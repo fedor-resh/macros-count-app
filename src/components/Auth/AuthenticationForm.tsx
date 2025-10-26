@@ -95,7 +95,7 @@ export function AuthenticationForm(props: PaperProps) {
       const { error: googleError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}/`,
         },
       });
 
