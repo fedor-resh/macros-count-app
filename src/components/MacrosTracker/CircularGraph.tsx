@@ -21,6 +21,7 @@ export function CircularGraph({
     <Stack align="center" gap="lg">
       <Box pos="relative" style={{ width: 200, height: 200 }}>
         <RingProgress
+          transitionDuration={300}
           style={{
             transform: 'scaleX(-1)',
           }}
@@ -33,6 +34,7 @@ export function CircularGraph({
           ]}
         />
         <RingProgress
+          transitionDuration={300}
           size={156}
           thickness={12}
           roundCaps

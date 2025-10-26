@@ -16,15 +16,24 @@ import {
 import { useForm } from '@mantine/form';
 import { upperFirst, useToggle } from '@mantine/hooks';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import {
+  useSignInMutation,
+  useSignInWithGoogleMutation,
+  useSignUpMutation,
+} from '../../store/api/supabaseApi';
 import { GoogleButton } from './GoogleButton';
 
 export function AuthenticationForm(props: PaperProps) {
   const navigate = useNavigate();
   const { session } = useAuth();
   const [type, toggle] = useToggle(['login', 'register']);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [signIn, { isLoading: isSigningIn }] = useSignInMutation();
+  const [signUp, { isLoading: isSigningUp }] = useSignUpMutation();
+  const [signInWithGoogle, { isLoading: isGoogleLoading }] = useSignInWithGoogleMutation();
+
+  const loading = isSigningIn || isSigningUp || isGoogleLoading;
 
   // Redirect if already logged in
   useEffect(() => {
@@ -48,61 +57,70 @@ export function AuthenticationForm(props: PaperProps) {
   });
 
   const handleSubmit = async (values: typeof form.values) => {
-    setLoading(true);
     setError(null);
 
     try {
       if (type === 'register') {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const result = await signUp({
           email: values.email,
           password: values.password,
-          options: {
-            data: {
-              name: values.name,
-            },
-          },
+          name: values.name,
         });
 
-        if (signUpError) {
-          throw signUpError;
+        if ('error' in result) {
+          const errorMsg =
+            typeof result.error === 'object' &&
+            result.error !== null &&
+            'error' in result.error &&
+            typeof result.error.error === 'string'
+              ? result.error.error
+              : 'Произошла ошибка при регистрации';
+          throw new Error(errorMsg);
         }
 
         setError('Проверьте вашу почту для подтверждения регистрации');
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const result = await signIn({
           email: values.email,
           password: values.password,
         });
 
-        if (signInError) {
-          throw signInError;
+        if ('error' in result) {
+          const errorMsg =
+            typeof result.error === 'object' &&
+            result.error !== null &&
+            'error' in result.error &&
+            typeof result.error.error === 'string'
+              ? result.error.error
+              : 'Произошла ошибка при входе';
+          throw new Error(errorMsg);
         }
 
         navigate('/');
       }
     } catch (err: any) {
       setError(err.message || 'Произошла ошибка при аутентификации');
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    setLoading(true);
     setError(null);
 
     try {
-      const { error: googleError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-      });
+      const result = await signInWithGoogle();
 
-      if (googleError) {
-        throw googleError;
+      if ('error' in result) {
+        const errorMsg =
+          typeof result.error === 'object' &&
+          result.error !== null &&
+          'error' in result.error &&
+          typeof result.error.error === 'string'
+            ? result.error.error
+            : 'Ошибка при входе через Google';
+        throw new Error(errorMsg);
       }
     } catch (err: any) {
       setError(err.message || 'Ошибка при входе через Google');
-    } finally {
-      setLoading(false);
     }
   };
 

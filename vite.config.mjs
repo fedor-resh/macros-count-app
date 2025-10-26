@@ -9,14 +9,4 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './vitest.setup.mjs',
   },
-  server: {
-    allowedHosts: true,
-    host: true,
-    port: 4173,
-  },
-  preview: {
-    host: true,
-    allowedHosts: true,
-    port: 4173,
-  },
 });

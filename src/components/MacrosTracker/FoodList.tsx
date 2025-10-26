@@ -1,4 +1,4 @@
-import { Box, Group, Paper, Stack, Text } from '@mantine/core';
+import { Group, Paper, Stack, Text } from '@mantine/core';
 
 export interface FoodItem {
   name: string;
@@ -9,9 +9,10 @@ export interface FoodItem {
 
 interface FoodListProps {
   items: FoodItem[];
+  onItemClick?: (index: number) => void;
 }
 
-export function FoodList({ items }: FoodListProps) {
+export function FoodList({ items, onItemClick }: FoodListProps) {
   return (
     <Stack gap="xs">
       {/* Header */}
@@ -37,7 +38,25 @@ export function FoodList({ items }: FoodListProps) {
         </Text>
       )}
       {items.map((item, index) => (
-        <Paper key={index} bg="#2a2a2a" p="sm" radius="md">
+        <Paper
+          key={index}
+          bg="#2a2a2a"
+          p="sm"
+          radius="md"
+          style={{
+            cursor: onItemClick ? 'pointer' : 'default',
+            transition: 'background-color 0.2s ease',
+          }}
+          onClick={() => onItemClick?.(index)}
+          onMouseEnter={(e) => {
+            if (onItemClick) {
+              e.currentTarget.style.backgroundColor = '#333333';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#2a2a2a';
+          }}
+        >
           <Group gap="md">
             <Text size="md" c="#d9d9d9" style={{ width: 112 }}>
               {item.name}

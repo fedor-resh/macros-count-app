@@ -4,11 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
 
-  if (loading) {
-    return <div>Загрузка...</div>;
-  }
-
-  if (!session) {
+  if (!session && !loading) {
     return <Navigate to="/login" replace />;
   }
 
