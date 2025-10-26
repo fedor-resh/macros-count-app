@@ -7,8 +7,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "1234:80"
+    restart: unless-stopped
     environment:
       - NODE_ENV=production
-    restart: unless-stopped
-    container_name: macros-count-app
 
