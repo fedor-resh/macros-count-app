@@ -4,15 +4,15 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   plugins: [react(), tsconfigPaths()],
-  preview: {
-    allowedHosts: [
-      'macros-count-app-frontend-k8ygnp-b67887-95-165-81-100.traefik.me',
-      'macros-count-app.fedorresh.ru',
-    ],
-  },
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: './vitest.setup.mjs',
+  },
+  preview: {
+    host: true,
+    port: 4173,
+    strictPort: true,
+    allowedHosts: ['macros-count-app.fedorresh.ru'],
   },
 });
