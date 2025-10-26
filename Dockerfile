@@ -1,23 +1,19 @@
 # Build stage
 FROM node:20-alpine AS builder
 
-# Enable Corepack for Yarn 4
-RUN corepack enable
-
 WORKDIR /app
 
 # Copy package files
-COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn ./.yarn
+COPY package.json package-lock.json ./
 
 # Install dependencies
-RUN yarn install --immutable
+RUN npm ci
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN yarn build
+RUN npm run build
 
 # Production stage
 FROM nginx:alpine
