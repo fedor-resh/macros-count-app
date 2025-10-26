@@ -15,6 +15,7 @@ export default defineConfig({
         short_name: 'Macros',
         description: 'Track your daily macros and calories',
         background_color: '#242424',
+        theme_color: '#242424',
         display: 'standalone',
         icons: [
           {
