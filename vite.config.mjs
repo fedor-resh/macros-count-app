@@ -14,8 +14,8 @@ export default defineConfig({
         name: 'Macros Count App',
         short_name: 'Macros',
         description: 'Track your daily macros and calories',
-        theme_color: '#1a1a1a',
-        background_color: '#1a1a1a',
+        theme_color: '#242424',
+        background_color: '#242424',
         display: 'standalone',
         icons: [
           {
