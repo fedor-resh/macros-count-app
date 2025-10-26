@@ -9,10 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './vitest.setup.mjs',
   },
-  preview: {
-    host: true,
-    port: 4173,
-    strictPort: true,
-    allowedHosts: ['macros-count-app.fedorresh.ru'],
+  server: {
+    allowedHosts: true,
   },
 });
