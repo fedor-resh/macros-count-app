@@ -18,7 +18,6 @@ import { upperFirst, useToggle } from '@mantine/hooks';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { GoogleButton } from './GoogleButton';
-import { TwitterButton } from './TwitterButton';
 
 export function AuthenticationForm(props: PaperProps) {
   const navigate = useNavigate();
@@ -113,14 +112,16 @@ export function AuthenticationForm(props: PaperProps) {
         Добро пожаловать, {type === 'login' ? 'войдите' : 'зарегистрируйтесь'}
       </Text>
 
-      <Group grow mb="md" mt="md">
-        <GoogleButton radius="xl" onClick={handleGoogleLogin} disabled={loading}>
-          Google
-        </GoogleButton>
-        <TwitterButton radius="xl" disabled={loading}>
-          Twitter
-        </TwitterButton>
-      </Group>
+      <GoogleButton
+        radius="xl"
+        onClick={handleGoogleLogin}
+        disabled={loading}
+        fullWidth
+        mb="md"
+        mt="md"
+      >
+        Google
+      </GoogleButton>
 
       <Divider label="Или используйте email" labelPosition="center" my="lg" />
 
