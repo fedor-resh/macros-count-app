@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [dispatch]);
 
   const signOut = async () => {
-    await signOutMutation();
+    await signOutMutation({}).unwrap();
     dispatch(clearAuth());
   };
 

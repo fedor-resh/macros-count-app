@@ -35,10 +35,7 @@ export const supabaseApi = createApi({
   tagTypes: ['Foods', 'Auth'],
   endpoints: (builder) => ({
     // Auth endpoints
-    signIn: builder.mutation<
-      AuthTokenResponsePassword['data'],
-      { email: string; password: string }
-      >({
+    signIn: builder.mutation({
       async queryFn({ email, password }) {
         const { data } = await supabase.auth.signInWithPassword({ email, password });
         return { data };

@@ -107,7 +107,7 @@ export function AuthenticationForm(props: PaperProps) {
     setError(null);
 
     try {
-      const result = await signInWithGoogle();
+      const result = await signInWithGoogle({}).unwrap();
 
       if ('error' in result) {
         const errorMsg =
