@@ -6,7 +6,10 @@ export default defineConfig({
   plugins: [react(), tsconfigPaths()],
   preview: {
     host: '0.0.0.0',
-    allowedHosts: 'all',
+    allowedHosts: [
+      'macros-count-app-frontend-k8ygnp-b67887-95-165-81-100.traefik.me',
+      'macros-count-app.fedorresh.ru',
+    ],
   },
   test: {
     globals: true,
