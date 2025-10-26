@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { IconPlus } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
 import { ActionIcon, Container, Stack } from '@mantine/core';
+import { AddProductDrawer } from '../components/MacrosTracker/AddProductDrawer';
 import { CircularGraph } from '../components/MacrosTracker/CircularGraph';
 import { FoodList } from '../components/MacrosTracker/FoodList';
 import { ProductDrawer } from '../components/MacrosTracker/ProductDrawer';
@@ -10,14 +10,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGetTodayFoodsQuery } from '../store/api/supabaseApi';
 
 export function HomePage() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { data: eatenProducts = [] } = useGetTodayFoodsQuery(user?.id ?? '', {
     skip: !user,
   });
 
   const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
-  const [drawerOpened, setDrawerOpened] = useState(false);
+  const [editDrawerOpened, setEditDrawerOpened] = useState(false);
+  const [addDrawerOpened, setAddDrawerOpened] = useState(false);
 
   const foodItems = useMemo(
     () =>
@@ -45,12 +45,16 @@ export function HomePage() {
 
   const handleItemClick = (index: number) => {
     setSelectedProductIndex(index);
-    setDrawerOpened(true);
+    setEditDrawerOpened(true);
   };
 
-  const handleDrawerClose = () => {
-    setDrawerOpened(false);
+  const handleEditDrawerClose = () => {
+    setEditDrawerOpened(false);
     setSelectedProductIndex(null);
+  };
+
+  const handleAddDrawerClose = () => {
+    setAddDrawerOpened(false);
   };
 
   const selectedProduct =
@@ -76,12 +80,18 @@ export function HomePage() {
           backgroundColor: '#ff7428',
         }}
         aria-label="Add food item"
-        onClick={() => navigate('/add-food')}
+        onClick={() => setAddDrawerOpened(true)}
       >
         <IconPlus size={32} stroke={2} color="#2a2a2a" />
       </ActionIcon>
 
-      <ProductDrawer opened={drawerOpened} onClose={handleDrawerClose} product={selectedProduct} />
+      <ProductDrawer
+        opened={editDrawerOpened}
+        onClose={handleEditDrawerClose}
+        product={selectedProduct}
+      />
+
+      <AddProductDrawer opened={addDrawerOpened} onClose={handleAddDrawerClose} />
     </Container>
   );
 }
