@@ -56,10 +56,9 @@ function DayMiniGraph({ day, caloriesPercent, proteinPercent, isActive, onClick 
   if (isActive) {
     return (
       <ActionIcon
-        variant="subtle"
+        variant="light"
         size="xl"
         radius="md"
-        color="orange"
         onClick={onClick}
         style={{ cursor: 'pointer' }}
       >
