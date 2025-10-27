@@ -6,6 +6,7 @@ import { useAuthStore } from '../../stores/authStore';
 interface AddProductDrawerProps {
   opened: boolean;
   onClose: () => void;
+  selectedDate?: string;
 }
 
 interface AddProductDrawerValues {
@@ -15,7 +16,7 @@ interface AddProductDrawerValues {
   protein: number | '';
 }
 
-export function AddProductDrawer({ opened, onClose }: AddProductDrawerProps) {
+export function AddProductDrawer({ opened, onClose, selectedDate }: AddProductDrawerProps) {
   const user = useAuthStore((state) => state.user);
   const { mutate: addFood, isPending: isLoading } = useAddFoodMutation();
 
@@ -48,7 +49,7 @@ export function AddProductDrawer({ opened, onClose }: AddProductDrawerProps) {
         unit: 'г',
         kcalories: values.kcalories,
         protein: values.protein,
-        date: new Date().toISOString().split('T')[0],
+        date: selectedDate || new Date().toISOString().split('T')[0],
         user_id: user.id,
       },
       {

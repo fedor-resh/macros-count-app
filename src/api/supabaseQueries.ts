@@ -17,7 +17,8 @@ export interface EatenProduct {
 // Query Keys
 export const foodKeys = {
   all: ['foods'] as const,
-  todayFoods: (userId: string) => ['foods', 'today', userId] as const,
+  todayFoods: (userId: string, date: string) => ['foods', date, userId] as const,
+  weeklyFoods: (userId: string) => ['foods', 'weekly', userId] as const,
 };
 
 // Auth Mutations
@@ -62,17 +63,47 @@ export function useSignInWithGoogleMutation() {
 }
 
 // Queries
-export function useGetTodayFoodsQuery(userId: string) {
+export function useGetTodayFoodsQuery(userId: string, date?: string) {
+  const queryDate = date || new Date().toISOString().split('T')[0];
+  
   return useQuery({
-    queryKey: foodKeys.todayFoods(userId),
+    queryKey: foodKeys.todayFoods(userId, queryDate),
     queryFn: async () => {
-      const today = new Date().toISOString().split('T')[0];
       const { data, error } = await supabase
         .from('eaten_product')
         .select('*')
         .eq('user_id', userId)
-        .eq('date', today)
+        .eq('date', queryDate)
         .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+      return data as Database['public']['Tables']['eaten_product']['Row'][];
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useGetWeeklyFoodsQuery(userId: string) {
+  return useQuery({
+    queryKey: foodKeys.weeklyFoods(userId),
+    queryFn: async () => {
+      // Calculate date range for last 7 days
+      const today = new Date();
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(today.getDate() - 6);
+      
+      const startDate = sevenDaysAgo.toISOString().split('T')[0];
+      const endDate = today.toISOString().split('T')[0];
+
+      const { data, error } = await supabase
+        .from('eaten_product')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true });
 
       if (error) {
         throw error;
@@ -101,10 +132,10 @@ export function useAddFoodMutation() {
       }
       return data;
     },
-    onSuccess: (_, variables) => {
-      // Invalidate the today foods query for the user
+    onSuccess: () => {
+      // Invalidate all food queries
       queryClient.invalidateQueries({
-        queryKey: foodKeys.todayFoods(variables.user_id!),
+        queryKey: foodKeys.all,
       });
     },
   });

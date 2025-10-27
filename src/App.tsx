@@ -1,4 +1,5 @@
 import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
 
 import { useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';

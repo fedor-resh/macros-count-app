@@ -8,10 +8,15 @@ import { FoodList } from '../components/MacrosTracker/FoodList';
 import { ProductDrawer } from '../components/MacrosTracker/ProductDrawer';
 import { WeeklyProgress } from '../components/MacrosTracker/WeeklyProgress';
 import { useAuthStore } from '../stores/authStore';
+import { useDateStore } from '../stores/dateStore';
 
 export function HomePage() {
   const user = useAuthStore((state) => state.user);
-  const { data: eatenProducts = [] } = useGetTodayFoodsQuery(user?.id ?? '');
+  const selectedDate = useDateStore((state) => state.selectedDate);
+  const { data: eatenProducts = [] } = useGetTodayFoodsQuery(
+    user?.id ?? '',
+    selectedDate || new Date().toISOString().split('T')[0]
+  );
 
   const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
   const [editDrawerOpened, setEditDrawerOpened] = useState(false);
@@ -62,7 +67,7 @@ export function HomePage() {
     <Container size="sm" py="xl" px="0" my="0">
       <Stack gap="xl">
         <CircularGraph calories={totalCalories} protein={totalProtein} />
-        <WeeklyProgress />
+        <WeeklyProgress userId={user?.id ?? ''} />
         <FoodList items={foodItems} onItemClick={handleItemClick} />
       </Stack>
 
@@ -89,7 +94,11 @@ export function HomePage() {
         product={selectedProduct}
       />
 
-      <AddProductDrawer opened={addDrawerOpened} onClose={handleAddDrawerClose} />
+      <AddProductDrawer
+        opened={addDrawerOpened}
+        onClose={handleAddDrawerClose}
+        selectedDate={selectedDate || new Date().toISOString().split('T')[0]}
+      />
     </Container>
   );
 }
