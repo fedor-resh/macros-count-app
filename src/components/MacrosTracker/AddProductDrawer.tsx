@@ -1,7 +1,7 @@
 import { Button, Drawer, NumberInput, Stack, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { useAuth } from '../../contexts/AuthContext';
-import { useAddFoodMutation } from '../../store/api/supabaseApi';
+import { useAddFoodMutation } from '../../api/supabaseQueries';
+import { useAuthStore } from '../../stores/authStore';
 
 interface AddProductDrawerProps {
   opened: boolean;
@@ -16,8 +16,8 @@ interface AddProductDrawerValues {
 }
 
 export function AddProductDrawer({ opened, onClose }: AddProductDrawerProps) {
-  const { user } = useAuth();
-  const [addFood, { isLoading }] = useAddFoodMutation();
+  const user = useAuthStore((state) => state.user);
+  const { mutate: addFood, isPending: isLoading } = useAddFoodMutation();
 
   const form = useForm<AddProductDrawerValues>({
     initialValues: {
@@ -41,8 +41,8 @@ export function AddProductDrawer({ opened, onClose }: AddProductDrawerProps) {
       return;
     }
 
-    try {
-      await addFood({
+    addFood(
+      {
         name: values.name,
         value: values.value,
         unit: 'г',
@@ -50,13 +50,14 @@ export function AddProductDrawer({ opened, onClose }: AddProductDrawerProps) {
         protein: values.protein,
         date: new Date().toISOString().split('T')[0],
         user_id: user.id,
-      }).unwrap();
-
-      form.reset();
-      onClose();
-    } catch (error) {
-      console.error('Failed to add product:', error);
-    }
+      },
+      {
+        onSuccess: () => {
+          form.reset();
+          onClose();
+        },
+      }
+    );
   };
 
   const handleClose = () => {
@@ -140,4 +141,3 @@ export function AddProductDrawer({ opened, onClose }: AddProductDrawerProps) {
     </Drawer>
   );
 }
-

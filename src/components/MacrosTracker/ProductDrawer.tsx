@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Button, Drawer, Group, NumberInput, Stack, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { Database } from '../../../database.types';
-import { useDeleteFoodMutation, useUpdateFoodMutation } from '../../store/api/supabaseApi';
+import { useDeleteFoodMutation, useUpdateFoodMutation } from '../../api/supabaseQueries';
 
 interface ProductDrawerProps {
   opened: boolean;
@@ -11,8 +11,8 @@ interface ProductDrawerProps {
 }
 
 export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) {
-  const [updateFood, { isLoading: isUpdating }] = useUpdateFoodMutation();
-  const [deleteFood, { isLoading: isDeleting }] = useDeleteFoodMutation();
+  const { mutate: updateFood, isPending: isUpdating } = useUpdateFoodMutation();
+  const { mutate: deleteFood, isPending: isDeleting } = useDeleteFoodMutation();
 
   const form = useForm({
     initialValues: {
@@ -47,15 +47,17 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
       return;
     }
 
-    try {
-      await updateFood({
+    updateFood(
+      {
         id: product.id,
         ...values,
-      }).unwrap();
-      onClose();
-    } catch (error) {
-      console.error('Failed to update product:', error);
-    }
+      },
+      {
+        onSuccess: () => {
+          onClose();
+        }
+      }
+    );
   };
 
   const handleDelete = async () => {
@@ -63,12 +65,11 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
       return;
     }
 
-    try {
-      await deleteFood(product.id).unwrap();
-      onClose();
-    } catch (error) {
-      console.error('Failed to delete product:', error);
-    }
+    deleteFood(product.id, {
+      onSuccess: () => {
+        onClose();
+      }
+    });
   };
 
   return (

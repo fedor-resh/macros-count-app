@@ -15,23 +15,23 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { upperFirst, useToggle } from '@mantine/hooks';
-import { useAuth } from '../../contexts/AuthContext';
 import {
   useSignInMutation,
   useSignInWithGoogleMutation,
   useSignUpMutation,
-} from '../../store/api/supabaseApi';
+} from '../../api/supabaseQueries';
+import { useAuthStore } from '../../stores/authStore';
 import { GoogleButton } from './GoogleButton';
 
 export function AuthenticationForm(props: PaperProps) {
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const session = useAuthStore((state) => state.session);
   const [type, toggle] = useToggle(['login', 'register']);
   const [error, setError] = useState<string | null>(null);
 
-  const [signIn, { isLoading: isSigningIn }] = useSignInMutation();
-  const [signUp, { isLoading: isSigningUp }] = useSignUpMutation();
-  const [signInWithGoogle, { isLoading: isGoogleLoading }] = useSignInWithGoogleMutation();
+  const { mutate: signIn, isPending: isSigningIn } = useSignInMutation();
+  const { mutate: signUp, isPending: isSigningUp } = useSignUpMutation();
+  const { mutate: signInWithGoogle, isPending: isGoogleLoading } = useSignInWithGoogleMutation();
 
   const loading = isSigningIn || isSigningUp || isGoogleLoading;
 
@@ -59,69 +59,48 @@ export function AuthenticationForm(props: PaperProps) {
   const handleSubmit = async (values: typeof form.values) => {
     setError(null);
 
-    try {
-      if (type === 'register') {
-        const result = await signUp({
+    if (type === 'register') {
+      signUp(
+        {
           email: values.email,
           password: values.password,
           name: values.name,
-        });
-
-        if ('error' in result) {
-          const errorMsg =
-            typeof result.error === 'object' &&
-            result.error !== null &&
-            'error' in result.error &&
-            typeof result.error.error === 'string'
-              ? result.error.error
-              : 'Произошла ошибка при регистрации';
-          throw new Error(errorMsg);
+        },
+        {
+          onSuccess: () => {
+            setError('Проверьте вашу почту для подтверждения регистрации');
+          },
+          onError: (err: any) => {
+            setError(err.message || 'Произошла ошибка при регистрации');
+          },
         }
-
-        setError('Проверьте вашу почту для подтверждения регистрации');
-      } else {
-        const result = await signIn({
+      );
+    } else {
+      signIn(
+        {
           email: values.email,
           password: values.password,
-        });
-
-        if ('error' in result) {
-          const errorMsg =
-            typeof result.error === 'object' &&
-            result.error !== null &&
-            'error' in result.error &&
-            typeof result.error.error === 'string'
-              ? result.error.error
-              : 'Произошла ошибка при входе';
-          throw new Error(errorMsg);
+        },
+        {
+          onSuccess: () => {
+            navigate('/');
+          },
+          onError: (err: any) => {
+            setError(err.message || 'Произошла ошибка при входе');
+          },
         }
-
-        navigate('/');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Произошла ошибка при аутентификации');
+      );
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     setError(null);
 
-    try {
-      const result = await signInWithGoogle({}).unwrap();
-
-      if ('error' in result) {
-        const errorMsg =
-          typeof result.error === 'object' &&
-          result.error !== null &&
-          'error' in result.error &&
-          typeof result.error.error === 'string'
-            ? result.error.error
-            : 'Ошибка при входе через Google';
-        throw new Error(errorMsg);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Ошибка при входе через Google');
-    }
+    signInWithGoogle(undefined, {
+      onError: (err: any) => {
+        setError(err.message || 'Ошибка при входе через Google');
+      },
+    });
   };
 
   return (

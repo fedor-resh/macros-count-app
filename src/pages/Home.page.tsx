@@ -1,19 +1,17 @@
 import { useMemo, useState } from 'react';
 import { IconPlus } from '@tabler/icons-react';
 import { ActionIcon, Container, Stack } from '@mantine/core';
+import { useGetTodayFoodsQuery } from '../api/supabaseQueries';
 import { AddProductDrawer } from '../components/MacrosTracker/AddProductDrawer';
 import { CircularGraph } from '../components/MacrosTracker/CircularGraph';
 import { FoodList } from '../components/MacrosTracker/FoodList';
 import { ProductDrawer } from '../components/MacrosTracker/ProductDrawer';
 import { WeeklyProgress } from '../components/MacrosTracker/WeeklyProgress';
-import { useAuth } from '../contexts/AuthContext';
-import { useGetTodayFoodsQuery } from '../store/api/supabaseApi';
+import { useAuthStore } from '../stores/authStore';
 
 export function HomePage() {
-  const { user } = useAuth();
-  const { data: eatenProducts = [] } = useGetTodayFoodsQuery(user?.id ?? '', {
-    skip: !user,
-  });
+  const user = useAuthStore((state) => state.user);
+  const { data: eatenProducts = [] } = useGetTodayFoodsQuery(user?.id ?? '');
 
   const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
   const [editDrawerOpened, setEditDrawerOpened] = useState(false);

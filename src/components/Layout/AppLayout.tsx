@@ -2,13 +2,13 @@ import { IconLogout } from '@tabler/icons-react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AppShell, Burger, Button, Container, Group, NavLink, Stack, Title } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuthStore } from '../../stores/authStore';
 
 export function AppLayout() {
   const [opened, { toggle }] = useDisclosure();
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
+  const signOut = useAuthStore((state) => state.signOut);
 
   const handleLogout = async () => {
     await signOut();

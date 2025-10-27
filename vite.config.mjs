@@ -68,8 +68,8 @@ export default defineConfig({
           'mantine-hooks': ['@mantine/hooks', '@mantine/form'],
           // Icons
           icons: ['@tabler/icons-react'],
-          // Redux
-          redux: ['@reduxjs/toolkit', 'react-redux'],
+          // TanStack Query
+          'react-query': ['@tanstack/react-query'],
           // Supabase
           supabase: ['@supabase/supabase-js'],
         },
