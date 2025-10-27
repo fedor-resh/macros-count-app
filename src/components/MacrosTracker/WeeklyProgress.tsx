@@ -41,7 +41,7 @@ function DayMiniGraph({ day, caloriesPercent, proteinPercent, isActive, onClick 
           ]}
           style={{
             position: 'absolute',
-            top: '19%',
+            top: '40%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
           }}
