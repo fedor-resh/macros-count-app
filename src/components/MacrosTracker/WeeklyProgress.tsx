@@ -17,33 +17,35 @@ interface WeeklyProgressProps {
 }
 
 // Daily goals
-const DAILY_CALORIES_GOAL = 2000;
+const DAILY_CALORIES_GOAL = 3000;
 const DAILY_PROTEIN_GOAL = 150;
 
 function DayMiniGraph({ day, caloriesPercent, proteinPercent, isActive, onClick }: DayProgress) {
   const content = (
     <Stack gap={4} align="center">
-      <Box pos="relative" style={{ width: 20, height: 20 }}>
+      <Box pos="relative" style={{ width: 30, height: 30 }}>
         <RingProgress
-          size={20}
-          thickness={1.5}
+          size={30}
+          thickness={2}
           sections={[
             { value: caloriesPercent, color: 'orange.6' },
             { value: 100 - caloriesPercent, color: 'gray.8' },
           ]}
         />
         <RingProgress
-          size={12}
-          thickness={1.5}
+          size={20}
+          thickness={2}
           sections={[
             { value: proteinPercent, color: 'blue.6' },
             { value: 100 - proteinPercent, color: 'gray.8' },
           ]}
-          style={{
-            position: 'absolute',
-            top: '40%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
+          styles={{
+            root: {
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+            },
           }}
         />
       </Box>
@@ -53,25 +55,12 @@ function DayMiniGraph({ day, caloriesPercent, proteinPercent, isActive, onClick 
     </Stack>
   );
 
-  if (isActive) {
-    return (
-      <ActionIcon
-        variant="light"
-        size="xl"
-        radius="md"
-        onClick={onClick}
-        style={{ cursor: 'pointer' }}
-      >
-        {content}
-      </ActionIcon>
-    );
-  }
-
   return (
     <ActionIcon
-      variant="transparent"
-      size="xl"
+      variant={isActive ? 'light' : 'transparent'}
       radius="md"
+      size="xl"
+      py={30}
       onClick={onClick}
       style={{ cursor: 'pointer' }}
     >
@@ -140,7 +129,7 @@ export function WeeklyProgress({ userId }: WeeklyProgressProps) {
             За 7 дней
           </Text>
         </Box>
-        <Group gap="xs" justify="space-between">
+        <Group gap="0" justify="space-between">
           {weekDays.map((dayData) => (
             <DayMiniGraph key={dayData.date} {...dayData} />
           ))}
