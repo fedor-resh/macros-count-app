@@ -19,12 +19,12 @@ const CALORIE_ADJUSTMENTS: Record<Goal, number> = {
 };
 
 // Коэффициенты белка (г на кг веса) в зависимости от уровня активности
-const PROTEIN_MULTIPLIERS: Record<ActivityLevel, { min: number; max: number }> = {
-  sedentary: { min: 0.8, max: 1.0 }, // Минимум для поддержания здоровья (малоподвижные)
-  light: { min: 1.2, max: 1.6 }, // Поддержание массы тела при умеренной активности
-  moderate: { min: 1.6, max: 2.2 }, // Похудение (для сохранения мышц) / умеренная активность
-  high: { min: 1.8, max: 2.5 }, // Набор мышечной массы / регулярные силовые тренировки
-  veryHigh: { min: 1.8, max: 2.5 }, // Набор мышечной массы / очень высокая активность
+const PROTEIN_MULTIPLIERS: Record<ActivityLevel, number> = {
+  sedentary: 0.8, // Минимум для поддержания здоровья (малоподвижные)
+  light: 1.2, // Поддержание массы тела при умеренной активности
+  moderate: 1.6, // Похудение (для сохранения мышц) / умеренная активность
+  high: 1.8, // Набор мышечной массы / регулярные силовые тренировки
+  veryHigh: 1.8, // Набор мышечной массы / очень высокая активность
 };
 
 /**
@@ -74,9 +74,7 @@ export function calculateCaloriesGoal(tdee: number, goal: Goal): number {
  */
 export function calculateProteinGoal(weight: number, activityLevel: ActivityLevel): number {
   const multiplier = PROTEIN_MULTIPLIERS[activityLevel];
-  // Используем среднее значение между min и max
-  const avgMultiplier = (multiplier.min + multiplier.max) / 2;
-  return Math.round(weight * avgMultiplier);
+  return Math.round(weight * multiplier);
 }
 
 /**
