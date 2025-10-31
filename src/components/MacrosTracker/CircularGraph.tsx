@@ -16,6 +16,14 @@ export function CircularGraph({
 }: CircularGraphProps) {
   const caloriesPercent = (calories / caloriesGoal) * 100;
   const proteinPercent = (protein / proteinGoal) * 100;
+  const caloriesExceeded = calories > caloriesGoal;
+  const proteinExceeded = protein > proteinGoal;
+  const caloriesOverflowPercent = caloriesExceeded
+    ? Math.min(((calories - caloriesGoal) / caloriesGoal) * 100, 100)
+    : 0;
+  const proteinOverflowPercent = proteinExceeded
+    ? Math.min(((protein - proteinGoal) / proteinGoal) * 100, 100)
+    : 0;
 
   return (
     <Stack align="center" gap="lg">
@@ -23,14 +31,37 @@ export function CircularGraph({
         <RingProgress
           transitionDuration={300}
           style={{
-            transform: 'scaleX(-1)',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%) scaleX(-1)',
+            zIndex: 3,
+            opacity: caloriesExceeded ? 1 : 0,
           }}
           size={200}
           thickness={12}
           roundCaps
           sections={[
-            { value: 100 - caloriesPercent, color: 'gray.8' },
-            { value: caloriesPercent, color: 'orange.6' },
+            { value: 100 - caloriesOverflowPercent, color: 'transparent' },
+            { value: caloriesOverflowPercent, color: '#AA0000' },
+          ]}
+        />
+        {/* Main calories ring */}
+        <RingProgress
+          transitionDuration={300}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%) scaleX(-1)',
+            zIndex: 2,
+          }}
+          size={200}
+          thickness={12}
+          roundCaps
+          sections={[
+            { value: 100 - Math.min(caloriesPercent, 100), color: 'gray.8' },
+            { value: Math.min(caloriesPercent, 100), color: 'orange.6' },
           ]}
         />
         <RingProgress
@@ -39,14 +70,34 @@ export function CircularGraph({
           thickness={12}
           roundCaps
           sections={[
-            { value: 100 - proteinPercent, color: 'gray.8' },
-            { value: proteinPercent, color: 'blue.6' },
+            { value: 100 - proteinOverflowPercent, color: 'transparent' },
+            { value: proteinOverflowPercent, color: 'blue.9' },
           ]}
           style={{
             position: 'absolute',
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%) scaleX(-1)',
+            zIndex: 3,
+            opacity: proteinExceeded ? 1 : 0,
+          }}
+        />
+        {/* Main protein ring */}
+        <RingProgress
+          transitionDuration={300}
+          size={156}
+          thickness={12}
+          roundCaps
+          sections={[
+            { value: 100 - Math.min(proteinPercent, 100), color: 'gray.8' },
+            { value: Math.min(proteinPercent, 100), color: 'blue.6' },
+          ]}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%) scaleX(-1)',
+            zIndex: 2,
           }}
         />
         <Stack

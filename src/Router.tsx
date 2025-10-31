@@ -4,6 +4,7 @@ import { AppLayout } from './components/Layout/AppLayout';
 import { AboutPage } from './pages/About.page';
 import { HomePage } from './pages/Home.page';
 import { LoginPage } from './pages/Login.page';
+import { ProfilePage } from './pages/Profile.page';
 
 const router = createBrowserRouter([
   {
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
       {
         path: '/about',
         element: <AboutPage />,
+      },
+      {
+        path: '/profile',
+        element: <ProfilePage />,
       },
     ],
   },

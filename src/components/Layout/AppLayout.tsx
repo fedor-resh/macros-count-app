@@ -1,6 +1,16 @@
 import { IconCalendar, IconLogout } from '@tabler/icons-react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { AppShell, Burger, Button, Container, Group, NavLink, Stack, Title } from '@mantine/core';
+import {
+  AppShell,
+  Avatar,
+  Burger,
+  Button,
+  Container,
+  Group,
+  NavLink,
+  Stack,
+  UnstyledButton,
+} from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
 import { useAuthStore } from '../../stores/authStore';
@@ -11,17 +21,14 @@ export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const signOut = useAuthStore((state) => state.signOut);
+  const user = useAuthStore((state) => state.user);
   const { selectedDate, setSelectedDate } = useDateStore();
 
   const handleLogout = async () => {
     await signOut();
   };
 
-  const navItems = [
-    { path: '/', label: 'Главная' },
-    { path: '/add-food', label: 'Добавить продукт' },
-    { path: '/about', label: 'О приложении' },
-  ];
+  const navItems = [{ path: '/', label: 'Главная' }];
 
   return (
     <AppShell
@@ -38,22 +45,34 @@ export function AppLayout() {
           <Group>
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
           </Group>
-          <DatePickerInput
-            value={selectedDate}
-            onChange={setSelectedDate}
-            placeholder="Выберите дату"
-            locale="ru"
-            valueFormat="DD.MM.YYYY"
-            leftSection={<IconCalendar size={18} stroke={1.5} />}
-            styles={{
-              root: {
-                width: 'min-content',
-              },
-              input: {
-                border: '0',
-              },
-            }}
-          />
+          <Group gap="xs">
+            <DatePickerInput
+              value={selectedDate}
+              onChange={setSelectedDate}
+              placeholder="Выберите дату"
+              locale="ru"
+              valueFormat="DD.MM.YYYY"
+              leftSection={<IconCalendar size={18} stroke={1.5} />}
+              styles={{
+                root: {
+                  width: 'min-content',
+                },
+                input: {
+                  border: '0',
+                },
+              }}
+            />
+            <UnstyledButton onClick={() => navigate('/profile')}>
+              <Avatar
+                src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture}
+                alt={user?.user_metadata?.full_name || user?.email || 'User'}
+                name={user?.user_metadata?.full_name || user?.email || 'User'}
+                radius="xl"
+                size="md"
+                style={{ cursor: 'pointer' }}
+              />
+            </UnstyledButton>
+          </Group>
         </Group>
       </AppShell.Header>
 

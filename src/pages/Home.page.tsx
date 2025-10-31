@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { IconPlus } from '@tabler/icons-react';
 import { ActionIcon, Container, Stack } from '@mantine/core';
-import { useGetTodayFoodsQuery } from '../api/supabaseQueries';
+import { useGetTodayFoodsQuery, useGetUserGoalsQuery } from '../api/supabaseQueries';
 import { AddProductDrawer } from '../components/MacrosTracker/AddProductDrawer';
 import { CircularGraph } from '../components/MacrosTracker/CircularGraph';
 import { FoodList } from '../components/MacrosTracker/FoodList';
@@ -17,6 +17,7 @@ export function HomePage() {
     user?.id ?? '',
     selectedDate || new Date().toISOString().split('T')[0]
   );
+  const { data: userGoals } = useGetUserGoalsQuery(user?.id || '');
 
   const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
   const [editDrawerOpened, setEditDrawerOpened] = useState(false);
@@ -63,11 +64,23 @@ export function HomePage() {
   const selectedProduct =
     selectedProductIndex !== null ? eatenProducts[selectedProductIndex] : null;
 
+  const caloriesGoal = userGoals?.calories_goal || 3000;
+  const proteinGoal = userGoals?.protein_goal || 150;
+
   return (
     <Container size="sm" py="xl" px="0" my="0">
       <Stack gap="xl">
-        <CircularGraph calories={totalCalories} protein={totalProtein} />
-        <WeeklyProgress userId={user?.id ?? ''} />
+        <CircularGraph
+          calories={totalCalories}
+          protein={totalProtein}
+          caloriesGoal={caloriesGoal}
+          proteinGoal={proteinGoal}
+        />
+        <WeeklyProgress
+          userId={user?.id ?? ''}
+          caloriesGoal={caloriesGoal}
+          proteinGoal={proteinGoal}
+        />
         <FoodList items={foodItems} onItemClick={handleItemClick} />
       </Stack>
 

@@ -21,6 +21,11 @@ export const foodKeys = {
   weeklyFoods: (userId: string) => ['foods', 'weekly', userId] as const,
 };
 
+export const userKeys = {
+  all: ['users'] as const,
+  user: (userId: string) => ['users', userId] as const,
+};
+
 // Auth Mutations
 export function useSignInMutation() {
   return useMutation({
@@ -189,6 +194,63 @@ export function useDeleteFoodMutation() {
       // Invalidate all food queries
       queryClient.invalidateQueries({
         queryKey: foodKeys.all,
+      });
+    },
+  });
+}
+
+// User Goals Queries
+export function useGetUserGoalsQuery(userId: string) {
+  return useQuery({
+    queryKey: userKeys.user(userId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+      return data as Database['public']['Tables']['users']['Row'];
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useUpdateUserGoalsMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      userId,
+      caloriesGoal, 
+      proteinGoal 
+    }: { 
+      userId: string;
+      caloriesGoal: number; 
+      proteinGoal: number;
+    }) => {
+      const { data, error } = await supabase
+        .from('users')
+        .upsert({
+          id: userId,
+          calories_goal: caloriesGoal,
+          protein_goal: proteinGoal,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate user queries
+      queryClient.invalidateQueries({
+        queryKey: userKeys.user(variables.userId),
       });
     },
   });

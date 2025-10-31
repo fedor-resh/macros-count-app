@@ -50,6 +50,30 @@ export type Database = {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          calories_goal: number
+          created_at: string
+          id: string
+          protein_goal: number
+          updated_at: string
+        }
+        Insert: {
+          calories_goal?: number
+          created_at?: string
+          id: string
+          protein_goal?: number
+          updated_at?: string
+        }
+        Update: {
+          calories_goal?: number
+          created_at?: string
+          id?: string
+          protein_goal?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
