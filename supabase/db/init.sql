@@ -8,8 +8,17 @@ CREATE TABLE public.users (
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   calories_goal integer NOT NULL DEFAULT 3000,
   protein_goal integer NOT NULL DEFAULT 150,
+  weight numeric,
+  height numeric,
+  age integer,
+  gender text CHECK (gender IN ('male', 'female')),
+  activity_level text CHECK (activity_level IN ('sedentary', 'light', 'moderate', 'high', 'veryHigh')),
+  goal text CHECK (goal IN ('loss', 'maintain', 'gain')),
   CONSTRAINT users_calories_goal_positive CHECK (calories_goal > 0),
-  CONSTRAINT users_protein_goal_positive CHECK (protein_goal > 0)
+  CONSTRAINT users_protein_goal_positive CHECK (protein_goal > 0),
+  CONSTRAINT users_weight_positive CHECK (weight IS NULL OR weight > 0),
+  CONSTRAINT users_height_positive CHECK (height IS NULL OR height > 0),
+  CONSTRAINT users_age_positive CHECK (age IS NULL OR age > 0)
 );
 
 -- Enable Row Level Security
@@ -50,8 +59,8 @@ CREATE TRIGGER set_updated_at
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.users (id, calories_goal, protein_goal)
-  VALUES (NEW.id, 3000, 150)
+  INSERT INTO public.users (id, calories_goal, protein_goal, gender, activity_level, goal)
+  VALUES (NEW.id, 3000, 150, 'male', 'moderate', 'maintain')
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;

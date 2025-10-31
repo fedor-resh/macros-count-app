@@ -57,6 +57,12 @@ export type Database = {
           id: string
           protein_goal: number
           updated_at: string
+          weight: number | null
+          height: number | null
+          age: number | null
+          gender: string | null
+          activity_level: string | null
+          goal: string | null
         }
         Insert: {
           calories_goal?: number
@@ -64,6 +70,12 @@ export type Database = {
           id: string
           protein_goal?: number
           updated_at?: string
+          weight?: number | null
+          height?: number | null
+          age?: number | null
+          gender?: string | null
+          activity_level?: string | null
+          goal?: string | null
         }
         Update: {
           calories_goal?: number
@@ -71,6 +83,12 @@ export type Database = {
           id?: string
           protein_goal?: number
           updated_at?: string
+          weight?: number | null
+          height?: number | null
+          age?: number | null
+          gender?: string | null
+          activity_level?: string | null
+          goal?: string | null
         }
         Relationships: []
       }

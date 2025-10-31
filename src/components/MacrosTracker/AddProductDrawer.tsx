@@ -1,6 +1,6 @@
 import { Button, Drawer, NumberInput, Stack, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { useAddFoodMutation } from '../../api/supabaseQueries';
+import { useAddFoodMutation } from '../../api/foodQueries';
 import { useAuthStore } from '../../stores/authStore';
 
 interface AddProductDrawerProps {

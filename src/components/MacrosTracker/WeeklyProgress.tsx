@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { ActionIcon, Box, Group, Paper, RingProgress, Stack, Text } from '@mantine/core';
-import { useGetWeeklyFoodsQuery } from '../../api/supabaseQueries';
+import { useGetWeeklyFoodsQuery } from '../../api/foodQueries';
 import { useDateStore } from '../../stores/dateStore';
 
 interface DayProgress {

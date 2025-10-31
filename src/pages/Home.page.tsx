@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { IconPlus } from '@tabler/icons-react';
 import { ActionIcon, Container, Stack } from '@mantine/core';
-import { useGetTodayFoodsQuery, useGetUserGoalsQuery } from '../api/supabaseQueries';
+import { useGetTodayFoodsQuery } from '../api/foodQueries';
+import { useGetUserGoalsQuery } from '../api/userQueries';
 import { AddProductDrawer } from '../components/MacrosTracker/AddProductDrawer';
 import { CircularGraph } from '../components/MacrosTracker/CircularGraph';
 import { FoodList } from '../components/MacrosTracker/FoodList';

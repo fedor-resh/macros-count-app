@@ -19,7 +19,7 @@ import {
   useSignInMutation,
   useSignInWithGoogleMutation,
   useSignUpMutation,
-} from '../../api/supabaseQueries';
+} from '../../api/userQueries';
 import { useAuthStore } from '../../stores/authStore';
 import { GoogleButton } from './GoogleButton';
 

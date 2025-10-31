@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Button, Drawer, Group, NumberInput, Stack, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { Database } from '../../../database.types';
-import { useDeleteFoodMutation, useUpdateFoodMutation } from '../../api/supabaseQueries';
+import { useDeleteFoodMutation, useUpdateFoodMutation } from '../../api/foodQueries';
 
 interface ProductDrawerProps {
   opened: boolean;
