@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { IconPlus } from '@tabler/icons-react';
-import { ActionIcon, Container, Stack } from '@mantine/core';
+import { Container, Stack } from '@mantine/core';
 import { useGetTodayFoodsQuery } from '../api/foodQueries';
 import { useGetUserGoalsQuery } from '../api/userQueries';
 import { AddProductDrawer } from '../components/MacrosTracker/AddProductDrawer';
+import { AddProductFAB } from '../components/MacrosTracker/AddProductFAB';
 import { CircularGraph } from '../components/MacrosTracker/CircularGraph';
 import { FoodList } from '../components/MacrosTracker/FoodList';
 import { ProductDrawer } from '../components/MacrosTracker/ProductDrawer';
@@ -85,22 +85,7 @@ export function HomePage() {
         <FoodList items={foodItems} onItemClick={handleItemClick} />
       </Stack>
 
-      {/* Floating Action Button */}
-      <ActionIcon
-        size={60}
-        radius="md"
-        color="#ff7428"
-        style={{
-          position: 'fixed',
-          bottom: 32,
-          right: 32,
-          backgroundColor: '#ff7428',
-        }}
-        aria-label="Add food item"
-        onClick={() => setAddDrawerOpened(true)}
-      >
-        <IconPlus size={32} stroke={2} color="#2a2a2a" />
-      </ActionIcon>
+      <AddProductFAB onAddProduct={() => setAddDrawerOpened(true)} />
 
       <ProductDrawer
         opened={editDrawerOpened}
