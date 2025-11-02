@@ -184,8 +184,6 @@ export function CameraModal({ opened, onClose }: CameraModalProps) {
         weight: result.analysis.weight,
         calories: result.analysis.calories,
         protein: result.analysis.protein,
-        carbs: result.analysis.carbs,
-        fats: result.analysis.fats,
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Не удалось загрузить фото';
