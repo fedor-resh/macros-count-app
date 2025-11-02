@@ -112,7 +112,7 @@ serve(async (req) => {
           "X-Title": siteName,
         },
         body: JSON.stringify({
-          model: "qwen/qwen3-vl-235b-a22b-instruct",
+          model: "google/gemini-2.5-flash-lite",
           messages: [
             {
               role: "user",
