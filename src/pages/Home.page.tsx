@@ -11,6 +11,7 @@ import { WeeklyProgress } from '../components/MacrosTracker/WeeklyProgress';
 import { useAddProductDrawerStore } from '../stores/addProductDrawerStore';
 import { useAuthStore } from '../stores/authStore';
 import { useDateStore } from '../stores/dateStore';
+import { FoodItem } from '../components/MacrosTracker/FoodList';
 
 export function HomePage() {
   const user = useAuthStore((state) => state.user);
@@ -28,10 +29,12 @@ export function HomePage() {
   const foodItems = useMemo(
     () =>
       eatenProducts.map((item) => ({
+        id: item.id.toString(),
         name: item.name,
         weight: `${item.value}${item.unit}`,
         calories: `${item.kcalories}к`,
         protein: `${item.protein}г`,
+        image_url: item.image_url,
       })),
     [eatenProducts]
   );

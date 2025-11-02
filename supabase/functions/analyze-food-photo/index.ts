@@ -60,37 +60,19 @@ serve(async (req) => {
     const fileName = `photo-${Date.now()}.${fileExt}`;
     const fullPath = `${user.id}/${fileName}`;
 
-    // Upload to Supabase Storage
+    // Convert file to base64 for LLM
     const fileBuffer = await file.arrayBuffer();
-    const { error: uploadError } = await supabaseClient.storage
-      .from("images")
-      .upload(fullPath, fileBuffer, {
-        contentType: file.type,
-        cacheControl: "3600",
-        upsert: false,
-      });
+    const base64Image = btoa(
+      new Uint8Array(fileBuffer).reduce(
+        (data, byte) => data + String.fromCharCode(byte),
+        ""
+      )
+    );
+    const mimeType = file.type || "image/jpeg";
+    const dataUrl = `data:${mimeType};base64,${base64Image}`;
 
-    if (uploadError) {
-      console.error("Upload error:", uploadError);
-      return new Response(
-        JSON.stringify({ error: `Failed to upload: ${uploadError.message}` }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Get public URL
-    const {
-      data: { publicUrl },
-    } = supabaseClient.storage.from("images").getPublicUrl(fullPath);
-
-    // Send to OpenRouter LLM for analysis
+    // Check API key before starting parallel operations
     const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
-    const siteUrl = Deno.env.get("SITE_URL") || "https://macros-count-app.com";
-    const siteName = Deno.env.get("SITE_NAME") || "Macros Count App";
-
     if (!openRouterApiKey) {
       return new Response(
         JSON.stringify({ error: "OpenRouter API key not configured" }),
@@ -101,9 +83,21 @@ serve(async (req) => {
       );
     }
 
-    const llmResponse = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
+    const siteUrl = Deno.env.get("SITE_URL") || "https://macros-count-app.com";
+    const siteName = Deno.env.get("SITE_NAME") || "Macros Count App";
+
+    // Start both operations in parallel
+    const [uploadResult, llmResponse] = await Promise.all([
+      // Upload to Supabase Storage
+      supabaseClient.storage
+        .from("images")
+        .upload(fullPath, fileBuffer, {
+          contentType: file.type,
+          cacheControl: "3600",
+          upsert: false,
+        }),
+      // Send to OpenRouter LLM for analysis
+      fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,8 +118,6 @@ serve(async (req) => {
   "food_name": "краткое название продукта (на русском языке)",
   "calories": estimated calories (number),
   "protein": estimated protein in grams (number),
-  "carbs": estimated carbs in grams (number),
-  "fats": estimated fats in grams (number),
   "weight": estimated weight in grams (number),
   "confidence": confidence level (low/medium/high)
 }
@@ -135,16 +127,36 @@ Only respond with valid JSON, no additional text.`,
                 {
                   type: "image_url",
                   image_url: {
-                    url: publicUrl,
+                    url: dataUrl,
                   },
                 },
               ],
             },
           ],
         }),
-      }
-    );
+      }),
+    ]);
 
+    // Check upload result
+    if (uploadResult.error) {
+      console.error("Upload error:", uploadResult.error);
+      return new Response(
+        JSON.stringify({
+          error: `Failed to upload: ${uploadResult.error.message}`,
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Get public URL
+    const {
+      data: { publicUrl },
+    } = supabaseClient.storage.from("images").getPublicUrl(fullPath);
+
+    // Check LLM response
     if (!llmResponse.ok) {
       const errorText = await llmResponse.text();
       console.error("LLM API error:", errorText);
@@ -177,12 +189,56 @@ Only respond with valid JSON, no additional text.`,
         food_name: "Unknown",
         calories: 0,
         protein: 0,
-        carbs: 0,
-        fats: 0,
         weight: 0,
         confidence: "low",
         raw_response: analysisText,
       };
+    }
+
+    // Check confidence level - if low, return error
+    if (nutritionData.confidence === "low") {
+      return new Response(
+        JSON.stringify({
+          error: "Низкая точность анализа. Пожалуйста, попробуйте снова с более четким фото.",
+          publicUrl,
+          analysis: nutritionData,
+        }),
+        {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Insert nutrition data into eaten_product table
+    const today = new Date().toISOString().split("T")[0];
+    const { data: insertedData, error: insertError } = await supabaseClient
+      .from("eaten_product")
+      .insert({
+        name: nutritionData.food_name || "Продукт",
+        kcalories: Math.round(nutritionData.calories || 0),
+        protein: Math.round(nutritionData.protein || 0),
+        value: nutritionData.weight || 0,
+        unit: "г",
+        date: today,
+        user_id: user.id,
+        image_url: publicUrl,
+      })
+      .select();
+
+    if (insertError) {
+      console.error("Database insert error:", insertError);
+      return new Response(
+        JSON.stringify({
+          error: `Failed to save to database: ${insertError.message}`,
+          publicUrl,
+          analysis: nutritionData,
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     return new Response(
@@ -191,6 +247,7 @@ Only respond with valid JSON, no additional text.`,
         publicUrl,
         filePath: fullPath,
         analysis: nutritionData,
+        insertedId: insertedData?.[0]?.id,
       }),
       {
         status: 200,

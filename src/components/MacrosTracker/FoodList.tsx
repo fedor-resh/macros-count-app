@@ -1,6 +1,8 @@
-import { Group, Paper, Stack, Text } from '@mantine/core';
+import { Group, Image, Paper, Stack, Text } from '@mantine/core';
 
 export interface FoodItem {
+  id: string;
+  image_url: string | null;
   name: string;
   weight: string;
   calories: string;
@@ -16,17 +18,14 @@ export function FoodList({ items, onItemClick }: FoodListProps) {
   return (
     <Stack gap="xs">
       {/* Header */}
-      <Group gap="md" px="md">
-        <Text size="md" c="#d9d9d9" style={{ width: 112 }}>
-          Продукт
-        </Text>
-        <Text size="md" c="#d9d9d9" style={{ flex: 1 }}>
+      <Group gap="md">
+        <Text c="#d9d9d9" ml="md" w={50}>
           Вес
         </Text>
-        <Text size="md" c="#ff7428" style={{ flex: 1 }}>
+        <Text c="#ff7428" w={50}>
           Кал
         </Text>
-        <Text size="md" c="#3d7cff" style={{ flex: 1 }}>
+        <Text c="#3d7cff" w={50}>
           Белки
         </Text>
       </Group>
@@ -58,18 +57,23 @@ export function FoodList({ items, onItemClick }: FoodListProps) {
           }}
         >
           <Group gap="md">
-            <Text size="md" c="#d9d9d9" style={{ width: 112 }}>
-              {item.name}
-            </Text>
-            <Text size="md" c="#d9d9d9" style={{ flex: 1 }}>
-              {item.weight}
-            </Text>
-            <Text size="md" c="#ff7428" style={{ flex: 1 }}>
-              {item.calories}
-            </Text>
-            <Text size="md" c="#3d7cff" style={{ flex: 1 }}>
-              {item.protein}
-            </Text>
+            <div>
+              <Text fw={550}>{item.name}</Text>
+              <Group gap="md">
+                <Text span inherit c="#d9d9d9" w={50}>
+                  {item.weight}
+                </Text>
+                <Text span inherit c="#ff7428" w={50}>
+                  {item.calories}
+                </Text>
+                <Text span inherit c="#3d7cff" w={50}>
+                  {item.protein}
+                </Text>
+              </Group>
+            </div>
+            {item.image_url && (
+              <Image src={item.image_url} alt={item.name} height={80} radius="md" />
+            )}
           </Group>
         </Paper>
       ))}

@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { Button, Drawer, Group, NumberInput, Stack, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { Database } from '../../../database.types';
 import { useDeleteFoodMutation, useUpdateFoodMutation } from '../../api/foodQueries';
+import { Database } from '../../types/database.types';
 
 interface ProductDrawerProps {
   opened: boolean;
@@ -55,7 +55,7 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
       {
         onSuccess: () => {
           onClose();
-        }
+        },
       }
     );
   };
@@ -68,7 +68,7 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
     deleteFood(product.id, {
       onSuccess: () => {
         onClose();
-      }
+      },
     });
   };
 

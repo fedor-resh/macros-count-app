@@ -83,6 +83,7 @@ CREATE TABLE public.eaten_product (
   date date DEFAULT now(),
   user_id uuid DEFAULT gen_random_uuid(),
   name text NOT NULL DEFAULT 'Продукт'::text,
+  image_url text,
   CONSTRAINT eaten_product_pkey PRIMARY KEY (id),
   CONSTRAINT eaten_product_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );

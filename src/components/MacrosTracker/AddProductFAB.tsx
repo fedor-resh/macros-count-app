@@ -3,7 +3,6 @@ import { IconBarcode, IconCamera, IconPhoto, IconPlus, IconSearch } from '@table
 import { ActionIcon, Transition } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useUploadPhotoMutation } from '../../api/photoQueries';
-import { useAddProductDrawerStore } from '../../stores/addProductDrawerStore';
 
 interface AddProductFABProps {
   onAddProduct: () => void;
@@ -13,7 +12,6 @@ export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
   const [fabExpanded, setFabExpanded] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const openAddProductDrawer = useAddProductDrawerStore((state) => state.open);
   const uploadPhotoMutation = useUploadPhotoMutation();
 
   const handleActionClick = () => {
@@ -43,14 +41,6 @@ export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
           title: 'Успешно',
           message: `Фото проанализировано: ${result.analysis.food_name}`,
           color: 'green',
-        });
-
-        // Open AddProductDrawer with analysis data
-        openAddProductDrawer({
-          name: result.analysis.food_name,
-          weight: Math.round(result.analysis.weight),
-          calories: Math.round(result.analysis.calories),
-          protein: Math.round(result.analysis.protein),
         });
       },
       onError: (err) => {
