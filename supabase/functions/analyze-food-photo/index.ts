@@ -112,7 +112,7 @@ serve(async (req) => {
           "X-Title": siteName,
         },
         body: JSON.stringify({
-          model: "google/gemini-2.0-flash-exp:free",
+          model: "qwen/qwen3-vl-235b-a22b-instruct",
           messages: [
             {
               role: "user",
@@ -121,7 +121,7 @@ serve(async (req) => {
                   type: "text",
                   text: `Analyze this food image and provide nutritional information in JSON format with the following structure:
 {
-  "food_name": "name of the food",
+  "food_name": "краткое название продукта (на русском языке)",
   "calories": estimated calories (number),
   "protein": estimated protein in grams (number),
   "carbs": estimated carbs in grams (number),

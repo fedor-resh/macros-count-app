@@ -5,8 +5,6 @@ export interface ProductData {
   weight: number;
   calories: number;
   protein: number;
-  carbs?: number;
-  fats?: number;
 }
 
 interface AddProductDrawerState {

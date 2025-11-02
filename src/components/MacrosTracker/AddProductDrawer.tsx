@@ -30,11 +30,27 @@ export function AddProductDrawer({ selectedDate }: AddProductDrawerProps) {
     },
     validate: {
       name: (value: string) => (value.trim().length === 0 ? 'Название обязательно' : null),
-      value: (value: number | '') => (value === '' || Number(value) <= 0 ? 'Вес должен быть больше 0' : null),
-      kcalories: (value: number | '') =>
-        value === '' || Number(value) < 0 ? 'Калории не могут быть отрицательными' : null,
-      protein: (value: number | '') =>
-        value === '' || Number(value) < 0 ? 'Белки не могут быть отрицательными' : null,
+      value: (value: number | '') => {
+        if (value === '') return 'Вес обязателен';
+        const numValue = Number(value);
+        if (numValue <= 0) return 'Вес должен быть больше 0';
+        if (numValue % 1 !== 0) return 'Вес должен быть целым числом';
+        return null;
+      },
+      kcalories: (value: number | '') => {
+        if (value === '') return null; // Allow empty, validation happens on submit
+        const numValue = Number(value);
+        if (numValue < 0) return 'Калории не могут быть отрицательными';
+        if (numValue % 1 !== 0) return 'Калории должны быть целым числом';
+        return null;
+      },
+      protein: (value: number | '') => {
+        if (value === '') return null; // Allow empty, validation happens on submit
+        const numValue = Number(value);
+        if (numValue < 0) return 'Белки не могут быть отрицательными';
+        if (numValue % 1 !== 0) return 'Белки должны быть целым числом';
+        return null;
+      },
     },
   });
 

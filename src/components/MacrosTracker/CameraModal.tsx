@@ -139,11 +139,9 @@ export function CameraModal({ opened, onClose }: CameraModalProps) {
             // Open AddProductDrawer with analysis data
             openAddProductDrawer({
               name: result.analysis.food_name,
-              weight: result.analysis.weight,
-              calories: result.analysis.calories,
-              protein: result.analysis.protein,
-              carbs: result.analysis.carbs,
-              fats: result.analysis.fats,
+              weight: Math.round(result.analysis.weight),
+              calories: Math.round(result.analysis.calories),
+              protein: Math.round(result.analysis.protein)
             });
           } catch (err) {
             const msg = err instanceof Error ? err.message : 'Не удалось загрузить фото';
