@@ -1,82 +1,87 @@
-import { Group, Image, Paper, Stack, Text } from '@mantine/core';
+import { Group, Image, Paper, Stack, Text } from "@mantine/core";
 
 export interface FoodItem {
-  id: string;
-  image_url: string | null;
-  name: string;
-  weight: string;
-  calories: string;
-  protein: string;
+	id: string;
+	image_url: string | null;
+	name: string;
+	weight: string;
+	calories: string;
+	protein: string;
 }
 
 interface FoodListProps {
-  items: FoodItem[];
-  onItemClick?: (index: number) => void;
+	items: FoodItem[];
+	onItemClick?: (index: number) => void;
 }
 
 export function FoodList({ items, onItemClick }: FoodListProps) {
-  return (
-    <Stack gap="xs">
-      {/* Header */}
-      <Group gap="md">
-        <Text c="#d9d9d9" ml="md" w={50}>
-          Вес
-        </Text>
-        <Text c="#ff7428" w={50}>
-          Кал
-        </Text>
-        <Text c="#3d7cff" w={50}>
-          Белки
-        </Text>
-      </Group>
+	return (
+		<Stack gap="xs">
+			{/* Header */}
+			<Group gap="md">
+				<Text c="#d9d9d9" ml="md" w={50}>
+					Вес
+				</Text>
+				<Text c="#ff7428" w={50}>
+					Кал
+				</Text>
+				<Text c="#3d7cff" w={50}>
+					Белки
+				</Text>
+			</Group>
 
-      {/* Food Items */}
-      {items.length === 0 && (
-        <Text size="md" c="#d9d9d9" style={{ width: '100%' }}>
-          Нет продуктов
-        </Text>
-      )}
-      {items.map((item, index) => (
-        <Paper
-          key={index}
-          bg="#2a2a2a"
-          p="sm"
-          radius="md"
-          style={{
-            cursor: onItemClick ? 'pointer' : 'default',
-            transition: 'background-color 0.2s ease',
-          }}
-          onClick={() => onItemClick?.(index)}
-          onMouseEnter={(e) => {
-            if (onItemClick) {
-              e.currentTarget.style.backgroundColor = '#333333';
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#2a2a2a';
-          }}
-        >
-          <Group gap="md">
-            <div>
-              <Text fw={550}>{item.name}</Text>
-              <Group gap="md">
-                <Text span inherit c="#d9d9d9" w={50}>
-                  {item.weight}
-                </Text>
-                <Text span inherit c="#ff7428" w={50}>
-                  {item.calories}
-                </Text>
-                <Text span inherit c="#3d7cff" w={50}>
-                  {item.protein}
-                </Text>
-              </Group>
-            </div>
-            {item.image_url && (
-              <Image src={item.image_url} alt={item.name} height={80} radius="md" />
-            )}
-          </Group>
-        </Paper>
-      ))}
-    </Stack>
-  );
+			{/* Food Items */}
+			{items.length === 0 && (
+				<Text size="md" c="#d9d9d9" style={{ width: "100%" }}>
+					Нет продуктов
+				</Text>
+			)}
+			{items.map((item, index) => (
+				<Paper
+					key={index}
+					bg="#2a2a2a"
+					p="sm"
+					radius="md"
+					style={{
+						cursor: onItemClick ? "pointer" : "default",
+						transition: "background-color 0.2s ease",
+					}}
+					onClick={() => onItemClick?.(index)}
+					onMouseEnter={(e) => {
+						if (onItemClick) {
+							e.currentTarget.style.backgroundColor = "#333333";
+						}
+					}}
+					onMouseLeave={(e) => {
+						e.currentTarget.style.backgroundColor = "#2a2a2a";
+					}}
+				>
+					<Group gap="md">
+						<div>
+							<Text fw={550}>{item.name}</Text>
+							<Group gap="md">
+								<Text span inherit c="#d9d9d9" w={50}>
+									{item.weight}
+								</Text>
+								<Text span inherit c="#ff7428" w={50}>
+									{item.calories}
+								</Text>
+								<Text span inherit c="#3d7cff" w={50}>
+									{item.protein}
+								</Text>
+							</Group>
+						</div>
+						{item.image_url && (
+							<Image
+								src={item.image_url}
+								alt={item.name}
+								height={80}
+								radius="md"
+							/>
+						)}
+					</Group>
+				</Paper>
+			))}
+		</Stack>
+	);
 }
