@@ -1,5 +1,8 @@
+import { useMutation } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { compressImage } from '../utils/imageCompression';
+import { queryClient } from '@/lib/queryClient';
+import { foodKeys } from './foodQueries';
 
 export interface FoodAnalysis {
   food_name: string;
@@ -60,4 +63,15 @@ export async function uploadPhoto(file: File): Promise<UploadPhotoResponse> {
     }
     throw new Error('Failed to upload photo: Unknown error');
   }
+}
+
+export function useUploadPhotoMutation() {
+  return useMutation({
+    mutationFn: uploadPhoto,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: foodKeys.all,
+      });
+    },
+  });
 }

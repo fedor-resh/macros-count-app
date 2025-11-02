@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { IconBarcode, IconCamera, IconPlus, IconSearch } from '@tabler/icons-react';
+import { useRef, useState } from 'react';
+import { IconBarcode, IconCamera, IconPhoto, IconPlus, IconSearch } from '@tabler/icons-react';
 import { ActionIcon, Transition } from '@mantine/core';
-import { CameraModal } from './CameraModal';
+import { notifications } from '@mantine/notifications';
+import { useUploadPhotoMutation } from '../../api/photoQueries';
+import { useAddProductDrawerStore } from '../../stores/addProductDrawerStore';
 
 interface AddProductFABProps {
   onAddProduct: () => void;
@@ -9,7 +11,10 @@ interface AddProductFABProps {
 
 export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
   const [fabExpanded, setFabExpanded] = useState(false);
-  const [cameraOpened, setCameraOpened] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const openAddProductDrawer = useAddProductDrawerStore((state) => state.open);
+  const uploadPhotoMutation = useUploadPhotoMutation();
 
   const handleActionClick = () => {
     setFabExpanded(false);
@@ -18,7 +23,50 @@ export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
 
   const handleCameraClick = () => {
     setFabExpanded(false);
-    setCameraOpened(true);
+    cameraInputRef.current?.click();
+  };
+
+  const handleGalleryClick = () => {
+    setFabExpanded(false);
+    galleryInputRef.current?.click();
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    uploadPhotoMutation.mutate(file, {
+      onSuccess: (result) => {
+        notifications.show({
+          title: 'Успешно',
+          message: `Фото проанализировано: ${result.analysis.food_name}`,
+          color: 'green',
+        });
+
+        // Open AddProductDrawer with analysis data
+        openAddProductDrawer({
+          name: result.analysis.food_name,
+          weight: Math.round(result.analysis.weight),
+          calories: Math.round(result.analysis.calories),
+          protein: Math.round(result.analysis.protein),
+        });
+      },
+      onError: (err) => {
+        const msg = err instanceof Error ? err.message : 'Не удалось загрузить фото';
+        notifications.show({ title: 'Ошибка', message: msg, color: 'red' });
+      },
+      onSettled: () => {
+        // Reset inputs
+        if (cameraInputRef.current) {
+          cameraInputRef.current.value = '';
+        }
+        if (galleryInputRef.current) {
+          galleryInputRef.current.value = '';
+        }
+      },
+    });
   };
 
   return (
@@ -51,16 +99,44 @@ export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
               radius="xl"
               onClick={handleActionClick}
               aria-label="Search product"
+              disabled={uploadPhotoMutation.isPending}
             >
               <IconSearch size={24} stroke={2} color="#2a2a2a" />
             </ActionIcon>
-            <ActionIcon size={50} radius="xl" onClick={handleActionClick} aria-label="Scan barcode">
+            <ActionIcon
+              size={50}
+              radius="xl"
+              onClick={handleActionClick}
+              aria-label="Scan barcode"
+              disabled={uploadPhotoMutation.isPending}
+            >
               <IconBarcode size={24} stroke={2} color="#2a2a2a" />
             </ActionIcon>
-            <ActionIcon size={50} radius="xl" onClick={handleActionClick} aria-label="Add manually">
+            <ActionIcon
+              size={50}
+              radius="xl"
+              onClick={handleActionClick}
+              aria-label="Add manually"
+              disabled={uploadPhotoMutation.isPending}
+            >
               <IconPlus size={24} stroke={2} color="#2a2a2a" />
             </ActionIcon>
-            <ActionIcon size={50} radius="xl" onClick={handleCameraClick} aria-label="Open camera">
+            <ActionIcon
+              size={50}
+              radius="xl"
+              onClick={handleGalleryClick}
+              aria-label="Choose from gallery"
+              disabled={uploadPhotoMutation.isPending}
+            >
+              <IconPhoto size={24} stroke={2} color="#2a2a2a" />
+            </ActionIcon>
+            <ActionIcon
+              size={50}
+              radius="xl"
+              onClick={handleCameraClick}
+              aria-label="Take photo"
+              disabled={uploadPhotoMutation.isPending}
+            >
               <IconCamera size={24} stroke={2} color="#2a2a2a" />
             </ActionIcon>
           </div>
@@ -77,11 +153,27 @@ export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
         }}
         aria-label={fabExpanded ? 'Close menu' : 'Add food item'}
         onClick={() => setFabExpanded(!fabExpanded)}
+        loading={uploadPhotoMutation.isPending}
       >
         <IconPlus size={32} stroke={2} color="#2a2a2a" />
       </ActionIcon>
 
-      <CameraModal opened={cameraOpened} onClose={() => setCameraOpened(false)} />
+      {/* Hidden file inputs */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileSelect}
+        style={{ display: 'none' }}
+      />
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        style={{ display: 'none' }}
+      />
     </div>
   );
 }

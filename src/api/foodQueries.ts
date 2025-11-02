@@ -17,8 +17,8 @@ export interface EatenProduct {
 // Query Keys
 export const foodKeys = {
   all: ['foods'] as const,
-  todayFoods: (userId: string, date: string) => ['foods', date, userId] as const,
-  weeklyFoods: (userId: string) => ['foods', 'weekly', userId] as const,
+  todayFoods: (date: string) => ['foods', date] as const,
+  weeklyFoods: () => ['foods', 'weekly'] as const,
 };
 
 // Queries
@@ -26,7 +26,7 @@ export function useGetTodayFoodsQuery(userId: string, date?: string) {
   const queryDate = date || new Date().toISOString().split('T')[0];
   
   return useQuery({
-    queryKey: foodKeys.todayFoods(userId, queryDate),
+    queryKey: foodKeys.todayFoods(queryDate),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('eaten_product')
@@ -46,7 +46,7 @@ export function useGetTodayFoodsQuery(userId: string, date?: string) {
 
 export function useGetWeeklyFoodsQuery(userId: string) {
   return useQuery({
-    queryKey: foodKeys.weeklyFoods(userId),
+    queryKey: foodKeys.weeklyFoods(),
     queryFn: async () => {
       // Calculate date range for last 7 days
       const today = new Date();
