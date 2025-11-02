@@ -42,9 +42,9 @@ export function CalorieCalculator({
       goal: initialParams?.goal ?? 'maintain',
     },
     validate: {
-      weight: (value) => (value && value > 0 ? null : 'Вес должен быть больше 0'),
-      height: (value) => (value && value > 0 ? null : 'Рост должен быть больше 0'),
-      age: (value) => (value && value > 0 ? null : 'Возраст должен быть больше 0'),
+      weight: (value: number | null) => (value && value > 0 ? null : 'Вес должен быть больше 0'),
+      height: (value: number | null) => (value && value > 0 ? null : 'Рост должен быть больше 0'),
+      age: (value: number | null) => (value && value > 0 ? null : 'Возраст должен быть больше 0'),
     },
   });
 

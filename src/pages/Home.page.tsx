@@ -8,12 +8,14 @@ import { CircularGraph } from '../components/MacrosTracker/CircularGraph';
 import { FoodList } from '../components/MacrosTracker/FoodList';
 import { ProductDrawer } from '../components/MacrosTracker/ProductDrawer';
 import { WeeklyProgress } from '../components/MacrosTracker/WeeklyProgress';
+import { useAddProductDrawerStore } from '../stores/addProductDrawerStore';
 import { useAuthStore } from '../stores/authStore';
 import { useDateStore } from '../stores/dateStore';
 
 export function HomePage() {
   const user = useAuthStore((state) => state.user);
   const selectedDate = useDateStore((state) => state.selectedDate);
+  const openAddProductDrawer = useAddProductDrawerStore((state) => state.open);
   const { data: eatenProducts = [] } = useGetTodayFoodsQuery(
     user?.id ?? '',
     selectedDate || new Date().toISOString().split('T')[0]
@@ -22,7 +24,6 @@ export function HomePage() {
 
   const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
   const [editDrawerOpened, setEditDrawerOpened] = useState(false);
-  const [addDrawerOpened, setAddDrawerOpened] = useState(false);
 
   const foodItems = useMemo(
     () =>
@@ -58,10 +59,6 @@ export function HomePage() {
     setSelectedProductIndex(null);
   };
 
-  const handleAddDrawerClose = () => {
-    setAddDrawerOpened(false);
-  };
-
   const selectedProduct =
     selectedProductIndex !== null ? eatenProducts[selectedProductIndex] : null;
 
@@ -85,7 +82,7 @@ export function HomePage() {
         <FoodList items={foodItems} onItemClick={handleItemClick} />
       </Stack>
 
-      <AddProductFAB onAddProduct={() => setAddDrawerOpened(true)} />
+      <AddProductFAB onAddProduct={() => openAddProductDrawer()} />
 
       <ProductDrawer
         opened={editDrawerOpened}
@@ -93,11 +90,7 @@ export function HomePage() {
         product={selectedProduct}
       />
 
-      <AddProductDrawer
-        opened={addDrawerOpened}
-        onClose={handleAddDrawerClose}
-        selectedDate={selectedDate || new Date().toISOString().split('T')[0]}
-      />
+      <AddProductDrawer selectedDate={selectedDate || new Date().toISOString().split('T')[0]} />
     </Container>
   );
 }

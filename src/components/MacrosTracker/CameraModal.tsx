@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { IconCamera, IconX } from '@tabler/icons-react';
-import { ActionIcon, Button, Drawer } from '@mantine/core';
+import { IconCamera, IconFile, IconX } from '@tabler/icons-react';
+import { ActionIcon, Drawer } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { uploadPhoto } from '../../api/photoQueries';
+import { useAddProductDrawerStore } from '../../stores/addProductDrawerStore';
 
 interface CameraModalProps {
   opened: boolean;
@@ -26,9 +27,11 @@ const getErrorMessage = (err: unknown): string => {
 
 export function CameraModal({ opened, onClose }: CameraModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const openAddProductDrawer = useAddProductDrawerStore((state) => state.open);
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -122,14 +125,26 @@ export function CameraModal({ opened, onClose }: CameraModalProps) {
             return;
           }
           try {
-            await uploadPhoto(new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' }));
+            const result = await uploadPhoto(
+              new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' })
+            );
             notifications.show({
               title: 'Успешно',
-              message: 'Фото успешно отправлено на сервер',
+              message: `Фото проанализировано: ${result.analysis.food_name}`,
               color: 'green',
             });
             stopCamera();
             onClose();
+
+            // Open AddProductDrawer with analysis data
+            openAddProductDrawer({
+              name: result.analysis.food_name,
+              weight: result.analysis.weight,
+              calories: result.analysis.calories,
+              protein: result.analysis.protein,
+              carbs: result.analysis.carbs,
+              fats: result.analysis.fats,
+            });
           } catch (err) {
             const msg = err instanceof Error ? err.message : 'Не удалось загрузить фото';
             setError(msg);
@@ -144,6 +159,46 @@ export function CameraModal({ opened, onClose }: CameraModalProps) {
     } catch {
       setIsLoading(false);
       setError('Не удалось сделать фото');
+    }
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await uploadPhoto(file);
+      notifications.show({
+        title: 'Успешно',
+        message: `Фото проанализировано: ${result.analysis.food_name}`,
+        color: 'green',
+      });
+      onClose();
+
+      // Open AddProductDrawer with analysis data
+      openAddProductDrawer({
+        name: result.analysis.food_name,
+        weight: result.analysis.weight,
+        calories: result.analysis.calories,
+        protein: result.analysis.protein,
+        carbs: result.analysis.carbs,
+        fats: result.analysis.fats,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Не удалось загрузить фото';
+      setError(msg);
+      notifications.show({ title: 'Ошибка', message: msg, color: 'red' });
+    } finally {
+      setIsLoading(false);
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -205,32 +260,50 @@ export function CameraModal({ opened, onClose }: CameraModalProps) {
             alignItems: 'center',
           }}
         >
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <ActionIcon
+              size={60}
+              radius="xl"
+              color="#ff7428"
+              onClick={() => {
+                stopCamera();
+                onClose();
+              }}
+              style={{ backgroundColor: '#2a2a2a' }}
+              aria-label="Close camera"
+            >
+              <IconX size={28} stroke={2} color="#d9d9d9" />
+            </ActionIcon>
+            <ActionIcon
+              size={60}
+              radius="xl"
+              color="#ff7428"
+              onClick={() => fileInputRef.current?.click()}
+              style={{ backgroundColor: '#2a2a2a' }}
+              aria-label="Select file"
+            >
+              <IconFile size={28} stroke={2} color="#d9d9d9" />
+            </ActionIcon>
+          </div>
           <ActionIcon
             size={60}
-            radius="xl"
-            color="#ff7428"
-            onClick={() => {
-              stopCamera();
-              onClose();
-            }}
-            style={{ backgroundColor: '#2a2a2a' }}
-            aria-label="Close camera"
-          >
-            <IconX size={28} stroke={2} color="#d9d9d9" />
-          </ActionIcon>
-          <Button
-            size="xl"
             radius="xl"
             color="#ff7428"
             onClick={capturePhoto}
             loading={isLoading}
             disabled={!!error}
-            leftSection={<IconCamera size={24} />}
-            style={{ minWidth: '200px' }}
           >
-            Сделать фото
-          </Button>
+            <IconCamera size={28} stroke={2} color="#d9d9d9" />
+          </ActionIcon>
         </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          style={{ display: 'none' }}
+        />
       </div>
     </Drawer>
   );

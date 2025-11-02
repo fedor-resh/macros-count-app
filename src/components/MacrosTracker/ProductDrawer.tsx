@@ -23,10 +23,10 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
       protein: 0,
     },
     validate: {
-      name: (value) => (value.trim().length === 0 ? 'Название обязательно' : null),
-      value: (value) => (value <= 0 ? 'Вес должен быть больше 0' : null),
-      kcalories: (value) => (value < 0 ? 'Калории не могут быть отрицательными' : null),
-      protein: (value) => (value < 0 ? 'Белки не могут быть отрицательными' : null),
+      name: (value: string) => (value.trim().length === 0 ? 'Название обязательно' : null),
+      value: (value: number) => (value <= 0 ? 'Вес должен быть больше 0' : null),
+      kcalories: (value: number) => (value < 0 ? 'Калории не могут быть отрицательными' : null),
+      protein: (value: number) => (value < 0 ? 'Белки не могут быть отрицательными' : null),
     },
   });
 

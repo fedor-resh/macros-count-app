@@ -1,11 +1,11 @@
+import { useEffect } from 'react';
 import { Button, Drawer, NumberInput, Stack, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useAddFoodMutation } from '../../api/foodQueries';
+import { useAddProductDrawerStore } from '../../stores/addProductDrawerStore';
 import { useAuthStore } from '../../stores/authStore';
 
 interface AddProductDrawerProps {
-  opened: boolean;
-  onClose: () => void;
   selectedDate?: string;
 }
 
@@ -16,8 +16,9 @@ interface AddProductDrawerValues {
   protein: number | '';
 }
 
-export function AddProductDrawer({ opened, onClose, selectedDate }: AddProductDrawerProps) {
+export function AddProductDrawer({ selectedDate }: AddProductDrawerProps) {
   const user = useAuthStore((state) => state.user);
+  const { opened, productData, reset } = useAddProductDrawerStore();
   const { mutate: addFood, isPending: isLoading } = useAddFoodMutation();
 
   const form = useForm<AddProductDrawerValues>({
@@ -28,14 +29,26 @@ export function AddProductDrawer({ opened, onClose, selectedDate }: AddProductDr
       protein: '',
     },
     validate: {
-      name: (value) => (value.trim().length === 0 ? 'Название обязательно' : null),
-      value: (value) => (value === '' || Number(value) <= 0 ? 'Вес должен быть больше 0' : null),
-      kcalories: (value) =>
+      name: (value: string) => (value.trim().length === 0 ? 'Название обязательно' : null),
+      value: (value: number | '') => (value === '' || Number(value) <= 0 ? 'Вес должен быть больше 0' : null),
+      kcalories: (value: number | '') =>
         value === '' || Number(value) < 0 ? 'Калории не могут быть отрицательными' : null,
-      protein: (value) =>
+      protein: (value: number | '') =>
         value === '' || Number(value) < 0 ? 'Белки не могут быть отрицательными' : null,
     },
   });
+
+  // Populate form when productData changes
+  useEffect(() => {
+    if (productData) {
+      form.setValues({
+        name: productData.name,
+        value: productData.weight,
+        kcalories: productData.calories,
+        protein: productData.protein,
+      });
+    }
+  }, [productData]);
 
   const handleSubmit = async (values: typeof form.values) => {
     if (!user?.id || values.value === '' || values.kcalories === '' || values.protein === '') {
@@ -55,7 +68,7 @@ export function AddProductDrawer({ opened, onClose, selectedDate }: AddProductDr
       {
         onSuccess: () => {
           form.reset();
-          onClose();
+          reset();
         },
       }
     );
@@ -63,7 +76,7 @@ export function AddProductDrawer({ opened, onClose, selectedDate }: AddProductDr
 
   const handleClose = () => {
     form.reset();
-    onClose();
+    reset();
   };
 
   return (

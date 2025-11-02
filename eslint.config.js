@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 export default defineConfig(
   tseslint.configs.recommended,
   ...mantine,
-  { ignores: ['**/*.{mjs,cjs,js,d.ts,d.mts}', 'database.types.ts'] },
+  { ignores: ['**/*.{mjs,cjs,js,d.ts,d.mts}', 'database.types.ts', 'supabase/functions/**/*'] },
   {
     files: ['**/*.story.tsx'],
     rules: { 'no-console': 'off' },

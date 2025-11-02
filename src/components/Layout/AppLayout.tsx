@@ -2,6 +2,7 @@ import { IconCalendar } from '@tabler/icons-react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { AppShell, Avatar, Container, Group, UnstyledButton } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
+import { DateValue } from '@mantine/dates';
 import faviconUrl from '../../favicon.svg?url';
 import { useAuthStore } from '../../stores/authStore';
 import { useDateStore } from '../../stores/dateStore';
@@ -10,6 +11,17 @@ export function AppLayout() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const { selectedDate, setSelectedDate } = useDateStore();
+
+  const handleDateChange = (date: DateValue) => {
+    if (date) {
+      const dateStr = date.toISOString().split('T')[0];
+      setSelectedDate(dateStr);
+    } else {
+      setSelectedDate(null);
+    }
+  };
+
+  const dateValue: DateValue | null = selectedDate ? new Date(selectedDate) : null;
 
   return (
     <AppShell header={{ height: 60 }} padding="sm">
@@ -23,8 +35,8 @@ export function AppLayout() {
           </UnstyledButton>
           <Group gap="xs">
             <DatePickerInput
-              value={selectedDate}
-              onChange={setSelectedDate}
+              value={dateValue}
+              onChange={handleDateChange}
               placeholder="Выберите дату"
               locale="ru"
               valueFormat="DD.MM.YYYY"
