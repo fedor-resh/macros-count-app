@@ -8,6 +8,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { useEffect } from "react";
 import {
 	useDeleteFoodMutation,
 	useUpdateFoodMutation,
@@ -20,6 +21,13 @@ interface ProductDrawerProps {
 	product: EatenProduct | null;
 }
 
+const initialValues = {
+	name: "",
+	value: 0,
+	kcalories: 0,
+	protein: 0,
+};
+
 export function ProductDrawer({
 	opened,
 	onClose,
@@ -27,15 +35,9 @@ export function ProductDrawer({
 }: ProductDrawerProps) {
 	const { mutate: updateFood, isPending: isUpdating } = useUpdateFoodMutation();
 	const { mutate: deleteFood, isPending: isDeleting } = useDeleteFoodMutation();
-
+	console.log(product);
 	const form = useForm({
-		mode: "controlled",
-		initialValues: {
-			name: product?.name || "",
-			value: product?.value || 0,
-			kcalories: product?.kcalories || 0,
-			protein: product?.protein || 0,
-		},
+		initialValues,
 		validate: {
 			name: (value: string) =>
 				value.trim().length === 0 ? "Название обязательно" : null,
@@ -56,6 +58,19 @@ export function ProductDrawer({
 			},
 		},
 	});
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: form from useForm is stable and doesn't need to be in deps
+	useEffect(() => {
+		if (product) {
+			form.setValues({
+				name: product.name,
+				value: product.value ?? 0,
+				kcalories: product.kcalories ?? 0,
+				protein: product.protein ?? 0,
+			});
+		}
+	}, [product]);
+	
 	const handleSubmit = async (values: typeof form.values) => {
 		if (!product?.id) {
 			return;
