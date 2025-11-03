@@ -110,9 +110,9 @@ serve(async (req) => {
 									text: `Analyze this food image and provide nutritional information in JSON format with the following structure:
 {
   "food_name": "краткое название продукта (на русском языке)",
-  "calories": estimated calories (number),
-  "protein": estimated protein in grams (number),
-  "weight": estimated weight in grams (number),
+  "calories"?: estimated calories (number), if not known, do not include it.
+  "protein"?: estimated protein in grams (number), if not known, do not include it.
+  "weight"?: estimated weight in grams (number), if not known, do not include it.
   "confidence": confidence level (low/medium/high)
 }
 

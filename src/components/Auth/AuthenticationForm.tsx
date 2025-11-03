@@ -7,7 +7,7 @@ import {
 	Divider,
 	Group,
 	Paper,
-	PaperProps,
+	type PaperProps,
 	PasswordInput,
 	Stack,
 	Text,

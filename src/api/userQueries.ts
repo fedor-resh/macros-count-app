@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Database } from "../types/database.types";
+import type { Database } from "../types/database.types";
 import { supabase } from "../lib/supabase";
-import { ActivityLevel, Gender, Goal } from "@/utils/calorieCalculator";
+import type { ActivityLevel, Gender, Goal } from "@/utils/calorieCalculator";
 
 // Query Keys
 export const userKeys = {

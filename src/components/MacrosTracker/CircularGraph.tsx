@@ -1,5 +1,5 @@
-import { IconFlame, IconMeat } from "@tabler/icons-react";
 import { Box, Group, RingProgress, Stack, Text } from "@mantine/core";
+import { IconFlame, IconMeat } from "@tabler/icons-react";
 
 interface CircularGraphProps {
 	calories: number;

@@ -14,6 +14,10 @@ interface FoodListProps {
 	onItemClick?: (index: number) => void;
 }
 
+function isItemValid(item: FoodItem): boolean {
+	return item.weight && item.calories && item.protein;
+}
+
 export function FoodList({ items, onItemClick }: FoodListProps) {
 	return (
 		<Stack gap="xs">
@@ -38,13 +42,15 @@ export function FoodList({ items, onItemClick }: FoodListProps) {
 			)}
 			{items.map((item, index) => (
 				<Paper
-					key={index}
+					key={item.id}
 					bg="#2a2a2a"
 					p="sm"
 					radius="md"
+					bd={isItemValid(item) ? "1px solid #2a2a2a" : "none"}
 					style={{
 						cursor: onItemClick ? "pointer" : "default",
 						transition: "background-color 0.2s ease",
+						overflow: "hidden",
 					}}
 					onClick={() => onItemClick?.(index)}
 					onMouseEnter={(e) => {
@@ -56,7 +62,7 @@ export function FoodList({ items, onItemClick }: FoodListProps) {
 						e.currentTarget.style.backgroundColor = "#2a2a2a";
 					}}
 				>
-					<Group gap="md">
+					<Group gap="md" justify="space-between" align="start" wrap="nowrap">
 						<div>
 							<Text fw={550}>{item.name}</Text>
 							<Group gap="md">
@@ -76,7 +82,8 @@ export function FoodList({ items, onItemClick }: FoodListProps) {
 								src={item.image_url}
 								alt={item.name}
 								height={80}
-								radius="md"
+								mr={-12}
+								my={-12}
 							/>
 						)}
 					</Group>

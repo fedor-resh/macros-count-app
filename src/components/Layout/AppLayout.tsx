@@ -8,7 +8,7 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { DateValue } from "@mantine/dates";
+import type { DateValue } from "@mantine/dates";
 import faviconUrl from "../../favicon.svg?url";
 import { useAuthStore } from "../../stores/authStore";
 import { useDateStore } from "../../stores/dateStore";

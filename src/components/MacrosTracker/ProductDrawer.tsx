@@ -12,7 +12,7 @@ import {
 	useDeleteFoodMutation,
 	useUpdateFoodMutation,
 } from "../../api/foodQueries";
-import { Database } from "../../types/database.types";
+import type { Database } from "../../types/database.types";
 
 interface ProductDrawerProps {
 	opened: boolean;

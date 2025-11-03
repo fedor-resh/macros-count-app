@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Database } from "../types/database.types";
+import type { Database } from "../types/database.types";
 import { supabase } from "../lib/supabase";
 
 export interface EatenProduct {

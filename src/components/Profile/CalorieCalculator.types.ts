@@ -1,7 +1,7 @@
-import {
-	type ActivityLevel,
-	type Gender,
-	type Goal,
+import type {
+	ActivityLevel,
+	Gender,
+	Goal,
 } from "../../utils/calorieCalculator";
 
 export interface CalculatorParams {
