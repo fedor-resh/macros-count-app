@@ -46,7 +46,7 @@ export function FoodList({ items, onItemClick }: FoodListProps) {
 					bg="#2a2a2a"
 					p="sm"
 					radius="md"
-					bd={isItemValid(item) ? "1px solid #2a2a2a" : "none"}
+					bd={isItemValid(item) ? "1px solid red" : "none"}
 					style={{
 						cursor: onItemClick ? "pointer" : "default",
 						transition: "background-color 0.2s ease",
@@ -67,13 +67,13 @@ export function FoodList({ items, onItemClick }: FoodListProps) {
 							<Text fw={550}>{item.name}</Text>
 							<Group gap="md">
 								<Text span inherit c="#d9d9d9" w={50}>
-									{item.weight}
+									{item.weight ?? '-'}
 								</Text>
 								<Text span inherit c="#ff7428" w={50}>
-									{item.calories}
+									{item.calories ?? '-'}
 								</Text>
 								<Text span inherit c="#3d7cff" w={50}>
-									{item.protein}
+									{item.protein ?? '-'}
 								</Text>
 							</Group>
 						</div>

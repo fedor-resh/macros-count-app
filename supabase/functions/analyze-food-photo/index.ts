@@ -208,34 +208,31 @@ Only respond with valid JSON, no additional text.`,
 
 		// Insert nutrition data into eaten_product table
 		const today = new Date().toISOString().split("T")[0];
-		const { data: insertedData, error: insertError } = await supabaseClient
-			.from("eaten_product")
-			.insert({
-				name: nutritionData.food_name || "Продукт",
-				kcalories: Math.round(nutritionData.calories || 0),
-				protein: Math.round(nutritionData.protein || 0),
-				value: nutritionData.weight || 0,
-				unit: "г",
-				date: today,
-				user_id: user.id,
-				image_url: publicUrl,
-			})
-			.select();
 
-		if (insertError) {
-			console.error("Database insert error:", insertError);
-			return new Response(
-				JSON.stringify({
-					error: `Failed to save to database: ${insertError.message}`,
-					publicUrl,
-					analysis: nutritionData,
-				}),
-				{
-					status: 500,
-					headers: { ...corsHeaders, "Content-Type": "application/json" },
-				},
-			);
+		const dataToInsert = {
+			name: nutritionData.food_name || "Продукт",
+			unit: "г",
+			date: today,
+			user_id: user.id,
+			image_url: publicUrl,
+		};
+
+		if (nutritionData.calories) {
+			dataToInsert.kcalories = Math.round(nutritionData.calories);
 		}
+		if (nutritionData.protein) {
+			dataToInsert.protein = Math.round(nutritionData.protein);
+		}
+		if (nutritionData.weight) {
+			dataToInsert.value = Math.round(nutritionData.weight);
+		}
+
+		console.log("dataToInsert", dataToInsert);
+
+		const { data: insertedData } = await supabaseClient
+			.from("eaten_product")
+			.insert(dataToInsert)
+			.select();
 
 		return new Response(
 			JSON.stringify({
