@@ -15,7 +15,7 @@ interface FoodListProps {
 }
 
 function isItemValid(item: FoodItem): boolean {
-	return item.weight && item.calories && item.protein;
+	return !!item.weight && !!item.calories && !!item.protein;
 }
 
 export function FoodList({ items, onItemClick }: FoodListProps) {
