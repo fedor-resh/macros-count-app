@@ -1,21 +1,13 @@
-import { Group, Image, Paper, Stack, Text } from "@mantine/core";
-
-export interface FoodItem {
-	id: string;
-	image_url: string | null;
-	name: string;
-	weight: string;
-	calories: string;
-	protein: string;
-}
+import { EatenProduct } from "@/types/types";
+import { Card, Group, Image, Stack, Text } from "@mantine/core";
 
 interface FoodListProps {
-	items: FoodItem[];
+	items: EatenProduct[];
 	onItemClick?: (index: number) => void;
 }
 
-function isItemValid(item: FoodItem): boolean {
-	return !!item.weight && !!item.calories && !!item.protein;
+function isValidFoodItem(item: EatenProduct): boolean {
+	return !!item.value && !!item.kcalories && !!item.protein;
 }
 
 export function FoodList({ items, onItemClick }: FoodListProps) {
@@ -41,39 +33,25 @@ export function FoodList({ items, onItemClick }: FoodListProps) {
 				</Text>
 			)}
 			{items.map((item, index) => (
-				<Paper
+				<Card
 					key={item.id}
-					bg="#2a2a2a"
 					p="sm"
 					radius="md"
-					bd={isItemValid(item) ? "1px solid red" : "none"}
-					style={{
-						cursor: onItemClick ? "pointer" : "default",
-						transition: "background-color 0.2s ease",
-						overflow: "hidden",
-					}}
+					bd={isValidFoodItem(item) ? "none" : "1px solid orange"}
 					onClick={() => onItemClick?.(index)}
-					onMouseEnter={(e) => {
-						if (onItemClick) {
-							e.currentTarget.style.backgroundColor = "#333333";
-						}
-					}}
-					onMouseLeave={(e) => {
-						e.currentTarget.style.backgroundColor = "#2a2a2a";
-					}}
 				>
 					<Group gap="md" justify="space-between" align="start" wrap="nowrap">
 						<div>
 							<Text fw={550}>{item.name}</Text>
 							<Group gap="md">
 								<Text span inherit c="#d9d9d9" w={50}>
-									{item.weight ?? '-'}
+									{item.value || "-"}г
 								</Text>
 								<Text span inherit c="#ff7428" w={50}>
-									{item.calories ?? '-'}
+									{item.kcalories || "-"}ккал
 								</Text>
 								<Text span inherit c="#3d7cff" w={50}>
-									{item.protein ?? '-'}
+									{item.protein || "-"}г
 								</Text>
 							</Group>
 						</div>
@@ -87,7 +65,7 @@ export function FoodList({ items, onItemClick }: FoodListProps) {
 							/>
 						)}
 					</Group>
-				</Paper>
+				</Card>
 			))}
 		</Stack>
 	);

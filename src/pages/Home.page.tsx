@@ -1,21 +1,20 @@
-import { useMemo, useState } from "react";
 import { Container, Stack } from "@mantine/core";
+import { useMemo, useState } from "react";
 import { useGetTodayFoodsQuery } from "../api/foodQueries";
 import { useGetUserGoalsQuery } from "../api/userQueries";
 import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
 import { AddProductFAB } from "../components/MacrosTracker/AddProductFAB";
 import { CircularGraph } from "../components/MacrosTracker/CircularGraph";
-import { FoodItem, FoodList } from "../components/MacrosTracker/FoodList";
+import { FoodList } from "../components/MacrosTracker/FoodList";
 import { ProductDrawer } from "../components/MacrosTracker/ProductDrawer";
 import { WeeklyProgress } from "../components/MacrosTracker/WeeklyProgress";
-import { useAddProductDrawerStore } from "../stores/addProductDrawerStore";
 import { useAuthStore } from "../stores/authStore";
 import { useDateStore } from "../stores/dateStore";
 
 export function HomePage() {
 	const user = useAuthStore((state) => state.user);
 	const selectedDate = useDateStore((state) => state.selectedDate);
-	const openAddProductDrawer = useAddProductDrawerStore((state) => state.open);
+	const [addProductDrawerOpened, setAddProductDrawerOpened] = useState(false);
 	const { data: eatenProducts = [] } = useGetTodayFoodsQuery(
 		user?.id ?? "",
 		selectedDate || new Date().toISOString().split("T")[0],
@@ -26,19 +25,6 @@ export function HomePage() {
 		number | null
 	>(null);
 	const [editDrawerOpened, setEditDrawerOpened] = useState(false);
-
-	const foodItems = useMemo(
-		() =>
-			eatenProducts.map((item) => ({
-				id: item.id.toString(),
-				name: item.name,
-				weight: `${item.value}${item.unit}`,
-				calories: `${item.kcalories}к`,
-				protein: `${item.protein}г`,
-				image_url: item.image_url,
-			})),
-		[eatenProducts],
-	);
 
 	const { totalCalories, totalProtein } = useMemo(() => {
 		const calories =
@@ -88,10 +74,10 @@ export function HomePage() {
 					caloriesGoal={caloriesGoal}
 					proteinGoal={proteinGoal}
 				/>
-				<FoodList items={foodItems} onItemClick={handleItemClick} />
+				<FoodList items={eatenProducts} onItemClick={handleItemClick} />
 			</Stack>
 
-			<AddProductFAB onAddProduct={() => openAddProductDrawer()} />
+			<AddProductFAB onAddProduct={() => setAddProductDrawerOpened(true)} />
 
 			<ProductDrawer
 				opened={editDrawerOpened}
@@ -101,6 +87,8 @@ export function HomePage() {
 
 			<AddProductDrawer
 				selectedDate={selectedDate || new Date().toISOString().split("T")[0]}
+				opened={addProductDrawerOpened}
+				onClose={() => setAddProductDrawerOpened(false)}
 			/>
 		</Container>
 	);

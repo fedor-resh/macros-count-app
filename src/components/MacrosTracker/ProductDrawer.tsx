@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+
 import {
 	Button,
 	Drawer,
@@ -12,12 +12,12 @@ import {
 	useDeleteFoodMutation,
 	useUpdateFoodMutation,
 } from "../../api/foodQueries";
-import type { Database } from "../../types/database.types";
+import type { EatenProduct } from "../../types/types";
 
 interface ProductDrawerProps {
 	opened: boolean;
 	onClose: () => void;
-	product: Database["public"]["Tables"]["eaten_product"]["Row"] | null;
+	product: EatenProduct | null;
 }
 
 export function ProductDrawer({
@@ -29,37 +29,33 @@ export function ProductDrawer({
 	const { mutate: deleteFood, isPending: isDeleting } = useDeleteFoodMutation();
 
 	const form = useForm({
+		mode: "controlled",
 		initialValues: {
-			name: "",
-			value: 0,
-			unit: "г",
-			kcalories: 0,
-			protein: 0,
+			name: product?.name || "",
+			value: product?.value || 0,
+			kcalories: product?.kcalories || 0,
+			protein: product?.protein || 0,
 		},
 		validate: {
 			name: (value: string) =>
 				value.trim().length === 0 ? "Название обязательно" : null,
-			value: (value: number) =>
-				value <= 0 ? "Вес должен быть больше 0" : null,
-			kcalories: (value: number) =>
-				value < 0 ? "Калории не могут быть отрицательными" : null,
-			protein: (value: number) =>
-				value < 0 ? "Белки не могут быть отрицательными" : null,
+			value: (value: number) => {
+				if (value <= 0) return "Вес должен быть больше 0";
+				if (value % 1 !== 0) return "Вес должен быть целым числом";
+				return null;
+			},
+			kcalories: (value: number) => {
+				if (value < 0) return "Калории не могут быть отрицательными";
+				if (value % 1 !== 0) return "Калории должны быть целым числом";
+				return null;
+			},
+			protein: (value: number) => {
+				if (value < 0) return "Белки не могут быть отрицательными";
+				if (value % 1 !== 0) return "Белки должны быть целым числом";
+				return null;
+			},
 		},
 	});
-
-	useEffect(() => {
-		if (product) {
-			form.setValues({
-				name: product.name || "",
-				value: product.value || 0,
-				unit: product.unit || "г",
-				kcalories: product.kcalories || 0,
-				protein: product.protein || 0,
-			});
-		}
-	}, [product]);
-
 	const handleSubmit = async (values: typeof form.values) => {
 		if (!product?.id) {
 			return;
@@ -147,6 +143,7 @@ export function ProductDrawer({
 						placeholder="0"
 						min={0}
 						step={1}
+						suffix="ккал"
 						{...form.getInputProps("kcalories")}
 						styles={{
 							label: { color: "#ff7428", marginBottom: "0.5rem" },
@@ -164,6 +161,7 @@ export function ProductDrawer({
 						placeholder="0"
 						min={0}
 						step={0.1}
+						suffix="г"
 						{...form.getInputProps("protein")}
 						styles={{
 							label: { color: "#3d7cff", marginBottom: "0.5rem" },

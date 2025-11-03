@@ -1,12 +1,12 @@
-import { useEffect } from "react";
 import { Button, Drawer, NumberInput, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useAddFoodMutation } from "../../api/foodQueries";
-import { useAddProductDrawerStore } from "../../stores/addProductDrawerStore";
 import { useAuthStore } from "../../stores/authStore";
 
 interface AddProductDrawerProps {
 	selectedDate?: string;
+	opened: boolean;
+	onClose: () => void;
 }
 
 interface AddProductDrawerValues {
@@ -16,12 +16,12 @@ interface AddProductDrawerValues {
 	protein: number | "";
 }
 
-export function AddProductDrawer({ selectedDate }: AddProductDrawerProps) {
+export function AddProductDrawer({ selectedDate, opened, onClose }: AddProductDrawerProps) {
 	const user = useAuthStore((state) => state.user);
-	const { opened, productData, reset } = useAddProductDrawerStore();
 	const { mutate: addFood, isPending: isLoading } = useAddFoodMutation();
 
 	const form = useForm<AddProductDrawerValues>({
+		mode: "controlled",
 		initialValues: {
 			name: "",
 			value: "",
@@ -55,17 +55,6 @@ export function AddProductDrawer({ selectedDate }: AddProductDrawerProps) {
 		},
 	});
 
-	// Populate form when productData changes
-	useEffect(() => {
-		if (productData) {
-			form.setValues({
-				name: productData.name,
-				value: productData.weight,
-				kcalories: productData.calories,
-				protein: productData.protein,
-			});
-		}
-	}, [productData]);
 
 	const handleSubmit = async (values: typeof form.values) => {
 		if (
@@ -90,7 +79,7 @@ export function AddProductDrawer({ selectedDate }: AddProductDrawerProps) {
 			{
 				onSuccess: () => {
 					form.reset();
-					reset();
+					onClose();
 				},
 			},
 		);
@@ -98,7 +87,7 @@ export function AddProductDrawer({ selectedDate }: AddProductDrawerProps) {
 
 	const handleClose = () => {
 		form.reset();
-		reset();
+		onClose();
 	};
 
 	return (
@@ -158,6 +147,7 @@ export function AddProductDrawer({ selectedDate }: AddProductDrawerProps) {
 						placeholder="0"
 						min={0}
 						step={1}
+						suffix="ккал"
 						{...form.getInputProps("kcalories")}
 						styles={{
 							label: { color: "#ff7428" },
@@ -166,6 +156,10 @@ export function AddProductDrawer({ selectedDate }: AddProductDrawerProps) {
 
 					<NumberInput
 						label="Белки (на 100г)"
+						placeholder="0"
+						min={0}
+						step={1}
+						suffix="г"
 						{...form.getInputProps("protein")}
 						styles={{
 							label: { color: "#3d7cff" },
