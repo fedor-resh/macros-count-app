@@ -1,4 +1,6 @@
-import { useRef, useState } from "react";
+import { ActionIcon, Transition } from "@mantine/core";
+import { useClickOutside } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import {
 	IconBarcode,
 	IconCamera,
@@ -6,8 +8,7 @@ import {
 	IconPlus,
 	IconSearch,
 } from "@tabler/icons-react";
-import { ActionIcon, Transition } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
+import { useRef, useState } from "react";
 import { useUploadPhotoMutation } from "../../api/photoQueries";
 
 interface AddProductFABProps {
@@ -19,6 +20,8 @@ export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
 	const cameraInputRef = useRef<HTMLInputElement>(null);
 	const galleryInputRef = useRef<HTMLInputElement>(null);
 	const uploadPhotoMutation = useUploadPhotoMutation();
+
+	const fabRef = useClickOutside(() => setFabExpanded(false));
 
 	const handleActionClick = () => {
 		setFabExpanded(false);
@@ -68,6 +71,7 @@ export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
 
 	return (
 		<div
+			ref={fabRef}
 			style={{
 				position: "fixed",
 				bottom: 32,

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import {
 	ActionIcon,
 	Box,
@@ -8,6 +7,7 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
+import { useMemo } from "react";
 import { useGetWeeklyFoodsQuery } from "../../api/foodQueries";
 import { useDateStore } from "../../stores/dateStore";
 
@@ -146,18 +146,21 @@ export function WeeklyProgress({
 	const { selectedDate, setSelectedDate } = useDateStore();
 
 	const weekDays: DayProgress[] = useMemo(() => {
-		// Generate last 7 days
+		// Generate week starting from Monday for the selected date
 		const days: DayProgress[] = [];
-		const today = new Date();
+		const currentDate = selectedDate ? new Date(selectedDate) : new Date();
 
-		for (let i = 6; i >= 0; i--) {
-			const date = new Date(today);
-			date.setDate(today.getDate() - i);
-			const dateStr = date.toISOString().split("T")[0];
+		// Find Monday of the week containing selectedDate
+		const currentDay = currentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+		const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; // If Sunday, go back 6 days
+		const monday = new Date(currentDate);
+		monday.setDate(currentDate.getDate() - daysFromMonday);
 
-			// Get day name in Russian
-			const dayNames = ["ВС", "ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ"];
-			const dayName = dayNames[date.getDay()];
+		for (let i = 0; i < 7; i++) {
+			const date = new Date(monday);
+			date.setDate(monday.getDate() + i);
+			const dateStr = date.toLocaleDateString('sv-SE');
+			const dayName = date.toLocaleDateString('ru-RU', { weekday: 'short' }).toUpperCase();
 
 			// Calculate totals for this day
 			const dayFoods = weeklyFoods.filter((food) => food.date === dateStr);

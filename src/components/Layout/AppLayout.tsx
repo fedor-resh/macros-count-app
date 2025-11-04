@@ -1,5 +1,3 @@
-import { IconCalendar } from "@tabler/icons-react";
-import { Outlet, useNavigate } from "react-router-dom";
 import {
 	AppShell,
 	Avatar,
@@ -7,8 +5,10 @@ import {
 	Group,
 	UnstyledButton,
 } from "@mantine/core";
-import { DatePickerInput } from "@mantine/dates";
 import type { DateValue } from "@mantine/dates";
+import { DatePickerInput } from "@mantine/dates";
+import { IconCalendar } from "@tabler/icons-react";
+import { Outlet, useNavigate } from "react-router-dom";
 import faviconUrl from "../../favicon.svg?url";
 import { useAuthStore } from "../../stores/authStore";
 import { useDateStore } from "../../stores/dateStore";
@@ -20,7 +20,7 @@ export function AppLayout() {
 
 	const handleDateChange = (date: DateValue) => {
 		if (date) {
-			const dateStr = date.toISOString().split("T")[0];
+			const dateStr = date.toLocaleDateString('sv-SE');
 			setSelectedDate(dateStr);
 		} else {
 			setSelectedDate(null);
