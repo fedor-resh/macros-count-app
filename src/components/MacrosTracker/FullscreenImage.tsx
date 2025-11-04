@@ -3,9 +3,10 @@ import { useState } from "react";
 
 interface FullscreenImageProps {
 	src: string;
+	style?: React.CSSProperties;
 }
 
-export function FullscreenImage({ src }: FullscreenImageProps) {
+export function FullscreenImage({ src, style }: FullscreenImageProps) {
 	const [isOpen, setIsOpen] = useState(false);
 
 	if (!isOpen) {
@@ -13,7 +14,7 @@ export function FullscreenImage({ src }: FullscreenImageProps) {
 			<Image
 				src={src}
 				alt="Food"
-				style={{ cursor: "pointer", height: 75}}
+				style={{ cursor: "pointer", ...style}}
 				onClick={() => setIsOpen(true)}
 			/>
 		);

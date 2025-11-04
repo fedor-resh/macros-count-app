@@ -1,14 +1,10 @@
-import { Box, Card, Group, Stack, Text } from "@mantine/core";
+import { Group, Stack, Text } from "@mantine/core";
 import type { EatenProduct } from "@/types/types";
-import { FullscreenImage } from "./FullscreenImage";
+import { FoodItem } from "./FoodItem";
 
 interface FoodListProps {
 	items: EatenProduct[];
 	onItemClick?: (index: number) => void;
-}
-
-function isValidFoodItem(item: EatenProduct): boolean {
-	return !!item.value && !!item.kcalories && !!item.protein;
 }
 
 export function FoodList({ items, onItemClick }: FoodListProps) {
@@ -34,38 +30,12 @@ export function FoodList({ items, onItemClick }: FoodListProps) {
 					</Text>
 				)}
 				{items.map((item, index) => (
-					<Card
+					<FoodItem
 						key={item.id}
-						p="sm"
-						radius="md"
-						bd={isValidFoodItem(item) ? "none" : "1px solid orange"}
-						onClick={() => onItemClick?.(index)}
-					>
-						<Group gap="md" justify="space-between" align="start" wrap="nowrap">
-							<div>
-								<Text fw={550}>{item.name}</Text>
-								<Group gap="md">
-									<Text span inherit c="#d9d9d9" w={50}>
-										{item.value ? `${item.value}г` : "-"}
-									</Text>
-									<Text span inherit c="#ff7428" w={50}>
-										{item.kcalories ? `${item.kcalories}к` : "-"}
-									</Text>
-									<Text span inherit c="#3d7cff" w={50}>
-										{item.protein ? `${item.protein}г` : "-"}
-									</Text>
-								</Group>
-							</div>
-							{item.image_url && (
-								<Box
-									style={{ marginRight: -12, marginTop: -12, marginBottom: -12 }}
-									onClick={(e) => e.stopPropagation()}
-								>
-									<FullscreenImage src={item.image_url} />
-								</Box>
-							)}
-						</Group>
-					</Card>
+						item={item}
+						index={index}
+						onItemClick={onItemClick}
+					/>
 				))}
 		</Stack>
 	);
