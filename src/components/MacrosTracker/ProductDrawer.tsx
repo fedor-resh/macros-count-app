@@ -78,11 +78,8 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
 			return;
 		}
 
-		deleteFood(product.id, {
-			onSuccess: () => {
-				onClose();
-			},
-		});
+		deleteFood(product.id);
+		onClose();
 	};
 
 	return (

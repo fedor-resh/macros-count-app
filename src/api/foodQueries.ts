@@ -138,11 +138,34 @@ export function useDeleteFoodMutation() {
 			}
 			return data;
 		},
-		onSuccess: () => {
-			// Invalidate all food queries
-			queryClient.invalidateQueries({
-				queryKey: foodKeys.all,
-			});
+		onMutate: async (id) => {
+			// Cancel outgoing refetches
+			await queryClient.cancelQueries({ queryKey: foodKeys.all });
+
+			// Snapshot previous values for rollback
+			const previousQueries: Record<string, unknown> = {};
+
+			// Get all food queries and optimistically update them
+			const allFoodQueries = queryClient.getQueriesData({ queryKey: foodKeys.all });
+			for (const [queryKey, data] of allFoodQueries) {
+				if (Array.isArray(data)) {
+					previousQueries[JSON.stringify(queryKey)] = data;
+					queryClient.setQueryData(queryKey, data.filter((item: { id: number }) => item.id !== id));
+				}
+			}
+
+			return { previousQueries };
+		},
+		onError: (_err, _id, context) => {
+			// Rollback on error
+			if (context?.previousQueries) {
+				for (const [queryKey, data] of Object.entries(context.previousQueries)) {
+					queryClient.setQueryData(JSON.parse(queryKey), data);
+				}
+			}
+		},
+		onSettled: () => {
+			// No need to invalidate since we've already updated optimistically
 		},
 	});
 }

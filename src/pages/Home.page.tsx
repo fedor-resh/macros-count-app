@@ -20,14 +20,6 @@ export function HomePage() {
 		user?.id ?? "",
 		selectedDate || new Date().toLocaleDateString("sv-SE"),
 	);
-	const [eatenProductsCopy, setEatenProductsCopy] = useState<EatenProduct[]>([]);
-	useEffect(() => {
-		if (eatenProducts.length > 0) {
-			startTransition(() => {
-				setEatenProductsCopy(() => [...eatenProducts]);
-			});
-		}
-	}, [eatenProducts]);
 	const { data: userGoals } = useGetUserGoalsQuery(user?.id || "");
 
 	const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
@@ -76,7 +68,7 @@ export function HomePage() {
 					caloriesGoal={caloriesGoal}
 					proteinGoal={proteinGoal}
 				/>
-				<FoodList items={eatenProductsCopy} onItemClick={handleItemClick} />
+				<FoodList items={eatenProducts} onItemClick={handleItemClick} />
 				<Space h="100px" />
 			</Stack>
 
