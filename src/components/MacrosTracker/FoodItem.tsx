@@ -55,6 +55,7 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 							marginBottom: -12,
 							width: 80,
 						}}
+						onClick={(e) => e.stopPropagation()}
 					>
 						<FullscreenImage src={item.image_url} style={{ height: cardHeight || 60, width: 80 }} />
 					</Box>
