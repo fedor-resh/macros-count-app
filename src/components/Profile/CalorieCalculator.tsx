@@ -28,8 +28,7 @@ export function CalorieCalculator({
 	isSaving = false,
 	initialParams,
 }: CalorieCalculatorProps) {
-	const [calculatedResults, setCalculatedResults] =
-		useState<CalculatedResults | null>(null);
+	const [calculatedResults, setCalculatedResults] = useState<CalculatedResults | null>(null);
 	const { mutate: updateParams } = useUpdateUserParamsMutation();
 
 	const form = useForm<CalculatorParams>({
@@ -43,23 +42,15 @@ export function CalorieCalculator({
 			goal: initialParams?.goal ?? "maintain",
 		},
 		validate: {
-			weight: (value: number | null) =>
-				value && value > 0 ? null : "Вес должен быть больше 0",
-			height: (value: number | null) =>
-				value && value > 0 ? null : "Рост должен быть больше 0",
-			age: (value: number | null) =>
-				value && value > 0 ? null : "Возраст должен быть больше 0",
+			weight: (value: number | null) => (value && value > 0 ? null : "Вес должен быть больше 0"),
+			height: (value: number | null) => (value && value > 0 ? null : "Рост должен быть больше 0"),
+			age: (value: number | null) => (value && value > 0 ? null : "Возраст должен быть больше 0"),
 		},
 	});
 
 	// Обновляем форму при изменении initialParams (только при первой загрузке)
 	useEffect(() => {
-		if (
-			initialParams &&
-			!form.values.weight &&
-			!form.values.height &&
-			!form.values.age
-		) {
+		if (initialParams && !form.values.weight && !form.values.height && !form.values.age) {
 			form.setValues({
 				weight: initialParams.weight ?? null,
 				height: initialParams.height ?? null,
@@ -189,9 +180,7 @@ export function CalorieCalculator({
 								{ label: "Женский", value: "female" },
 							]}
 							value={form.values.gender}
-							onChange={(value) =>
-								form.setFieldValue("gender", value as Gender)
-							}
+							onChange={(value) => form.setFieldValue("gender", value as Gender)}
 							disabled={isLoading}
 						/>
 					</div>
@@ -210,18 +199,15 @@ export function CalorieCalculator({
 							},
 							{
 								value: "moderate",
-								label:
-									"Умеренная активность (3-5 тренировок в неделю, регулярный спорт)",
+								label: "Умеренная активность (3-5 тренировок в неделю, регулярный спорт)",
 							},
 							{
 								value: "high",
-								label:
-									"Высокая активность (6-7 тренировок в неделю, силовые тренировки)",
+								label: "Высокая активность (6-7 тренировок в неделю, силовые тренировки)",
 							},
 							{
 								value: "veryHigh",
-								label:
-									"Очень высокая активность (2 тренировки в день, профессиональный спорт)",
+								label: "Очень высокая активность (2 тренировки в день, профессиональный спорт)",
 							},
 						]}
 						disabled={isLoading}
@@ -285,10 +271,7 @@ export function CalorieCalculator({
 									prev
 										? {
 												...prev,
-												caloriesGoal:
-													typeof value === "number"
-														? value
-														: Number(value) || 0,
+												caloriesGoal: typeof value === "number" ? value : Number(value) || 0,
 											}
 										: null,
 								)
@@ -307,10 +290,7 @@ export function CalorieCalculator({
 									prev
 										? {
 												...prev,
-												proteinGoal:
-													typeof value === "number"
-														? value
-														: Number(value) || 0,
+												proteinGoal: typeof value === "number" ? value : Number(value) || 0,
 											}
 										: null,
 								)
@@ -322,11 +302,7 @@ export function CalorieCalculator({
 						/>
 
 						<Group justify="flex-end" mt="md">
-							<Button
-								onClick={handleSave}
-								loading={isSaving}
-								disabled={isLoading}
-							>
+							<Button onClick={handleSave} loading={isSaving} disabled={isLoading}>
 								Сохранить цели
 							</Button>
 						</Group>

@@ -1,18 +1,7 @@
-
-import {
-	Button,
-	Drawer,
-	Group,
-	NumberInput,
-	Stack,
-	TextInput,
-} from "@mantine/core";
+import { Button, Drawer, Group, NumberInput, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useEffect } from "react";
-import {
-	useDeleteFoodMutation,
-	useUpdateFoodMutation,
-} from "../../api/foodQueries";
+import { useDeleteFoodMutation, useUpdateFoodMutation } from "../../api/foodQueries";
 import type { EatenProduct } from "../../types/types";
 
 interface ProductDrawerProps {
@@ -28,19 +17,14 @@ const initialValues = {
 	protein: 0,
 };
 
-export function ProductDrawer({
-	opened,
-	onClose,
-	product,
-}: ProductDrawerProps) {
+export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) {
 	const { mutate: updateFood, isPending: isUpdating } = useUpdateFoodMutation();
 	const { mutate: deleteFood, isPending: isDeleting } = useDeleteFoodMutation();
 	console.log(product);
 	const form = useForm({
 		initialValues,
 		validate: {
-			name: (value: string) =>
-				value.trim().length === 0 ? "Название обязательно" : null,
+			name: (value: string) => (value.trim().length === 0 ? "Название обязательно" : null),
 			value: (value: number) => {
 				if (value <= 0) return "Вес должен быть больше 0";
 				if (value % 1 !== 0) return "Вес должен быть целым числом";
@@ -70,7 +54,7 @@ export function ProductDrawer({
 			});
 		}
 	}, [product]);
-	
+
 	const handleSubmit = async (values: typeof form.values) => {
 		if (!product?.id) {
 			return;

@@ -29,8 +29,7 @@ export function AddProductDrawer({ selectedDate, opened, onClose }: AddProductDr
 			protein: "",
 		},
 		validate: {
-			name: (value: string) =>
-				value.trim().length === 0 ? "Название обязательно" : null,
+			name: (value: string) => (value.trim().length === 0 ? "Название обязательно" : null),
 			value: (value: number | "") => {
 				if (value === "") return "Вес обязателен";
 				const numValue = Number(value);
@@ -55,14 +54,8 @@ export function AddProductDrawer({ selectedDate, opened, onClose }: AddProductDr
 		},
 	});
 
-
 	const handleSubmit = async (values: typeof form.values) => {
-		if (
-			!user?.id ||
-			values.value === "" ||
-			values.kcalories === "" ||
-			values.protein === ""
-		) {
+		if (!user?.id || values.value === "" || values.kcalories === "" || values.protein === "") {
 			return;
 		}
 

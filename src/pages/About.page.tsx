@@ -7,8 +7,7 @@ export function AboutPage() {
 				About
 			</Title>
 			<Text>
-				This is a macros counting application built with React, Mantine, and
-				React Router.
+				This is a macros counting application built with React, Mantine, and React Router.
 			</Text>
 		</Container>
 	);

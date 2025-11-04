@@ -1,21 +1,8 @@
 import { IconLogout } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
-import {
-	Avatar,
-	Button,
-	Container,
-	Group,
-	Paper,
-	Space,
-	Stack,
-	Text,
-	Title,
-} from "@mantine/core";
+import { Avatar, Button, Container, Group, Paper, Space, Stack, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import {
-	useGetUserGoalsQuery,
-	useUpdateUserGoalsMutation,
-} from "../api/userQueries";
+import { useGetUserGoalsQuery, useUpdateUserGoalsMutation } from "../api/userQueries";
 import { CalorieCalculator } from "../components/Profile/CalorieCalculator";
 import { useAuthStore } from "../stores/authStore";
 
@@ -23,15 +10,12 @@ export function ProfilePage() {
 	const navigate = useNavigate();
 	const user = useAuthStore((state) => state.user);
 	const signOut = useAuthStore((state) => state.signOut);
-	const { data: userGoals, isLoading: isLoadingGoals } = useGetUserGoalsQuery(
-		user?.id || "",
-	);
+	const { data: userGoals, isLoading: isLoadingGoals } = useGetUserGoalsQuery(user?.id || "");
 	const { mutate: updateGoals, isPending } = useUpdateUserGoalsMutation();
 
 	const displayName = user?.user_metadata?.full_name || user?.email || "User";
 	const email = user?.email || "";
-	const avatarUrl =
-		user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+	const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
 	const handleLogout = async () => {
 		await signOut();
@@ -75,13 +59,7 @@ export function ProfilePage() {
 
 				<Paper p="xl" radius="md" withBorder>
 					<Stack align="center" gap="md">
-						<Avatar
-							src={avatarUrl}
-							alt={displayName}
-							name={displayName}
-							radius="xl"
-							size={120}
-						/>
+						<Avatar src={avatarUrl} alt={displayName} name={displayName} radius="xl" size={120} />
 						<Stack align="center" gap="xs">
 							<Title order={3}>{displayName}</Title>
 							{email && <Text c="dimmed">{email}</Text>}

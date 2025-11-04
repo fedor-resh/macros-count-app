@@ -12,13 +12,7 @@ export const userKeys = {
 // Auth Mutations
 export function useSignInMutation() {
 	return useMutation({
-		mutationFn: async ({
-			email,
-			password,
-		}: {
-			email: string;
-			password: string;
-		}) => {
+		mutationFn: async ({ email, password }: { email: string; password: string }) => {
 			const { data, error } = await supabase.auth.signInWithPassword({
 				email,
 				password,
@@ -74,11 +68,7 @@ export function useGetUserGoalsQuery(userId: string) {
 	return useQuery({
 		queryKey: userKeys.user(userId),
 		queryFn: async () => {
-			const { data, error } = await supabase
-				.from("users")
-				.select("*")
-				.eq("id", userId)
-				.single();
+			const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
 
 			if (error) {
 				throw error;

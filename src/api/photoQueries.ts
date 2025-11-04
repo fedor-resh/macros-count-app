@@ -45,21 +45,16 @@ export async function uploadPhoto(file: File): Promise<UploadPhotoResponse> {
 		const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
 		// Call the edge function
-		const response = await fetch(
-			`${supabaseUrl}/functions/v1/analyze-food-photo`,
-			{
-				method: "POST",
-				headers: {
-					Authorization: `Bearer ${session.access_token}`,
-				},
-				body: formData,
+		const response = await fetch(`${supabaseUrl}/functions/v1/analyze-food-photo`, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${session.access_token}`,
 			},
-		);
+			body: formData,
+		});
 
 		if (!response.ok) {
-			const errorData = await response
-				.json()
-				.catch(() => ({ error: "Unknown error" }));
+			const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
 			throw new Error(errorData.error || `Server error: ${response.status}`);
 		}
 

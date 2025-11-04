@@ -47,11 +47,9 @@ export function compressImage(file: File): Promise<File> {
 							reject(new Error("Failed to compress image"));
 							return;
 						}
-						const compressedFile = new File(
-							[blob],
-							file.name.replace(/\.[^/.]+$/, ".jpg"),
-							{ type: "image/jpeg" },
-						);
+						const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+							type: "image/jpeg",
+						});
 						resolve(compressedFile);
 					},
 					"image/jpeg",

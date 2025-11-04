@@ -25,7 +25,8 @@
 	"javascript": {
 		"formatter": {
 			"quoteStyle": "double",
-			"enabled": true
+			"enabled": true,
+			"lineWidth": 100
 		}
 	},
 	"assist": {

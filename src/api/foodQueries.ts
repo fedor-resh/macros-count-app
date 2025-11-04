@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Database } from "../types/database.types";
 import { supabase } from "../lib/supabase";
+import type { EatenProductTable } from "../types/types";
 
 export interface EatenProduct {
 	id?: string;
@@ -78,13 +79,8 @@ export function useAddFoodMutation() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: async (
-			foodData: Database["public"]["Tables"]["eaten_product"]["Insert"],
-		) => {
-			const { data, error } = await supabase
-				.from("eaten_product")
-				.insert(foodData)
-				.select();
+		mutationFn: async (foodData: EatenProductTable["Insert"]) => {
+			const { data, error } = await supabase.from("eaten_product").insert(foodData).select();
 
 			if (error) {
 				throw error;
@@ -105,7 +101,7 @@ export function useUpdateFoodMutation() {
 
 	return useMutation({
 		mutationFn: async (
-			params: Database["public"]["Tables"]["eaten_product"]["Update"] & {
+			params: EatenProductTable["Update"] & {
 				id: number;
 			},
 		) => {
@@ -135,11 +131,7 @@ export function useDeleteFoodMutation() {
 
 	return useMutation({
 		mutationFn: async (id: number) => {
-			const { data, error } = await supabase
-				.from("eaten_product")
-				.delete()
-				.eq("id", id)
-				.select();
+			const { data, error } = await supabase.from("eaten_product").delete().eq("id", id).select();
 
 			if (error) {
 				throw error;

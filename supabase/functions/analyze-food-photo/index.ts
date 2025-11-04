@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
 	"Access-Control-Allow-Origin": "*",
-	"Access-Control-Allow-Headers":
-		"authorization, x-client-info, apikey, content-type",
+	"Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
@@ -57,10 +56,7 @@ serve(async (req) => {
 		// Convert file to base64 for LLM
 		const fileBuffer = await file.arrayBuffer();
 		const base64Image = btoa(
-			new Uint8Array(fileBuffer).reduce(
-				(data, byte) => data + String.fromCharCode(byte),
-				"",
-			),
+			new Uint8Array(fileBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ""),
 		);
 		const mimeType = file.type || "image/jpeg";
 		const dataUrl = `data:${mimeType};base64,${base64Image}`;
@@ -68,13 +64,10 @@ serve(async (req) => {
 		// Check API key before starting parallel operations
 		const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
 		if (!openRouterApiKey) {
-			return new Response(
-				JSON.stringify({ error: "OpenRouter API key not configured" }),
-				{
-					status: 500,
-					headers: { ...corsHeaders, "Content-Type": "application/json" },
-				},
-			);
+			return new Response(JSON.stringify({ error: "OpenRouter API key not configured" }), {
+				status: 500,
+				headers: { ...corsHeaders, "Content-Type": "application/json" },
+			});
 		}
 
 		const siteUrl = Deno.env.get("SITE_URL") || "https://macros-count-app.com";
@@ -194,8 +187,7 @@ Only respond with valid JSON, no additional text.`,
 		if (nutritionData.confidence === "low") {
 			return new Response(
 				JSON.stringify({
-					error:
-						"Низкая точность анализа. Пожалуйста, попробуйте снова с более четким фото.",
+					error: "Низкая точность анализа. Пожалуйста, попробуйте снова с более четким фото.",
 					publicUrl,
 					analysis: nutritionData,
 				}),

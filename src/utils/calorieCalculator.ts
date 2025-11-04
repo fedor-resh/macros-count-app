@@ -1,10 +1,5 @@
 export type Gender = "male" | "female";
-export type ActivityLevel =
-	| "sedentary"
-	| "light"
-	| "moderate"
-	| "high"
-	| "veryHigh";
+export type ActivityLevel = "sedentary" | "light" | "moderate" | "high" | "veryHigh";
 export type Goal = "loss" | "maintain" | "gain";
 
 // Коэффициенты активности
@@ -40,12 +35,7 @@ const PROTEIN_MULTIPLIERS: Record<ActivityLevel, number> = {
  * @param gender - пол
  * @returns BMR в ккал
  */
-export function calculateBMR(
-	weight: number,
-	height: number,
-	age: number,
-	gender: Gender,
-): number {
+export function calculateBMR(weight: number, height: number, age: number, gender: Gender): number {
 	const baseBMR = 10 * weight + 6.25 * height - 5 * age;
 	const genderAdjustment = gender === "male" ? 5 : -161;
 	return baseBMR + genderAdjustment;
@@ -57,10 +47,7 @@ export function calculateBMR(
  * @param activityLevel - уровень активности
  * @returns TDEE в ккал
  */
-export function calculateTDEE(
-	bmr: number,
-	activityLevel: ActivityLevel,
-): number {
+export function calculateTDEE(bmr: number, activityLevel: ActivityLevel): number {
 	return Math.round(bmr * ACTIVITY_MULTIPLIERS[activityLevel]);
 }
 
@@ -80,10 +67,7 @@ export function calculateCaloriesGoal(tdee: number, goal: Goal): number {
  * @param activityLevel - уровень активности
  * @returns Цель по белку в граммах
  */
-export function calculateProteinGoal(
-	weight: number,
-	activityLevel: ActivityLevel,
-): number {
+export function calculateProteinGoal(weight: number, activityLevel: ActivityLevel): number {
 	const multiplier = PROTEIN_MULTIPLIERS[activityLevel];
 	return Math.round(weight * multiplier);
 }
@@ -101,12 +85,7 @@ export function calculateGoals(params: {
 	activityLevel: ActivityLevel;
 	goal: Goal;
 }) {
-	const bmr = calculateBMR(
-		params.weight,
-		params.height,
-		params.age,
-		params.gender,
-	);
+	const bmr = calculateBMR(params.weight, params.height, params.age, params.gender);
 	const tdee = calculateTDEE(bmr, params.activityLevel);
 	const caloriesGoal = calculateCaloriesGoal(tdee, params.goal);
 	const proteinGoal = calculateProteinGoal(params.weight, params.activityLevel);

@@ -25,7 +25,6 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 
 	return (
 		<Card
-			key={item.id}
 			p="sm"
 			radius="md"
 			bd={isValidFoodItem(item) ? "none" : "1px solid orange"}
@@ -64,4 +63,3 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 		</Card>
 	);
 }
-

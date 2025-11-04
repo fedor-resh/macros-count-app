@@ -1,5 +1,5 @@
-import { Container, Stack } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { Container, Space, Stack } from "@mantine/core";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import { useGetTodayFoodsQuery } from "../api/foodQueries";
 import { useGetUserGoalsQuery } from "../api/userQueries";
 import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
@@ -10,6 +10,7 @@ import { ProductDrawer } from "../components/MacrosTracker/ProductDrawer";
 import { WeeklyProgress } from "../components/MacrosTracker/WeeklyProgress";
 import { useAuthStore } from "../stores/authStore";
 import { useDateStore } from "../stores/dateStore";
+import type { EatenProduct } from "../types/types";
 
 export function HomePage() {
 	const user = useAuthStore((state) => state.user);
@@ -17,26 +18,27 @@ export function HomePage() {
 	const [addProductDrawerOpened, setAddProductDrawerOpened] = useState(false);
 	const { data: eatenProducts = [] } = useGetTodayFoodsQuery(
 		user?.id ?? "",
-		selectedDate || new Date().toISOString().split("T")[0],
+		selectedDate || new Date().toLocaleDateString("sv-SE"),
 	);
+	const [eatenProductsCopy, setEatenProductsCopy] = useState<EatenProduct[]>([]);
+	useEffect(() => {
+		if (eatenProducts.length > 0) {
+			startTransition(() => {
+				setEatenProductsCopy(() => [...eatenProducts]);
+			});
+		}
+	}, [eatenProducts]);
 	const { data: userGoals } = useGetUserGoalsQuery(user?.id || "");
 
-	const [selectedProductIndex, setSelectedProductIndex] = useState<
-		number | null
-	>(null);
+	const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
 	const [editDrawerOpened, setEditDrawerOpened] = useState(false);
 
 	const { totalCalories, totalProtein } = useMemo(() => {
 		const calories =
-			eatenProducts.reduce(
-				(sum, item) => sum + ((item.kcalories! * item.value!) / 100 || 0),
-				0,
-			) || 0;
+			eatenProducts.reduce((sum, item) => sum + ((item.kcalories! * item.value!) / 100 || 0), 0) ||
+			0;
 		const protein =
-			eatenProducts.reduce(
-				(sum, item) => sum + ((item.protein! * item.value!) / 100 || 0),
-				0,
-			) || 0;
+			eatenProducts.reduce((sum, item) => sum + ((item.protein! * item.value!) / 100 || 0), 0) || 0;
 
 		return {
 			totalCalories: Math.round(calories),
@@ -74,7 +76,8 @@ export function HomePage() {
 					caloriesGoal={caloriesGoal}
 					proteinGoal={proteinGoal}
 				/>
-				<FoodList items={eatenProducts} onItemClick={handleItemClick} />
+				<FoodList items={eatenProductsCopy} onItemClick={handleItemClick} />
+				<Space h="100px" />
 			</Stack>
 
 			<AddProductFAB onAddProduct={() => setAddProductDrawerOpened(true)} />

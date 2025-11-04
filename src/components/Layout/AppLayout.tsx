@@ -1,10 +1,4 @@
-import {
-	AppShell,
-	Avatar,
-	Container,
-	Group,
-	UnstyledButton,
-} from "@mantine/core";
+import { AppShell, Avatar, Container, Group, UnstyledButton } from "@mantine/core";
 import type { DateValue } from "@mantine/dates";
 import { DatePickerInput } from "@mantine/dates";
 import { IconCalendar } from "@tabler/icons-react";
@@ -20,16 +14,14 @@ export function AppLayout() {
 
 	const handleDateChange = (date: DateValue) => {
 		if (date) {
-			const dateStr = date.toLocaleDateString('sv-SE');
+			const dateStr = date.toLocaleDateString("sv-SE");
 			setSelectedDate(dateStr);
 		} else {
 			setSelectedDate(null);
 		}
 	};
 
-	const dateValue: DateValue | null = selectedDate
-		? new Date(selectedDate)
-		: null;
+	const dateValue: DateValue | null = selectedDate ? new Date(selectedDate) : null;
 
 	return (
 		<AppShell header={{ height: 60 }} padding="sm">
@@ -39,11 +31,7 @@ export function AppLayout() {
 						onClick={() => navigate("/")}
 						style={{ display: "flex", alignItems: "center" }}
 					>
-						<img
-							src={faviconUrl}
-							alt="Home"
-							style={{ width: 32, height: 32, cursor: "pointer" }}
-						/>
+						<img src={faviconUrl} alt="Home" style={{ width: 32, height: 32, cursor: "pointer" }} />
 					</UnstyledButton>
 					<Group gap="xs">
 						<DatePickerInput
@@ -64,10 +52,7 @@ export function AppLayout() {
 						/>
 						<UnstyledButton onClick={() => navigate("/profile")}>
 							<Avatar
-								src={
-									user?.user_metadata?.avatar_url ||
-									user?.user_metadata?.picture
-								}
+								src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture}
 								alt={user?.user_metadata?.full_name || user?.email || "User"}
 								name={user?.user_metadata?.full_name || user?.email || "User"}
 								radius="xl"

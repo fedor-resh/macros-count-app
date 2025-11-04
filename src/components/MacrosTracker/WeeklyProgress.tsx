@@ -1,12 +1,4 @@
-import {
-	ActionIcon,
-	Box,
-	Group,
-	Paper,
-	RingProgress,
-	Stack,
-	Text,
-} from "@mantine/core";
+import { ActionIcon, Box, Group, Paper, RingProgress, Stack, Text } from "@mantine/core";
 import { useMemo } from "react";
 import { useGetWeeklyFoodsQuery } from "../../api/foodQueries";
 import { useDateStore } from "../../stores/dateStore";
@@ -113,11 +105,7 @@ function DayMiniGraph({
 					}}
 				/>
 			</Box>
-			<Text
-				size="13px"
-				c={isActive ? "#d9d9d9" : "#afafaf"}
-				fw={isActive ? 700 : 400}
-			>
+			<Text size="13px" c={isActive ? "#d9d9d9" : "#afafaf"} fw={isActive ? 700 : 400}>
 				{day}
 			</Text>
 		</Stack>
@@ -159,8 +147,8 @@ export function WeeklyProgress({
 		for (let i = 0; i < 7; i++) {
 			const date = new Date(monday);
 			date.setDate(monday.getDate() + i);
-			const dateStr = date.toLocaleDateString('sv-SE');
-			const dayName = date.toLocaleDateString('ru-RU', { weekday: 'short' }).toUpperCase();
+			const dateStr = date.toLocaleDateString("sv-SE");
+			const dayName = date.toLocaleDateString("ru-RU", { weekday: "short" }).toUpperCase();
 
 			// Calculate totals for this day
 			const dayFoods = weeklyFoods.filter((food) => food.date === dateStr);
@@ -174,14 +162,8 @@ export function WeeklyProgress({
 			);
 
 			// Calculate percentages (cap at 100%)
-			const caloriesPercent = Math.min(
-				Math.round((totalCalories / caloriesGoal) * 100),
-				100,
-			);
-			const proteinPercent = Math.min(
-				Math.round((totalProtein / proteinGoal) * 100),
-				100,
-			);
+			const caloriesPercent = Math.min(Math.round((totalCalories / caloriesGoal) * 100), 100);
+			const proteinPercent = Math.min(Math.round((totalProtein / proteinGoal) * 100), 100);
 
 			// Check if goals are exceeded
 			const caloriesExceeded = totalCalories > caloriesGoal;
@@ -189,16 +171,10 @@ export function WeeklyProgress({
 
 			// Calculate overflow percentages
 			const caloriesOverflowPercent = caloriesExceeded
-				? Math.min(
-						Math.round(((totalCalories - caloriesGoal) / caloriesGoal) * 100),
-						100,
-					)
+				? Math.min(Math.round(((totalCalories - caloriesGoal) / caloriesGoal) * 100), 100)
 				: 0;
 			const proteinOverflowPercent = proteinExceeded
-				? Math.min(
-						Math.round(((totalProtein - proteinGoal) / proteinGoal) * 100),
-						100,
-					)
+				? Math.min(Math.round(((totalProtein - proteinGoal) / proteinGoal) * 100), 100)
 				: 0;
 
 			days.push({

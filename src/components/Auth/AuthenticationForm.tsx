@@ -31,8 +31,7 @@ export function AuthenticationForm(props: PaperProps) {
 
 	const { mutate: signIn, isPending: isSigningIn } = useSignInMutation();
 	const { mutate: signUp, isPending: isSigningUp } = useSignUpMutation();
-	const { mutate: signInWithGoogle, isPending: isGoogleLoading } =
-		useSignInWithGoogleMutation();
+	const { mutate: signInWithGoogle, isPending: isGoogleLoading } = useSignInWithGoogleMutation();
 
 	const loading = isSigningIn || isSigningUp || isGoogleLoading;
 
@@ -54,9 +53,7 @@ export function AuthenticationForm(props: PaperProps) {
 		validate: {
 			email: (val: string) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
 			password: (val: string) =>
-				val.length <= 6
-					? "Password should include at least 6 characters"
-					: null,
+				val.length <= 6 ? "Password should include at least 6 characters" : null,
 		},
 	});
 
@@ -139,9 +136,7 @@ export function AuthenticationForm(props: PaperProps) {
 							label="Имя"
 							placeholder="Ваше имя"
 							value={form.values.name}
-							onChange={(event) =>
-								form.setFieldValue("name", event.currentTarget.value)
-							}
+							onChange={(event) => form.setFieldValue("name", event.currentTarget.value)}
 							radius="md"
 							disabled={loading}
 						/>
@@ -152,9 +147,7 @@ export function AuthenticationForm(props: PaperProps) {
 						label="Email"
 						placeholder="hello@example.com"
 						value={form.values.email}
-						onChange={(event) =>
-							form.setFieldValue("email", event.currentTarget.value)
-						}
+						onChange={(event) => form.setFieldValue("email", event.currentTarget.value)}
 						error={form.errors.email && "Неверный email"}
 						radius="md"
 						disabled={loading}
@@ -165,13 +158,8 @@ export function AuthenticationForm(props: PaperProps) {
 						label="Пароль"
 						placeholder="Ваш пароль"
 						value={form.values.password}
-						onChange={(event) =>
-							form.setFieldValue("password", event.currentTarget.value)
-						}
-						error={
-							form.errors.password &&
-							"Пароль должен содержать минимум 6 символов"
-						}
+						onChange={(event) => form.setFieldValue("password", event.currentTarget.value)}
+						error={form.errors.password && "Пароль должен содержать минимум 6 символов"}
 						radius="md"
 						disabled={loading}
 					/>
@@ -180,9 +168,7 @@ export function AuthenticationForm(props: PaperProps) {
 						<Checkbox
 							label="Я принимаю условия использования"
 							checked={form.values.terms}
-							onChange={(event) =>
-								form.setFieldValue("terms", event.currentTarget.checked)
-							}
+							onChange={(event) => form.setFieldValue("terms", event.currentTarget.checked)}
 							disabled={loading}
 						/>
 					)}
@@ -197,16 +183,9 @@ export function AuthenticationForm(props: PaperProps) {
 						size="xs"
 						disabled={loading}
 					>
-						{type === "register"
-							? "Уже есть аккаунт? Войти"
-							: "Нет аккаунта? Зарегистрироваться"}
+						{type === "register" ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Зарегистрироваться"}
 					</Anchor>
-					<Button
-						type="submit"
-						radius="xl"
-						loading={loading}
-						disabled={loading}
-					>
+					<Button type="submit" radius="xl" loading={loading} disabled={loading}>
 						{upperFirst(type === "login" ? "Войти" : "Регистрация")}
 					</Button>
 				</Group>

@@ -1,13 +1,7 @@
 import { ActionIcon, Transition } from "@mantine/core";
 import { useClickOutside } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import {
-	IconBarcode,
-	IconCamera,
-	IconPhoto,
-	IconPlus,
-	IconSearch,
-} from "@tabler/icons-react";
+import { IconBarcode, IconCamera, IconPhoto, IconPlus, IconSearch } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import { useUploadPhotoMutation } from "../../api/photoQueries";
 
@@ -53,8 +47,7 @@ export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
 				});
 			},
 			onError: (err) => {
-				const msg =
-					err instanceof Error ? err.message : "Не удалось загрузить фото";
+				const msg = err instanceof Error ? err.message : "Не удалось загрузить фото";
 				notifications.show({ title: "Ошибка", message: msg, color: "red" });
 			},
 			onSettled: () => {
@@ -84,12 +77,7 @@ export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
 			}}
 		>
 			{/* Circular Action Buttons */}
-			<Transition
-				mounted={fabExpanded}
-				transition="pop"
-				duration={200}
-				timingFunction="ease"
-			>
+			<Transition mounted={fabExpanded} transition="pop" duration={200} timingFunction="ease">
 				{(styles) => (
 					<div
 						style={{
