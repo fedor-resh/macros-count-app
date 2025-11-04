@@ -53,7 +53,7 @@ export function FullscreenImage({ src, style }: FullscreenImageProps) {
 				display: "flex",
 				alignItems: "center",
 				justifyContent: "center",
-				zIndex: 100,
+				zIndex: 1000,
 				cursor: "pointer",
 			}}
 			onClick={() => startTransition(() => setIsOpen(false))}

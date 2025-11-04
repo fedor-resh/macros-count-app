@@ -32,9 +32,9 @@ export function FoodList({ items, onItemClick }: FoodListProps) {
 				</Text>
 			)}
 			{items.map((item, index) => (
-				<ViewTransition key={item.id}>
+				<div key={item.id}>
 					<FoodItem item={item} index={index} onItemClick={onItemClick} />
-				</ViewTransition>
+				</div>
 			))}
 		</Stack>
 	);
