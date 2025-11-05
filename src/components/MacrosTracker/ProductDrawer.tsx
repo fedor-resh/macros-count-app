@@ -20,7 +20,6 @@ const initialValues = {
 export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) {
 	const { mutate: updateFood, isPending: isUpdating } = useUpdateFoodMutation();
 	const { mutate: deleteFood, isPending: isDeleting } = useDeleteFoodMutation();
-	console.log(product);
 	const form = useForm({
 		initialValues,
 		validate: {
@@ -114,6 +113,7 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
 								"&:focus": { borderColor: "#ff7428" },
 							},
 						}}
+						
 					/>
 
 					<NumberInput
@@ -131,6 +131,9 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
 								color: "#d9d9d9",
 								"&:focus": { borderColor: "#ff7428" },
 							},
+						}}
+						onFocusCapture={(event) => {
+							event.currentTarget.select();
 						}}
 					/>
 
@@ -150,6 +153,9 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
 								"&:focus": { borderColor: "#ff7428" },
 							},
 						}}
+						onFocusCapture={(event) => {
+							event.currentTarget.select();
+						}}
 					/>
 
 					<NumberInput
@@ -168,23 +174,13 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
 								"&:focus": { borderColor: "#3d7cff" },
 							},
 						}}
+						onFocusCapture={(event) => {
+							event.currentTarget.select();
+						}}
 					/>
 
 					<Group grow mt="md">
-						<Button
-							type="submit"
-							loading={isUpdating}
-							disabled={isDeleting}
-							styles={{
-								root: {
-									backgroundColor: "#ff7428",
-									color: "#1a1a1a",
-									"&:hover": { backgroundColor: "#ff8542" },
-								},
-							}}
-						>
-							Сохранить
-						</Button>
+
 
 						<Button
 							type="button"
@@ -200,6 +196,20 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
 							}}
 						>
 							Удалить
+						</Button>
+						<Button
+							type="submit"
+							loading={isUpdating}
+							disabled={isDeleting}
+							styles={{
+								root: {
+									backgroundColor: "#ff7428",
+									color: "#1a1a1a",
+									"&:hover": { backgroundColor: "#ff8542" },
+								},
+							}}
+						>
+							Сохранить
 						</Button>
 					</Group>
 				</Stack>
