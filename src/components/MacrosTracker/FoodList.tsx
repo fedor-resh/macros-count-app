@@ -1,6 +1,4 @@
 import { Group, Stack, Text } from "@mantine/core";
-// @ts-expect-error - ViewTransition is experimental in React 19
-import { ViewTransition } from "react";
 import type { EatenProduct } from "@/types/types";
 import { FoodItem } from "./FoodItem";
 

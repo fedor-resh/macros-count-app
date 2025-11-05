@@ -21,7 +21,7 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 		if (cardRef.current) {
 			setCardHeight(cardRef.current.offsetHeight);
 		}
-	});
+	}, []);
 
 	return (
 		<Card
