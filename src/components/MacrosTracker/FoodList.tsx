@@ -1,6 +1,8 @@
 import { Group, Stack, Text } from "@mantine/core";
+import { useMutationState } from "@tanstack/react-query";
 import type { EatenProduct } from "@/types/types";
 import { FoodItem } from "./FoodItem";
+import { FoodItemLoader } from "./FoodItemLoader";
 
 interface FoodListProps {
 	items: EatenProduct[];
@@ -22,6 +24,9 @@ export function FoodList({ items, onItemClick }: FoodListProps) {
 					Белки
 				</Text>
 			</Group>
+
+			{/* Loader when uploading */}
+			{/* <FoodItemLoader /> */}
 
 			{/* Food Items */}
 			{items.length === 0 && (

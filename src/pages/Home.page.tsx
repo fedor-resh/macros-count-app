@@ -1,7 +1,8 @@
 import { Container, Space, Stack } from "@mantine/core";
-import { startTransition, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useGetWeeklyFoodsQuery } from "../api/foodQueries";
 import { useGetUserGoalsQuery } from "../api/userQueries";
+import { useUploadPhotoMutation } from "../api/photoQueries";
 import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
 import { AddProductFAB } from "../components/MacrosTracker/AddProductFAB";
 import { CircularGraph } from "../components/MacrosTracker/CircularGraph";
@@ -10,14 +11,13 @@ import { ProductDrawer } from "../components/MacrosTracker/ProductDrawer";
 import { WeeklyProgress } from "../components/MacrosTracker/WeeklyProgress";
 import { useAuthStore } from "../stores/authStore";
 import { useDateStore } from "../stores/dateStore";
-import type { EatenProduct } from "../types/types";
 import { getFormattedDate } from "../utils/dateUtils";
 
 export function HomePage() {
 	const user = useAuthStore((state) => state.user);
 	const selectedDate = useDateStore((state) => state.selectedDate);
 	const [addProductDrawerOpened, setAddProductDrawerOpened] = useState(false);
-	const { data: weeklyFoods = [] } = useGetWeeklyFoodsQuery(user?.id ?? "");
+	const { data: weeklyFoods = [] } = useGetWeeklyFoodsQuery(user?.id ?? "", selectedDate);
 	const { data: userGoals } = useGetUserGoalsQuery(user?.id || "");
 
 	const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);

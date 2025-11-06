@@ -7,28 +7,31 @@ import { getFormattedDate } from "../utils/dateUtils";
 export const foodKeys = {
 	all: ["foods"] as const,
 	todayFoods: (date: string) => ["foods", date] as const,
-	weeklyFoods: () => ["foods", "weekly"] as const,
+	weeklyFoods: (monday: string) => ["foods", "weekly", monday] as const,
 };
 
-export function useGetWeeklyFoodsQuery(userId: string) {
+export function getMondayOfWeek(date: string) {
+	const monday = new Date(date);
+	monday.setDate(monday.getDate() - monday.getDay());
+	return getFormattedDate(monday);
+}
+
+export function useGetWeeklyFoodsQuery(userId: string, date: string | null) {
+	const monday = getMondayOfWeek(date ?? new Date().toISOString());
 	return useQuery({
-		queryKey: foodKeys.weeklyFoods(),
+		queryKey: foodKeys.weeklyFoods(monday),
 		queryFn: async () => {
 			// Calculate date range for last 7 days
-			const today = new Date();
-			const sevenDaysAgo = new Date(today);
-			sevenDaysAgo.setDate(today.getDate() - 6);
-
-			const startDate = getFormattedDate(sevenDaysAgo);
-			const endDate = getFormattedDate(today);
+			const endDate = new Date(monday);
+			endDate.setDate(endDate.getDate() + 6);
 
 			const { data, error } = await supabase
 				.from("eaten_product")
 				.select("*")
 				.eq("userId", userId)
-				.gte("date", startDate)
-				.lte("date", endDate)
-				.order("date");
+				.gte("date", monday)
+				.lte("date", getFormattedDate(endDate))
+				.order("createdAt", { ascending: false });
 
 			if (error) {
 				throw error;

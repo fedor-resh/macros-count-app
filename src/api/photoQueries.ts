@@ -2,7 +2,8 @@ import { useMutation } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { compressImage } from "../utils/imageCompression";
 import { queryClient } from "@/lib/queryClient";
-import { foodKeys } from "./foodQueries";
+import { foodKeys, getMondayOfWeek } from "./foodQueries";
+import { EatenProduct } from "@/types/types";
 
 export interface FoodAnalysis {
 	food_name: string;
@@ -70,7 +71,18 @@ export async function uploadPhoto(file: File): Promise<UploadPhotoResponse> {
 
 export function useUploadPhotoMutation() {
 	return useMutation({
+		mutationKey: ["uploadPhoto"],
 		mutationFn: uploadPhoto,
+		onMutate: (file: File) => {
+			const date = getMondayOfWeek(new Date().toISOString());
+			queryClient.setQueryData(foodKeys.weeklyFoods(date), (old: EatenProduct[]) => {
+				console.log(old);
+				return [...old, {
+				id: Math.random(),
+				name: "loading...",
+				}];
+			});
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: foodKeys.all,

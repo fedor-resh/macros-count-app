@@ -131,8 +131,9 @@ export function WeeklyProgress({
 	caloriesGoal = 3000,
 	proteinGoal = 150,
 }: WeeklyProgressProps) {
-	const { data: weeklyFoods = [] } = useGetWeeklyFoodsQuery(userId);
 	const { selectedDate, setSelectedDate } = useDateStore();
+
+	const { data: weeklyFoods = [] } = useGetWeeklyFoodsQuery(userId, selectedDate);
 
 	const weekDays: DayProgress[] = useMemo(() => {
 		// Generate week starting from Monday for the selected date

@@ -1,7 +1,7 @@
 import { Box, Image } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 // @ts-expect-error - ViewTransition is experimental in React 19
-import { startTransition, useEffect, useState, ViewTransition } from "react";
+import { startTransition, useEffect, useState, ViewTransition, useId } from "react";
 
 const IMAGE_TRANSITION_NAME = "food-image";
 const FULLSCREEN_HINT_KEY = "fullscreen-image-hint-shown";
@@ -28,9 +28,11 @@ export function FullscreenImage({ src, style }: FullscreenImageProps) {
 		}
 	}, [isOpen]);
 
+	const id = useId();
+
 	if (!isOpen) {
 		return (
-			<ViewTransition name={IMAGE_TRANSITION_NAME}>
+			<ViewTransition name={IMAGE_TRANSITION_NAME+id}>
 				<Image
 					src={src}
 					alt="Food"
@@ -55,7 +57,7 @@ export function FullscreenImage({ src, style }: FullscreenImageProps) {
 			}}
 			onClick={() => startTransition(() => setIsOpen(false))}
 		>
-			<ViewTransition name={IMAGE_TRANSITION_NAME}>
+			<ViewTransition name={IMAGE_TRANSITION_NAME+id}>
 				<img
 					src={src}
 					alt="Fullscreen"
