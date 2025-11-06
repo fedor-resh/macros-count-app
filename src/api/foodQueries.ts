@@ -10,29 +10,6 @@ export const foodKeys = {
 	weeklyFoods: () => ["foods", "weekly"] as const,
 };
 
-// Queries
-export function useGetTodayFoodsQuery(userId: string, date?: string) {
-	const queryDate = date || new Date().toISOString().split("T")[0];
-
-	return useQuery({
-		queryKey: foodKeys.todayFoods(queryDate),
-		queryFn: async () => {
-			const { data, error } = await supabase
-				.from("eaten_product")
-				.select("*")
-				.eq("userId", userId)
-				.eq("date", queryDate)
-				.order("createdAt", { ascending: false });
-
-			if (error) {
-				throw error;
-			}
-			return data as EatenProduct[];
-		},
-		enabled: !!userId,
-	});
-}
-
 export function useGetWeeklyFoodsQuery(userId: string) {
 	return useQuery({
 		queryKey: foodKeys.weeklyFoods(),
@@ -51,7 +28,7 @@ export function useGetWeeklyFoodsQuery(userId: string) {
 				.eq("userId", userId)
 				.gte("date", startDate)
 				.lte("date", endDate)
-				.order("date", { ascending: true });
+				.order("date");
 
 			if (error) {
 				throw error;
