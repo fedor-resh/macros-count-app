@@ -4,9 +4,9 @@ import "@mantine/notifications/styles.css";
 
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { useEffect } from "react";
-import { queryClient } from "./lib/queryClient";
+import { persister, queryClient } from "./lib/queryClient";
 import { Router } from "./Router";
 import { useAuthStore } from "./stores/authStore";
 import { theme } from "./theme";
@@ -19,11 +19,11 @@ export default function App() {
 	}, [initialize]);
 
 	return (
-		<QueryClientProvider client={queryClient}>
+		<PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
 			<MantineProvider theme={theme} defaultColorScheme="dark">
 				<Notifications position="top-right" />
 				<Router />
 			</MantineProvider>
-		</QueryClientProvider>
+		</PersistQueryClientProvider>
 	);
 }
