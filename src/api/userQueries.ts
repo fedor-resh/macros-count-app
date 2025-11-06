@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Database } from "../types/database.types";
 import { supabase } from "../lib/supabase";
 import type { ActivityLevel, Gender, Goal } from "@/utils/calorieCalculator";
+import { type User, type UserTable } from "@/types/types";
 
 // Query Keys
 export const userKeys = {
@@ -75,12 +76,6 @@ export function useGetUserGoalsQuery(userId: string) {
 			}
 			return data as Database["public"]["Tables"]["users"]["Row"];
 		},
-		select: (data) => ({
-			...data,
-			activityLevel: data.activity_level as ActivityLevel,
-			goal: data.goal as Goal,
-			gender: data.gender as Gender,
-		}),
 		enabled: !!userId,
 	});
 }
@@ -102,8 +97,8 @@ export function useUpdateUserGoalsMutation() {
 				.from("users")
 				.upsert({
 					id: userId,
-					calories_goal: caloriesGoal,
-					protein_goal: proteinGoal,
+					caloriesGoal,
+					proteinGoal,
 				})
 				.select()
 				.single();
@@ -126,34 +121,12 @@ export function useUpdateUserParamsMutation() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: async ({
-			userId,
-			weight,
-			height,
-			age,
-			gender,
-			activityLevel,
-			goal,
-		}: {
-			userId: string;
-			weight: number | null;
-			height: number | null;
-			age: number | null;
-			gender: Gender;
-			activityLevel: ActivityLevel;
-			goal: Goal;
-		}) => {
+		mutationFn: async (userParams: Partial<User> & { id: string }) => {
+			const { id, ...updateData } = userParams;
 			const { data, error } = await supabase
 				.from("users")
-				.update({
-					weight,
-					height,
-					age,
-					gender,
-					activity_level: activityLevel,
-					goal,
-				})
-				.eq("id", userId)
+				.update(updateData)
+				.eq("id", id)
 				.select()
 				.single();
 
@@ -165,7 +138,7 @@ export function useUpdateUserParamsMutation() {
 		onSuccess: (_, variables) => {
 			// Invalidate user queries
 			queryClient.invalidateQueries({
-				queryKey: userKeys.user(variables.userId),
+				queryKey: userKeys.user(variables.id),
 			});
 		},
 	});

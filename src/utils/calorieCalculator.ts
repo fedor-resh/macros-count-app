@@ -1,3 +1,5 @@
+import { CalculatorParams } from "@/components/Profile/CalorieCalculator.types";
+
 export type Gender = "male" | "female";
 export type ActivityLevel = "sedentary" | "light" | "moderate" | "high" | "veryHigh";
 export type Goal = "loss" | "maintain" | "gain";
@@ -77,18 +79,19 @@ export function calculateProteinGoal(weight: number, activityLevel: ActivityLeve
  * @param params - параметры пользователя
  * @returns Рассчитанные цели
  */
-export function calculateGoals(params: {
-	weight: number;
-	height: number;
-	age: number;
-	gender: Gender;
-	activityLevel: ActivityLevel;
-	goal: Goal;
-}) {
-	const bmr = calculateBMR(params.weight, params.height, params.age, params.gender);
-	const tdee = calculateTDEE(bmr, params.activityLevel);
-	const caloriesGoal = calculateCaloriesGoal(tdee, params.goal);
-	const proteinGoal = calculateProteinGoal(params.weight, params.activityLevel);
+export function calculateGoals(params: CalculatorParams) {
+	const bmr = calculateBMR(
+		params.weight ?? 0,
+		params.height ?? 0,
+		params.age ?? 0,
+		params.gender as Gender,
+	);
+	const tdee = calculateTDEE(bmr, params.activityLevel as ActivityLevel);
+	const caloriesGoal = calculateCaloriesGoal(tdee, params.goal as Goal);
+	const proteinGoal = calculateProteinGoal(
+		params.weight ?? 0,
+		params.activityLevel as ActivityLevel,
+	);
 
 	return {
 		bmr: Math.round(bmr),

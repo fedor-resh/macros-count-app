@@ -6,6 +6,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import faviconUrl from "../../favicon.svg?url";
 import { useAuthStore } from "../../stores/authStore";
 import { useDateStore } from "../../stores/dateStore";
+import { getFormattedDate } from "../../utils/dateUtils";
 
 export function AppLayout() {
 	const navigate = useNavigate();
@@ -14,7 +15,7 @@ export function AppLayout() {
 
 	const handleDateChange = (date: DateValue) => {
 		if (date) {
-			const dateStr = date.toLocaleDateString("sv-SE");
+			const dateStr = getFormattedDate(date);
 			setSelectedDate(dateStr);
 		} else {
 			setSelectedDate(null);

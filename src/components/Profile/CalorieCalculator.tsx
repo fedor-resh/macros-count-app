@@ -14,7 +14,12 @@ import {
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useUpdateUserParamsMutation } from "../../api/userQueries";
-import { calculateGoals, type Gender } from "../../utils/calorieCalculator";
+import {
+	calculateGoals,
+	type ActivityLevel,
+	type Gender,
+	type Goal,
+} from "../../utils/calorieCalculator";
 import type {
 	CalculatedResults,
 	CalculatorParams,
@@ -37,9 +42,9 @@ export function CalorieCalculator({
 			weight: initialParams?.weight ?? null,
 			height: initialParams?.height ?? null,
 			age: initialParams?.age ?? null,
-			gender: initialParams?.gender ?? "male",
-			activityLevel: initialParams?.activityLevel ?? "moderate",
-			goal: initialParams?.goal ?? "maintain",
+			gender: initialParams?.gender ?? null,
+			activityLevel: initialParams?.activityLevel ?? null,
+			goal: initialParams?.goal ?? null,
 		},
 		validate: {
 			weight: (value: number | null) => (value && value > 0 ? null : "Вес должен быть больше 0"),
@@ -49,15 +54,16 @@ export function CalorieCalculator({
 	});
 
 	// Обновляем форму при изменении initialParams (только при первой загрузке)
+	// biome-ignore lint/correctness/useExhaustiveDependencies: form is controlled
 	useEffect(() => {
 		if (initialParams && !form.values.weight && !form.values.height && !form.values.age) {
 			form.setValues({
 				weight: initialParams.weight ?? null,
 				height: initialParams.height ?? null,
 				age: initialParams.age ?? null,
-				gender: initialParams.gender ?? "male",
-				activityLevel: initialParams.activityLevel ?? "moderate",
-				goal: initialParams.goal ?? "maintain",
+				gender: initialParams.gender ?? null,
+				activityLevel: initialParams.activityLevel ?? null,
+				goal: initialParams.goal ?? null,
 			});
 		}
 	}, [initialParams]);
@@ -77,18 +83,13 @@ export function CalorieCalculator({
 
 		const timeoutId = setTimeout(() => {
 			updateParams({
-				userId,
-				weight: form.values.weight,
-				height: form.values.height,
-				age: form.values.age,
-				gender: form.values.gender,
-				activityLevel: form.values.activityLevel,
-				goal: form.values.goal,
+				...form.values,
+				id: userId,
 			});
 		}, 1000); // Debounce 1 секунда
 
 		return () => clearTimeout(timeoutId);
-	}, [form.values, userId]);
+	}, [form.values, userId, initialParams, updateParams]);
 
 	const handleCalculate = () => {
 		const { weight, height, age, gender, activityLevel, goal } = form.values;
@@ -179,7 +180,7 @@ export function CalorieCalculator({
 								{ label: "Мужской", value: "male" },
 								{ label: "Женский", value: "female" },
 							]}
-							value={form.values.gender}
+							value={form.values.gender ?? "male"}
 							onChange={(value) => form.setFieldValue("gender", value as Gender)}
 							disabled={isLoading}
 						/>

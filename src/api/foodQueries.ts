@@ -1,19 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Database } from "../types/database.types";
 import { supabase } from "../lib/supabase";
-import type { EatenProductTable } from "../types/types";
-
-export interface EatenProduct {
-	id?: string;
-	name: string;
-	value: number;
-	unit: string;
-	kcalories: number;
-	protein: number;
-	date: string;
-	user_id: string;
-	created_at?: string;
-}
+import { EatenProduct, InsertEatenProduct, type EatenProductTable } from "../types/types";
+import { getFormattedDate } from "../utils/dateUtils";
 
 // Query Keys
 export const foodKeys = {
@@ -32,9 +21,9 @@ export function useGetTodayFoodsQuery(userId: string, date?: string) {
 			const { data, error } = await supabase
 				.from("eaten_product")
 				.select("*")
-				.eq("user_id", userId)
+				.eq("userId", userId)
 				.eq("date", queryDate)
-				.order("created_at", { ascending: false });
+				.order("createdAt", { ascending: false });
 
 			if (error) {
 				throw error;
@@ -54,13 +43,13 @@ export function useGetWeeklyFoodsQuery(userId: string) {
 			const sevenDaysAgo = new Date(today);
 			sevenDaysAgo.setDate(today.getDate() - 6);
 
-			const startDate = sevenDaysAgo.toISOString().split("T")[0];
-			const endDate = today.toISOString().split("T")[0];
+			const startDate = getFormattedDate(sevenDaysAgo);
+			const endDate = getFormattedDate(today);
 
 			const { data, error } = await supabase
 				.from("eaten_product")
 				.select("*")
-				.eq("user_id", userId)
+				.eq("userId", userId)
 				.gte("date", startDate)
 				.lte("date", endDate)
 				.order("date", { ascending: true });
@@ -68,7 +57,7 @@ export function useGetWeeklyFoodsQuery(userId: string) {
 			if (error) {
 				throw error;
 			}
-			return data as Database["public"]["Tables"]["eaten_product"]["Row"][];
+			return data as EatenProduct[];
 		},
 		enabled: !!userId,
 	});
@@ -79,7 +68,7 @@ export function useAddFoodMutation() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: async (foodData: EatenProductTable["Insert"]) => {
+		mutationFn: async (foodData: InsertEatenProduct) => {
 			const { data, error } = await supabase.from("eaten_product").insert(foodData).select();
 
 			if (error) {
@@ -150,7 +139,10 @@ export function useDeleteFoodMutation() {
 			for (const [queryKey, data] of allFoodQueries) {
 				if (Array.isArray(data)) {
 					previousQueries[JSON.stringify(queryKey)] = data;
-					queryClient.setQueryData(queryKey, data.filter((item: { id: number }) => item.id !== id));
+					queryClient.setQueryData(
+						queryKey,
+						data.filter((item: { id: number }) => item.id !== id),
+					);
 				}
 			}
 

@@ -2,6 +2,7 @@ import { Button, Drawer, NumberInput, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useAddFoodMutation } from "../../api/foodQueries";
 import { useAuthStore } from "../../stores/authStore";
+import { getFormattedDate } from "../../utils/dateUtils";
 
 interface AddProductDrawerProps {
 	selectedDate?: string;
@@ -66,8 +67,8 @@ export function AddProductDrawer({ selectedDate, opened, onClose }: AddProductDr
 				unit: "г",
 				kcalories: values.kcalories,
 				protein: values.protein,
-				date: selectedDate || new Date().toISOString().split("T")[0],
-				user_id: user.id,
+				date: selectedDate || getFormattedDate(),
+				userId: user.id,
 			},
 			{
 				onSuccess: () => {

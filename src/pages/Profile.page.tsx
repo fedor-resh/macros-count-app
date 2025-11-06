@@ -78,7 +78,7 @@ export function ProfilePage() {
 											Калории
 										</Text>
 										<Text size="xl" fw={700} c="orange.6">
-											{userGoals.calories_goal}
+											{userGoals.caloriesGoal}
 										</Text>
 										<Text size="xs" c="dimmed">
 											ккал/день
@@ -91,7 +91,7 @@ export function ProfilePage() {
 											Белок
 										</Text>
 										<Text size="xl" fw={700} c="blue.6">
-											{userGoals.protein_goal}
+											{userGoals.proteinGoal}
 										</Text>
 										<Text size="xs" c="dimmed">
 											г/день

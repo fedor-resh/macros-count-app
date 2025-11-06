@@ -46,7 +46,7 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 						</Text>
 					</Group>
 				</div>
-				{item.image_url && (
+				{item.imageUrl && (
 					<Box
 						style={{
 							marginRight: -12,
@@ -56,7 +56,7 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 						}}
 						onClick={(e) => e.stopPropagation()}
 					>
-						<FullscreenImage src={item.image_url} style={{ height: cardHeight || 60, width: 80 }} />
+						<FullscreenImage src={item.imageUrl} style={{ height: cardHeight || 60, width: 80 }} />
 					</Box>
 				)}
 			</Group>

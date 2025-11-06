@@ -1,6 +1,6 @@
 import { Container, Space, Stack } from "@mantine/core";
 import { startTransition, useEffect, useMemo, useState } from "react";
-import { useGetTodayFoodsQuery } from "../api/foodQueries";
+import { useGetWeeklyFoodsQuery } from "../api/foodQueries";
 import { useGetUserGoalsQuery } from "../api/userQueries";
 import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
 import { AddProductFAB } from "../components/MacrosTracker/AddProductFAB";
@@ -11,19 +11,22 @@ import { WeeklyProgress } from "../components/MacrosTracker/WeeklyProgress";
 import { useAuthStore } from "../stores/authStore";
 import { useDateStore } from "../stores/dateStore";
 import type { EatenProduct } from "../types/types";
+import { getFormattedDate } from "../utils/dateUtils";
 
 export function HomePage() {
 	const user = useAuthStore((state) => state.user);
 	const selectedDate = useDateStore((state) => state.selectedDate);
 	const [addProductDrawerOpened, setAddProductDrawerOpened] = useState(false);
-	const { data: eatenProducts = [] } = useGetTodayFoodsQuery(
-		user?.id ?? "",
-		selectedDate || new Date().toLocaleDateString("sv-SE"),
-	);
+	const { data: weeklyFoods = [] } = useGetWeeklyFoodsQuery(user?.id ?? "");
 	const { data: userGoals } = useGetUserGoalsQuery(user?.id || "");
 
 	const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
 	const [editDrawerOpened, setEditDrawerOpened] = useState(false);
+
+	const eatenProducts = useMemo(() => {
+		const targetDate = selectedDate || getFormattedDate();
+		return weeklyFoods.filter((food) => food.date === targetDate);
+	}, [weeklyFoods, selectedDate]);
 
 	const { totalCalories, totalProtein } = useMemo(() => {
 		const calories =
@@ -51,8 +54,8 @@ export function HomePage() {
 	const selectedProduct =
 		selectedProductIndex !== null ? eatenProducts[selectedProductIndex] : null;
 
-	const caloriesGoal = userGoals?.calories_goal || 3000;
-	const proteinGoal = userGoals?.protein_goal || 150;
+	const caloriesGoal = userGoals?.caloriesGoal ?? 3000;
+	const proteinGoal = userGoals?.proteinGoal ?? 150;
 
 	return (
 		<Container size="sm" py="xl" px="0" my="0">

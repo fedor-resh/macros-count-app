@@ -2,6 +2,7 @@ import { ActionIcon, Box, Group, Paper, RingProgress, Stack, Text } from "@manti
 import { useMemo } from "react";
 import { useGetWeeklyFoodsQuery } from "../../api/foodQueries";
 import { useDateStore } from "../../stores/dateStore";
+import { getFormattedDate } from "../../utils/dateUtils";
 
 interface DayProgress {
 	day: string;
@@ -147,7 +148,7 @@ export function WeeklyProgress({
 		for (let i = 0; i < 7; i++) {
 			const date = new Date(monday);
 			date.setDate(monday.getDate() + i);
-			const dateStr = date.toLocaleDateString("sv-SE");
+			const dateStr = getFormattedDate(date);
 			const dayName = date.toLocaleDateString("ru-RU", { weekday: "short" }).toUpperCase();
 
 			// Calculate totals for this day

@@ -113,7 +113,6 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
 								"&:focus": { borderColor: "#ff7428" },
 							},
 						}}
-						
 					/>
 
 					<NumberInput
@@ -180,8 +179,6 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
 					/>
 
 					<Group grow mt="md">
-
-
 						<Button
 							type="button"
 							onClick={handleDelete}
