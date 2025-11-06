@@ -1,6 +1,3 @@
--- WARNING: This schema is for context only and is not meant to be run.
--- Table order and constraints may not be valid for execution.
-
 -- Create users table with goals
 CREATE TABLE public.users (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -72,18 +69,3 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
 
--- Create eaten_product table
-CREATE TABLE public.eaten_product (
-  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
-  "createdAt" timestamp with time zone NOT NULL DEFAULT now(),
-  protein bigint,
-  kcalories bigint,
-  unit text,
-  value double precision,
-  date date DEFAULT now(),
-  "userId" uuid DEFAULT gen_random_uuid(),
-  name text NOT NULL DEFAULT 'Продукт'::text,
-  "imageUrl" text,
-  CONSTRAINT eaten_product_pkey PRIMARY KEY (id),
-  CONSTRAINT eaten_product_user_id_fkey FOREIGN KEY ("userId") REFERENCES auth.users(id)
-);

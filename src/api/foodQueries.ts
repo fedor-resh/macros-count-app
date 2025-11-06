@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Database } from "../types/database.types";
 import { supabase } from "../lib/supabase";
-import { EatenProduct, InsertEatenProduct, type EatenProductTable } from "../types/types";
+import type { EatenProduct, InsertEatenProduct } from "../types/types";
 import { getFormattedDate } from "../utils/dateUtils";
 
 // Query Keys
@@ -28,7 +27,7 @@ export function useGetTodayFoodsQuery(userId: string, date?: string) {
 			if (error) {
 				throw error;
 			}
-			return data as Database["public"]["Tables"]["eaten_product"]["Row"][];
+			return data as EatenProduct[];
 		},
 		enabled: !!userId,
 	});
@@ -90,7 +89,7 @@ export function useUpdateFoodMutation() {
 
 	return useMutation({
 		mutationFn: async (
-			params: EatenProductTable["Update"] & {
+			params: InsertEatenProduct & {
 				id: number;
 			},
 		) => {
