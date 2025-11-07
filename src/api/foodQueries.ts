@@ -12,7 +12,12 @@ export const foodKeys = {
 
 export function getMondayOfWeek(date: string) {
 	const monday = new Date(date);
-	monday.setDate(monday.getDate() - monday.getDay());
+	if(monday.getDay() === 0) {
+		monday.setDate(monday.getDate() - 6);
+	} else {
+		monday.setDate(monday.getDate() - monday.getDay() + 1);
+	}
+	console.log('monday', monday, monday.toLocaleDateString('ru-RU', { weekday: 'short' }));
 	return getFormattedDate(monday);
 }
 
@@ -24,7 +29,7 @@ export function useGetWeeklyFoodsQuery(userId: string, date: string | null) {
 			// Calculate date range for last 7 days
 			const endDate = new Date(monday);
 			endDate.setDate(endDate.getDate() + 6);
-
+			console.log('end',endDate.toLocaleDateString('ru-RU', { weekday: 'short' }));
 			const { data, error } = await supabase
 				.from("eaten_product")
 				.select("*")
