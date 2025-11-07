@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { startTransition } from "react";
 import { getFormattedDate } from "../utils/dateUtils";
+import { startTransition } from "@/utils/viewTransition";
 interface DateState {
 	selectedDate: string | null;
 	setSelectedDate: (date: string | null) => void;
@@ -8,5 +8,5 @@ interface DateState {
 
 export const useDateStore = create<DateState>((set) => ({
 	selectedDate: getFormattedDate(new Date()),
-	setSelectedDate: (date) => startTransition(() => set({ selectedDate: date })),
+	setSelectedDate: (date) => set({ selectedDate: date }),
 }));
