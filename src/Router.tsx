@@ -5,6 +5,7 @@ import { AboutPage } from "./pages/About.page";
 import { HomePage } from "./pages/Home.page";
 import { LoginPage } from "./pages/Login.page";
 import { ProfilePage } from "./pages/Profile.page";
+import { SandboxPage } from "./pages/Sandbox.page";
 
 const router = createBrowserRouter([
 	{
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
 			{
 				path: "/profile",
 				element: <ProfilePage />,
+			},
+			{
+				path: "/sandbox",
+				element: <SandboxPage />,
 			},
 		],
 	},

@@ -1,7 +1,7 @@
 import { Box, Image } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-// @ts-expect-error - ViewTransition is experimental in React 19
-import { startTransition, useEffect, useState, ViewTransition, useId } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { startTransition } from "../../utils/viewTransition";
 
 const IMAGE_TRANSITION_NAME = "food-image";
 const FULLSCREEN_HINT_KEY = "fullscreen-image-hint-shown";
@@ -13,6 +13,8 @@ interface FullscreenImageProps {
 
 export function FullscreenImage({ src, style }: FullscreenImageProps) {
 	const [isOpen, setIsOpen] = useState(false);
+	const id = useId();
+	const ref = useRef<HTMLImageElement>(null);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -28,18 +30,31 @@ export function FullscreenImage({ src, style }: FullscreenImageProps) {
 		}
 	}, [isOpen]);
 
-	const id = useId();
+	const handleToggle = () => {
+		if (ref.current) {
+			ref.current.style.zIndex = "10000";
+		}
+		startTransition(() => {
+			setIsOpen((prev) => !prev);
+		});
+	};
 
 	if (!isOpen) {
 		return (
-			<ViewTransition name={IMAGE_TRANSITION_NAME+id}>
-				<Image
-					src={src}
-					alt="Food"
-					style={{ cursor: "pointer", ...style }}
-					onClick={() => startTransition(() => setIsOpen(true))}
-				/>
-			</ViewTransition>
+			<Image
+				src={src}
+				ref={ref}
+				alt="Food"
+				style={{ 
+					position: "relative",
+					borderTopRightRadius: "10px",
+					borderBottomRightRadius: "10px",
+					cursor: "pointer", 
+					viewTransitionName: `${IMAGE_TRANSITION_NAME}-${id}`,
+					...style 
+				}}
+				onClick={handleToggle}
+			/>
 		);
 	}
 
@@ -48,26 +63,25 @@ export function FullscreenImage({ src, style }: FullscreenImageProps) {
 			style={{
 				position: "fixed",
 				inset: 0,
-				transition: "all 0.5s ease-in-out",
 				zIndex: 100,
 				cursor: "pointer",
 				display: "flex",
 				alignItems: "center",
 				justifyContent: "center",
+				backgroundColor: "rgba(0, 0, 0, 0.9)",
 			}}
-			onClick={() => startTransition(() => setIsOpen(false))}
+			onClick={handleToggle}
 		>
-			<ViewTransition name={IMAGE_TRANSITION_NAME+id}>
-				<img
-					src={src}
-					alt="Fullscreen"
-					style={{
-						maxWidth: "100%",
-						maxHeight: "100%",
-						objectFit: "contain",
-					}}
-				/>
-			</ViewTransition>
+			<img
+				src={src}
+				alt="Fullscreen"
+				style={{
+					maxWidth: "100%",
+					maxHeight: "100%",
+					objectFit: "contain",
+					viewTransitionName: `${IMAGE_TRANSITION_NAME}-${id}`,
+				}}
+			/>
 		</Box>
 	);
 }

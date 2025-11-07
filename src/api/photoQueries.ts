@@ -77,10 +77,13 @@ export function useUploadPhotoMutation() {
 			const date = getMondayOfWeek(new Date().toISOString());
 			queryClient.setQueryData(foodKeys.weeklyFoods(date), (old: EatenProduct[]) => {
 				console.log(old);
-				return [...old, {
-				id: Math.random(),
-				name: "loading...",
-				}];
+				return [
+					...old,
+					{
+						id: Math.random(),
+						name: "loading...",
+					},
+				];
 			});
 		},
 		onSuccess: () => {

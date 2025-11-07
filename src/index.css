@@ -21,3 +21,7 @@
 	font-weight: 700;
 	font-style: italic;
 }
+
+@view-transition {
+	navigation: auto;
+}

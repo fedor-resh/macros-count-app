@@ -1,8 +1,8 @@
 import { Group, Stack, Text } from "@mantine/core";
-import { useMutationState } from "@tanstack/react-query";
 import type { EatenProduct } from "@/types/types";
 import { FoodItem } from "./FoodItem";
-import { FoodItemLoader } from "./FoodItemLoader";
+// @ts-expect-error - ViewTransition is experimental in React 19
+import { ViewTransition } from "react";
 
 interface FoodListProps {
 	items: EatenProduct[];
