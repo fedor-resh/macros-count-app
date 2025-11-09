@@ -53,7 +53,7 @@ export function useGetWeeklyFoodsQuery(date: string | null) {
 export function useGetFoodsHistoryQuery(limit = 200) {
 	const userId = useAuthStore((state) => state.user?.id);
 	return useQuery({
-		queryKey: foodKeys.weeklyFoods(getMondayOfWeek(new Date().toISOString())),
+		queryKey: [],
 		queryFn: async () => {
 			const { data, error } = await supabase
 				.from("eaten_product")
