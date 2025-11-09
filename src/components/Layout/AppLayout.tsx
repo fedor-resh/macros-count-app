@@ -19,7 +19,7 @@ export function AppLayout() {
 			const dateStr = getFormattedDate(date);
 			setSelectedDate(dateStr);
 		} else {
-			setSelectedDate(null);
+			setSelectedDate(getFormattedDate(new Date()));
 		}
 	};
 

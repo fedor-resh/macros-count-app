@@ -193,7 +193,7 @@ export function AddProductPage() {
 			/>
 
 			<AddProductDrawer
-				selectedDate={targetDate}
+				selectedDate={selectedDate}
 				opened={drawerOpened}
 				onClose={handleDrawerClose}
 			/>
