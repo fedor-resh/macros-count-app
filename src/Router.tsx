@@ -2,6 +2,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ProtectedRoute } from "./components/Auth/ProtectedRoute";
 import { AppLayout } from "./components/Layout/AppLayout";
 import { AboutPage } from "./pages/About.page";
+import { AddProductPage } from "./pages/AddProduct.page";
+import { AddProductSearchPage } from "./pages/AddProductSearch.page";
 import { HomePage } from "./pages/Home.page";
 import { LoginPage } from "./pages/Login.page";
 import { ProfilePage } from "./pages/Profile.page";
@@ -35,6 +37,14 @@ const router = createBrowserRouter([
 			{
 				path: "/sandbox",
 				element: <SandboxPage />,
+			},
+			{
+				path: "/add-product",
+				element: <AddProductPage />,
+			},
+			{
+				path: "/add-product/search",
+				element: <AddProductSearchPage />,
 			},
 		],
 	},

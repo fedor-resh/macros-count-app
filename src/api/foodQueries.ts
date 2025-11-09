@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
+import { useAuthStore } from "../stores/authStore";
 import type { EatenProduct, InsertEatenProduct } from "../types/types";
 import { getFormattedDate } from "../utils/dateUtils";
 
 // Query Keys
 export const foodKeys = {
 	all: ["foods"] as const,
-	todayFoods: (date: string) => ["foods", date] as const,
-	weeklyFoods: (monday: string) => ["foods", "weekly", monday] as const,
+	weeklyFoods: (monday: string) => ["foods", monday] as const,
 };
 
 export function getMondayOfWeek(date: string) {
@@ -20,11 +20,15 @@ export function getMondayOfWeek(date: string) {
 	return getFormattedDate(monday);
 }
 
-export function useGetWeeklyFoodsQuery(userId: string, date: string | null) {
+export function useGetWeeklyFoodsQuery(date: string | null) {
+	const userId = useAuthStore((state) => state.user?.id);
 	const monday = getMondayOfWeek(date ?? new Date().toISOString());
 	return useQuery({
 		queryKey: foodKeys.weeklyFoods(monday),
 		queryFn: async () => {
+			if (!userId) {
+				throw new Error("User is not authenticated");
+			}
 			// Calculate date range for last 7 days
 			const endDate = new Date(monday);
 			endDate.setDate(endDate.getDate() + 6);
@@ -46,6 +50,29 @@ export function useGetWeeklyFoodsQuery(userId: string, date: string | null) {
 	});
 }
 
+export function useGetFoodsHistoryQuery(limit = 200) {
+	const userId = useAuthStore((state) => state.user?.id);
+	return useQuery({
+		queryKey: foodKeys.weeklyFoods(getMondayOfWeek(new Date().toISOString())),
+		queryFn: async () => {
+			const { data, error } = await supabase
+				.from("eaten_product")
+				.select("*")
+				.eq("userId", userId)
+				.order("createdAt", { ascending: false })
+				.limit(limit);
+
+			if (error) {
+				throw error;
+			}
+
+			return data as EatenProduct[];
+		},
+		enabled: !!userId,
+		staleTime: 1000 * 60 * 5,
+	});
+}
+
 // Mutations
 export function useAddFoodMutation() {
 	const queryClient = useQueryClient();
@@ -60,7 +87,6 @@ export function useAddFoodMutation() {
 			return data;
 		},
 		onSuccess: () => {
-			// Invalidate all food queries
 			queryClient.invalidateQueries({
 				queryKey: foodKeys.all,
 			});
@@ -69,8 +95,6 @@ export function useAddFoodMutation() {
 }
 
 export function useUpdateFoodMutation() {
-	const queryClient = useQueryClient();
-
 	return useMutation({
 		mutationFn: async (
 			params: InsertEatenProduct & {
@@ -89,12 +113,7 @@ export function useUpdateFoodMutation() {
 			}
 			return data;
 		},
-		onSuccess: () => {
-			// Invalidate all food queries
-			queryClient.invalidateQueries({
-				queryKey: foodKeys.all,
-			});
-		},
+		meta: { invalidateKeys: [foodKeys.all] },
 	});
 }
 

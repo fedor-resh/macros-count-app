@@ -23,7 +23,12 @@ export interface UploadPhotoResponse {
 	analysis: FoodAnalysis;
 }
 
-export async function uploadPhoto(file: File): Promise<UploadPhotoResponse> {
+export interface UploadPhotoPayload {
+	file: File;
+	date: string;
+}
+
+export async function uploadPhoto({ file, date }: UploadPhotoPayload): Promise<UploadPhotoResponse> {
 	try {
 		// Get the current session
 		const {
@@ -41,6 +46,7 @@ export async function uploadPhoto(file: File): Promise<UploadPhotoResponse> {
 		// Create form data
 		const formData = new FormData();
 		formData.append("photo", compressedFile);
+		formData.append("date", date);
 
 		// Get the Supabase URL
 		const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -73,9 +79,9 @@ export function useUploadPhotoMutation() {
 	return useMutation({
 		mutationKey: ["uploadPhoto"],
 		mutationFn: uploadPhoto,
-		onMutate: (file: File) => {
-			const date = getMondayOfWeek(new Date().toISOString());
-			queryClient.setQueryData(foodKeys.weeklyFoods(date), (old: EatenProduct[]) => {
+		onMutate: ({ date }) => {
+			const monday = getMondayOfWeek(date);
+			queryClient.setQueryData(foodKeys.weeklyFoods(monday), (old: EatenProduct[] = []) => {
 				console.log(old);
 				return [
 					...old,

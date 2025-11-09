@@ -18,7 +18,6 @@ interface DayProgress {
 }
 
 interface WeeklyProgressProps {
-	userId: string;
 	caloriesGoal?: number;
 	proteinGoal?: number;
 }
@@ -126,14 +125,10 @@ function DayMiniGraph({
 	);
 }
 
-export function WeeklyProgress({
-	userId,
-	caloriesGoal = 3000,
-	proteinGoal = 150,
-}: WeeklyProgressProps) {
+export function WeeklyProgress({ caloriesGoal = 3000, proteinGoal = 150 }: WeeklyProgressProps) {
 	const { selectedDate, setSelectedDate } = useDateStore();
 
-	const { data: weeklyFoods = [] } = useGetWeeklyFoodsQuery(userId, selectedDate);
+	const { data: weeklyFoods = [] } = useGetWeeklyFoodsQuery(selectedDate);
 
 	const weekDays: DayProgress[] = useMemo(() => {
 		// Generate week starting from Monday for the selected date
@@ -197,22 +192,10 @@ export function WeeklyProgress({
 	}, [weeklyFoods, selectedDate, setSelectedDate, caloriesGoal, proteinGoal]);
 
 	return (
-		<Paper bg="#2a2a2a" p="md" radius="md">
-			<Stack gap="sm">
-				<Box>
-					<Text size="md" c="#d9d9d9">
-						Ежедневная цель
-					</Text>
-					<Text size="xs" c="#9d9d9d">
-						За 7 дней
-					</Text>
-				</Box>
 				<Group gap="0" justify="space-between">
 					{weekDays.map((dayData) => (
 						<DayMiniGraph key={dayData.date} {...dayData} />
 					))}
 				</Group>
-			</Stack>
-		</Paper>
 	);
 }

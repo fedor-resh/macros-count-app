@@ -10,7 +10,7 @@ export function ProfilePage() {
 	const navigate = useNavigate();
 	const user = useAuthStore((state) => state.user);
 	const signOut = useAuthStore((state) => state.signOut);
-	const { data: userGoals, isLoading: isLoadingGoals } = useGetUserGoalsQuery(user?.id || "");
+	const { data: userGoals, isLoading: isLoadingGoals } = useGetUserGoalsQuery();
 	const { mutate: updateGoals, isPending } = useUpdateUserGoalsMutation();
 
 	const displayName = user?.user_metadata?.full_name || user?.email || "User";
@@ -105,7 +105,6 @@ export function ProfilePage() {
 
 				{userGoals && user?.id && (
 					<CalorieCalculator
-						userId={user.id}
 						isLoading={isLoadingGoals}
 						onSave={handleSave}
 						isSaving={isPending}

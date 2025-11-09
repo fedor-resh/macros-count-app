@@ -2,23 +2,18 @@ import { Container, Space, Stack } from "@mantine/core";
 import { useMemo, useState } from "react";
 import { useGetWeeklyFoodsQuery } from "../api/foodQueries";
 import { useGetUserGoalsQuery } from "../api/userQueries";
-import { useUploadPhotoMutation } from "../api/photoQueries";
-import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
 import { AddProductFAB } from "../components/MacrosTracker/AddProductFAB";
 import { CircularGraph } from "../components/MacrosTracker/CircularGraph";
 import { FoodList } from "../components/MacrosTracker/FoodList";
 import { ProductDrawer } from "../components/MacrosTracker/ProductDrawer";
 import { WeeklyProgress } from "../components/MacrosTracker/WeeklyProgress";
-import { useAuthStore } from "../stores/authStore";
 import { useDateStore } from "../stores/dateStore";
 import { getFormattedDate } from "../utils/dateUtils";
 
 export function HomePage() {
-	const user = useAuthStore((state) => state.user);
 	const selectedDate = useDateStore((state) => state.selectedDate);
-	const [addProductDrawerOpened, setAddProductDrawerOpened] = useState(false);
-	const { data: weeklyFoods = [] } = useGetWeeklyFoodsQuery(user?.id ?? "", selectedDate);
-	const { data: userGoals } = useGetUserGoalsQuery(user?.id || "");
+	const { data: weeklyFoods = [] } = useGetWeeklyFoodsQuery(selectedDate);
+	const { data: userGoals } = useGetUserGoalsQuery();
 
 	const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
 	const [editDrawerOpened, setEditDrawerOpened] = useState(false);
@@ -29,11 +24,16 @@ export function HomePage() {
 	}, [weeklyFoods, selectedDate]);
 
 	const { totalCalories, totalProtein } = useMemo(() => {
-		const calories =
-			eatenProducts.reduce((sum, item) => sum + ((item.kcalories! * item.value!) / 100 || 0), 0) ||
-			0;
-		const protein =
-			eatenProducts.reduce((sum, item) => sum + ((item.protein! * item.value!) / 100 || 0), 0) || 0;
+		const calories = eatenProducts.reduce((sum, item) => {
+			const kcalories = item.kcalories ?? 0;
+			const value = item.value ?? 0;
+			return sum + (kcalories * value) / 100;
+		}, 0);
+		const protein = eatenProducts.reduce((sum, item) => {
+			const proteinPer100 = item.protein ?? 0;
+			const value = item.value ?? 0;
+			return sum + (proteinPer100 * value) / 100;
+		}, 0);
 
 		return {
 			totalCalories: Math.round(calories),
@@ -66,27 +66,17 @@ export function HomePage() {
 					caloriesGoal={caloriesGoal}
 					proteinGoal={proteinGoal}
 				/>
-				<WeeklyProgress
-					userId={user?.id ?? ""}
-					caloriesGoal={caloriesGoal}
-					proteinGoal={proteinGoal}
-				/>
+				<WeeklyProgress caloriesGoal={caloriesGoal} proteinGoal={proteinGoal} />
 				<FoodList items={eatenProducts} onItemClick={handleItemClick} />
 				<Space h="100px" />
 			</Stack>
 
-			<AddProductFAB onAddProduct={() => setAddProductDrawerOpened(true)} />
+			<AddProductFAB />
 
 			<ProductDrawer
 				opened={editDrawerOpened}
 				onClose={handleEditDrawerClose}
 				product={selectedProduct}
-			/>
-
-			<AddProductDrawer
-				selectedDate={selectedDate || new Date().toISOString().split("T")[0]}
-				opened={addProductDrawerOpened}
-				onClose={() => setAddProductDrawerOpened(false)}
 			/>
 		</Container>
 	);

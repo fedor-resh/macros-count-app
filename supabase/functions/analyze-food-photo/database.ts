@@ -5,13 +5,16 @@ export function prepareEatenProductData(
 	analysis: FoodAnalysis,
 	userId: string,
 	publicUrl: string,
+	date?: string,
 ): EatenProductInsert {
-	const today = new Date().toISOString().split("T")[0];
+	const today = new Date().toLocaleDateString("sv-SE");
+	const normalizedDate =
+		typeof date === "string" && date.trim().length > 0 ? date.trim() : today;
 
 	const data: EatenProductInsert = {
 		name: analysis.food_name || "Продукт",
 		unit: "г",
-		date: today,
+		date: normalizedDate,
 		userId: userId,
 		imageUrl: publicUrl,
 	};

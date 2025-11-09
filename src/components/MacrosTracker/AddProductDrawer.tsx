@@ -3,11 +3,19 @@ import { useForm } from "@mantine/form";
 import { useAddFoodMutation } from "../../api/foodQueries";
 import { useAuthStore } from "../../stores/authStore";
 import { getFormattedDate } from "../../utils/dateUtils";
+import { useEffect } from "react";
 
 interface AddProductDrawerProps {
 	selectedDate?: string;
 	opened: boolean;
 	onClose: () => void;
+	initialProduct?: {
+		name: string;
+		value?: number | null;
+		kcalories?: number | null;
+		protein?: number | null;
+		unit?: string | null;
+	};
 }
 
 interface AddProductDrawerValues {
@@ -17,7 +25,12 @@ interface AddProductDrawerValues {
 	protein: number | "";
 }
 
-export function AddProductDrawer({ selectedDate, opened, onClose }: AddProductDrawerProps) {
+export function AddProductDrawer({
+	selectedDate,
+	opened,
+	onClose,
+	initialProduct,
+}: AddProductDrawerProps) {
 	const user = useAuthStore((state) => state.user);
 	const { mutate: addFood, isPending: isLoading } = useAddFoodMutation();
 
@@ -55,6 +68,18 @@ export function AddProductDrawer({ selectedDate, opened, onClose }: AddProductDr
 		},
 	});
 
+	useEffect(() => {
+		if (!opened) {
+			return;
+		}
+
+		if (initialProduct) {
+			form.setValues(initialProduct as AddProductDrawerValues);
+		} else {
+			form.reset();
+		}
+	}, [opened, initialProduct, form]);
+
 	const handleSubmit = async (values: typeof form.values) => {
 		if (!user?.id || values.value === "" || values.kcalories === "" || values.protein === "") {
 			return;
@@ -64,7 +89,7 @@ export function AddProductDrawer({ selectedDate, opened, onClose }: AddProductDr
 			{
 				name: values.name,
 				value: values.value,
-				unit: "г",
+				unit: initialProduct?.unit ?? "г",
 				kcalories: values.kcalories,
 				protein: values.protein,
 				date: selectedDate || getFormattedDate(),
@@ -134,6 +159,7 @@ export function AddProductDrawer({ selectedDate, opened, onClose }: AddProductDr
 								"&:focus": { borderColor: "#ff7428" },
 							},
 						}}
+						autoFocus
 					/>
 
 					<NumberInput

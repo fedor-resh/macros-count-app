@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Database } from "../types/database.types";
 import { supabase } from "../lib/supabase";
-import type { ActivityLevel, Gender, Goal } from "@/utils/calorieCalculator";
-import { type User, type UserTable } from "@/types/types";
+import type { User } from "@/types/types";
+import { useAuthStore } from "../stores/authStore";
 
 // Query Keys
 export const userKeys = {
 	all: ["users"] as const,
-	user: (userId: string) => ["users", userId] as const,
+	user: (userId: string | null | undefined) => ["users", userId ?? "anonymous"] as const,
 };
 
 // Auth Mutations
@@ -65,10 +65,14 @@ export function useSignInWithGoogleMutation() {
 }
 
 // User Goals Queries
-export function useGetUserGoalsQuery(userId: string) {
+export function useGetUserGoalsQuery() {
+	const userId = useAuthStore((state) => state.user?.id);
 	return useQuery({
 		queryKey: userKeys.user(userId),
 		queryFn: async () => {
+			if (!userId) {
+				throw new Error("User is not authenticated");
+			}
 			const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
 
 			if (error) {
@@ -119,14 +123,17 @@ export function useUpdateUserGoalsMutation() {
 
 export function useUpdateUserParamsMutation() {
 	const queryClient = useQueryClient();
+	const userId = useAuthStore((state) => state.user?.id);
 
 	return useMutation({
-		mutationFn: async (userParams: Partial<User> & { id: string }) => {
-			const { id, ...updateData } = userParams;
+		mutationFn: async (userParams: Partial<User>) => {
+			if (!userId) {
+				throw new Error("User is not authenticated");
+			}
 			const { data, error } = await supabase
 				.from("users")
-				.update(updateData)
-				.eq("id", id)
+				.update(userParams)
+				.eq("id", userId)
 				.select()
 				.single();
 
@@ -135,10 +142,12 @@ export function useUpdateUserParamsMutation() {
 			}
 			return data;
 		},
-		onSuccess: (_, variables) => {
-			// Invalidate user queries
+		onSuccess: () => {
+			if (!userId) {
+				return;
+			}
 			queryClient.invalidateQueries({
-				queryKey: userKeys.user(variables.id),
+				queryKey: userKeys.user(userId),
 			});
 		},
 	});

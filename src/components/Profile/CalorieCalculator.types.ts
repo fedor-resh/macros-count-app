@@ -15,7 +15,6 @@ export interface CalculatedResults {
 }
 
 export interface CalorieCalculatorProps {
-	userId: string;
 	isLoading?: boolean;
 	onSave: (caloriesGoal: number, proteinGoal: number) => void;
 	isSaving?: boolean;

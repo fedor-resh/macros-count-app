@@ -25,9 +25,9 @@ import type {
 	CalculatorParams,
 	CalorieCalculatorProps,
 } from "./CalorieCalculator.types";
+import { useAuthStore } from "../../stores/authStore";
 
 export function CalorieCalculator({
-	userId,
 	isLoading = false,
 	onSave,
 	isSaving = false,
@@ -35,6 +35,7 @@ export function CalorieCalculator({
 }: CalorieCalculatorProps) {
 	const [calculatedResults, setCalculatedResults] = useState<CalculatedResults | null>(null);
 	const { mutate: updateParams } = useUpdateUserParamsMutation();
+	const userId = useAuthStore((state) => state.user?.id);
 
 	const form = useForm<CalculatorParams>({
 		mode: "controlled",
@@ -81,10 +82,13 @@ export function CalorieCalculator({
 			return;
 		}
 
+		if (!userId) {
+			return;
+		}
+
 		const timeoutId = setTimeout(() => {
 			updateParams({
 				...form.values,
-				id: userId,
 			});
 		}, 1000); // Debounce 1 секунда
 

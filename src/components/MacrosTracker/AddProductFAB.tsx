@@ -1,44 +1,40 @@
-import { ActionIcon, Transition } from "@mantine/core";
-import { useClickOutside } from "@mantine/hooks";
+import { ActionIcon, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconBarcode, IconCamera, IconPhoto, IconPlus, IconSearch } from "@tabler/icons-react";
-import { useRef, useState } from "react";
+import { IconCamera, IconSearch } from "@tabler/icons-react";
+import type { ChangeEvent } from "react";
+import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useUploadPhotoMutation } from "../../api/photoQueries";
+import { startTransition } from "../../utils/viewTransition";
+import { useDateStore } from "../../stores/dateStore";
+import { getFormattedDate } from "../../utils/dateUtils";
 
-interface AddProductFABProps {
-	onAddProduct: () => void;
-}
-
-export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
-	const [fabExpanded, setFabExpanded] = useState(false);
-	const cameraInputRef = useRef<HTMLInputElement>(null);
-	const galleryInputRef = useRef<HTMLInputElement>(null);
+export function AddProductFAB() {
+	const navigate = useNavigate();
 	const uploadPhotoMutation = useUploadPhotoMutation();
+	const cameraInputRef = useRef<HTMLInputElement>(null);
+	const selectedDate = useDateStore((state) => state.selectedDate);
 
-	const fabRef = useClickOutside(() => setFabExpanded(false));
-
-	const handleActionClick = () => {
-		setFabExpanded(false);
-		onAddProduct();
+	const navigateToSearch = () => {
+		startTransition(() => {
+			navigate("/add-product/search");
+		});
 	};
 
-	const handleCameraClick = () => {
-		setFabExpanded(false);
+	const handlePhotoClick = () => {
 		cameraInputRef.current?.click();
 	};
 
-	const handleGalleryClick = () => {
-		setFabExpanded(false);
-		galleryInputRef.current?.click();
-	};
-
-	const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+	const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
-		if (!file) {
-			return;
-		}
+		if (!file) return;
 
-		uploadPhotoMutation.mutate(file, {
+		uploadPhotoMutation.mutate(
+			{
+				file,
+				date: selectedDate,
+			},
+			{
 			onSuccess: (result) => {
 				notifications.show({
 					title: "Успешно",
@@ -46,113 +42,68 @@ export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
 					color: "green",
 				});
 			},
-			onError: (err) => {
-				const msg = err instanceof Error ? err.message : "Не удалось загрузить фото";
-				notifications.show({ title: "Ошибка", message: msg, color: "red" });
+			onError: (error) => {
+				const message = error instanceof Error ? error.message : "Не удалось загрузить фото";
+				notifications.show({ title: "Ошибка", message, color: "red" });
 			},
 			onSettled: () => {
-				// Reset inputs
 				if (cameraInputRef.current) {
 					cameraInputRef.current.value = "";
 				}
-				if (galleryInputRef.current) {
-					galleryInputRef.current.value = "";
-				}
 			},
-		});
+			},
+		);
 	};
 
 	return (
-		<div
-			ref={fabRef}
-			style={{
-				position: "fixed",
-				bottom: 32,
-				right: 32,
-				display: "flex",
-				flexDirection: "column",
-				alignItems: "center",
-				gap: 16,
-				zIndex: 3,
-			}}
-		>
-			{/* Circular Action Buttons */}
-			<Transition mounted={fabExpanded} transition="pop" duration={200} timingFunction="ease">
-				{(styles) => (
-					<div
-						style={{
-							...styles,
-							display: "flex",
-							flexDirection: "column",
-							gap: 12,
-							alignItems: "center",
-						}}
-					>
-						<ActionIcon
-							size={50}
-							radius="xl"
-							onClick={handleActionClick}
-							aria-label="Search product"
-							disabled={uploadPhotoMutation.isPending}
-						>
-							<IconSearch size={24} stroke={2} color="#2a2a2a" />
-						</ActionIcon>
-						<ActionIcon
-							size={50}
-							radius="xl"
-							onClick={handleActionClick}
-							aria-label="Scan barcode"
-							disabled={uploadPhotoMutation.isPending}
-						>
-							<IconBarcode size={24} stroke={2} color="#2a2a2a" />
-						</ActionIcon>
-						<ActionIcon
-							size={50}
-							radius="xl"
-							onClick={handleActionClick}
-							aria-label="Add manually"
-							disabled={uploadPhotoMutation.isPending}
-						>
-							<IconPlus size={24} stroke={2} color="#2a2a2a" />
-						</ActionIcon>
-						<ActionIcon
-							size={50}
-							radius="xl"
-							onClick={handleGalleryClick}
-							aria-label="Choose from gallery"
-							disabled={uploadPhotoMutation.isPending}
-						>
-							<IconPhoto size={24} stroke={2} color="#2a2a2a" />
-						</ActionIcon>
-						<ActionIcon
-							size={50}
-							radius="xl"
-							onClick={handleCameraClick}
-							aria-label="Take photo"
-							disabled={uploadPhotoMutation.isPending}
-						>
-							<IconCamera size={24} stroke={2} color="#2a2a2a" />
-						</ActionIcon>
-					</div>
-				)}
-			</Transition>
-
-			{/* Main FAB Button */}
-			<ActionIcon
-				size={60}
-				radius="md"
+		<>
+			<div
 				style={{
-					transform: fabExpanded ? "rotate(45deg)" : "rotate(0deg)",
-					transition: "transform 0.2s ease",
+					position: "fixed",
+					left: "50%",
+					bottom: 16,
+					transform: "translateX(-50%)",
+					width: "min(500px, calc(100% - 32px))",
+					display: "flex",
+					alignItems: "center",
+					gap: 12,
+					padding: "12px 16px",
+					zIndex: 3,
 				}}
-				aria-label={fabExpanded ? "Close menu" : "Add food item"}
-				onClick={() => setFabExpanded(!fabExpanded)}
-				loading={uploadPhotoMutation.isPending}
 			>
-				<IconPlus size={32} stroke={2} color="#2a2a2a" />
-			</ActionIcon>
+				<TextInput
+					readOnly
+					placeholder="Поиск продуктов..."
+					onClick={navigateToSearch}
+					onFocus={navigateToSearch}
+					leftSection={<IconSearch size={18} />}
+					style={{ flex: 1 }}
+					styles={{
+						input: {
+							backgroundColor: "#2a2a2a",
+							color: "#d9d9d9",
+							borderColor: "#3a3a3a",
+							cursor: "pointer",
+							viewTransitionName: "search-input",
+						},
+					}}
+				/>
 
-			{/* Hidden file inputs */}
+				<ActionIcon
+					size={48}
+					radius="lg"
+					aria-label="Сделать фото"
+					onClick={handlePhotoClick}
+					disabled={uploadPhotoMutation.isPending}
+					style={{
+						backgroundColor: "#ff7428",
+						color: "#1a1a1a",
+					}}
+				>
+					<IconCamera size={24} stroke={2} />
+				</ActionIcon>
+			</div>
+
 			<input
 				ref={cameraInputRef}
 				type="file"
@@ -161,13 +112,6 @@ export function AddProductFAB({ onAddProduct }: AddProductFABProps) {
 				onChange={handleFileSelect}
 				style={{ display: "none" }}
 			/>
-			<input
-				ref={galleryInputRef}
-				type="file"
-				accept="image/*"
-				onChange={handleFileSelect}
-				style={{ display: "none" }}
-			/>
-		</div>
+		</>
 	);
 }

@@ -28,7 +28,7 @@ serve(async (req) => {
 	}
 
 	// Parse and process file
-	const file = await parseFormData(req);
+	const { file, date } = await parseFormData(req);
 	const fileInfo = await processFile(user.id, file);
 
 	// Start both operations in parallel
@@ -66,7 +66,7 @@ serve(async (req) => {
 	}
 
 	// Insert nutrition data into database
-	const dataToInsert = prepareEatenProductData(nutritionData, user.id, publicUrl);
+	const dataToInsert = prepareEatenProductData(nutritionData, user.id, publicUrl, date);
 
 	const { id: insertedId } = await insertEatenProduct(supabaseClient, dataToInsert);
 
