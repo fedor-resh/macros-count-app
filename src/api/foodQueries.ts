@@ -50,7 +50,7 @@ export function useGetWeeklyFoodsQuery(date: string | null) {
 	});
 }
 
-export function useGetFoodsHistoryQuery(limit = 200) {
+export function useGetFoodsHistoryQuery(limit = 50) {
 	const userId = useAuthStore((state) => state.user?.id);
 	return useQuery({
 		queryKey: [],

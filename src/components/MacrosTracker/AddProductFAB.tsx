@@ -1,4 +1,4 @@
-import { ActionIcon, TextInput } from "@mantine/core";
+import { ActionIcon, Paper, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCamera, IconSearch } from "@tabler/icons-react";
 import type { ChangeEvent } from "react";
@@ -78,22 +78,18 @@ export function AddProductFAB() {
 					leftSection={<IconSearch size={20} />}
 					size="lg"
 					style={{ flex: 1, viewTransitionName: "search-input" }}
-					styles={{
-						input: {
-							backgroundColor: "var(--mantine-color-dark-6)",
-							boxShadow: "var(--mantine-shadow-lg)",
-							border: "1px solid var(--mantine-color-dark-3)",
-						},
-					}}
 				/>
 
+<Paper>
 				<ActionIcon
-					size={48}
+					size={50}
 					aria-label="Сделать фото"
 					onClick={handlePhotoClick}
+					variant="light"
 				>
 					<IconCamera size={24} stroke={2} />
 				</ActionIcon>
+				</Paper>
 			</div>
 
 			<input

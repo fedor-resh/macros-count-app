@@ -86,7 +86,7 @@ export function AddProductSearchPage() {
 						height: 50,
 						width: 60,
 					}}
-					onClick={() => navigate("/", { viewTransition: true })}
+					onClick={() => navigate("/")}
 				>
 					<IconArrowLeft size={20} />
 				</ActionIcon>
