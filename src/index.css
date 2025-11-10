@@ -22,6 +22,32 @@
 	font-style: italic;
 }
 
+body {
+	--mantine-color-dark-0: #c9c9c9;
+	--mantine-color-dark-1: #b8b8b8;
+	--mantine-color-dark-2: #828282;
+	--mantine-color-dark-3: #696969;
+	--mantine-color-dark-4: #424242;
+	--mantine-color-dark-5: #3b3b3b;
+	--mantine-color-dark-6: #2e2e2e;
+	--mantine-color-dark-7: #242424;
+	--mantine-color-dark-8: #1c1c1c;
+	--mantine-color-dark-9: #141414;
+	--mantine-color-orange-0: hsl(34, 100%, 95%);
+	--mantine-color-orange-1: hsl(33, 100%, 90%);
+	--mantine-color-orange-2: hsl(33, 100%, 83%);
+	--mantine-color-orange-3: hsl(32, 95%, 78%);
+	--mantine-color-orange-4: hsl(31, 96%, 70%);
+	--mantine-color-orange-5: hsl(29, 95%, 63%);
+	--mantine-color-orange-6: hsl(27, 96%, 59%);
+	--mantine-color-orange-7: hsl(24, 92%, 55%);
+	--mantine-color-orange-8: hsl(21, 83%, 53%);
+	--mantine-color-orange-9: hsl(17, 85%, 54%);
+	--mantine-color-body: var(--mantine-color-dark-9);
+	--input-bg: var(--mantine-color-dark-8);
+	--text-color: var(--mantine-color-dark-1);
+}
+
 @view-transition {
 	navigation: auto;
 }

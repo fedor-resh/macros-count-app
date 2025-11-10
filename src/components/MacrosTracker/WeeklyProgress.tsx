@@ -105,7 +105,7 @@ function DayMiniGraph({
 					}}
 				/>
 			</Box>
-			<Text size="13px" c={isActive ? "#d9d9d9" : "#afafaf"} fw={isActive ? 700 : 400}>
+			<Text size="13px" c={isActive ? "dark.1" : "dark.2"} fw={isActive ? 700 : 400}>
 				{day}
 			</Text>
 		</Stack>

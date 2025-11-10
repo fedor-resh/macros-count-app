@@ -1,4 +1,4 @@
-import { Box, Card, Group, Text } from "@mantine/core";
+import { Box, Card, Group, Paper, Text } from "@mantine/core";
 import { useLayoutEffect, useRef, useState } from "react";
 import type { EatenProduct } from "@/types/types";
 import { FullscreenImage } from "./FullscreenImage";
@@ -24,10 +24,10 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 	}, []);
 
 	return (
-		<Card
+		<Paper
 			p="sm"
-			radius="md"
-			bd={isValidFoodItem(item) ? "none" : "1px solid orange"}
+			withBorder
+			bd={isValidFoodItem(item) ? "1px solid var(--mantine-color-dark-6)" : "1px solid orange"}
 			onClick={() => onItemClick?.(index)}
 			ref={cardRef}
 		>
@@ -35,13 +35,13 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 				<div>
 					<Text fw={550}>{item.name}</Text>
 					<Group gap="md">
-						<Text span inherit c="#d9d9d9" w={50}>
+						<Text span inherit c="dark.1" w={50}>
 							{item.value ? `${item.value}г` : "-"}
 						</Text>
-						<Text span inherit c="#ff7428" w={50}>
+						<Text span inherit c="orange.9" w={50} fw={400}>
 							{item.kcalories ? `${item.kcalories}к` : "-"}
 						</Text>
-						<Text span inherit c="#3d7cff" w={50}>
+						<Text span inherit c="blue.6" w={50}>
 							{item.protein ? `${item.protein}г` : "-"}
 						</Text>
 					</Group>
@@ -60,6 +60,6 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 					</Box>
 				)}
 			</Group>
-		</Card>
+		</Paper>
 	);
 }

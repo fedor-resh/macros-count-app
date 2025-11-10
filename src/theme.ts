@@ -8,4 +8,17 @@ export const theme = createTheme({
 	headings: {
 		fontFamily: "PT Sans, sans-serif",
 	},
+	defaultRadius: "md",
+	components: {
+		ActionIcon: {
+			defaultProps: {
+				variant: "default",
+			},
+		},
+		Paper: {
+			defaultProps: {
+				bg: "var(--mantine-color-dark-8)",
+			},
+		},
+	}
 });
