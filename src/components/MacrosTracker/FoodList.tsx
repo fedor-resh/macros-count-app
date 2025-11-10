@@ -1,11 +1,9 @@
 import { Group, Stack, Text } from "@mantine/core";
-import type { EatenProduct } from "@/types/types";
+import type { EatenProduct, SearchResult } from "@/types/types";
 import { FoodItem } from "./FoodItem";
-// @ts-expect-error - ViewTransition is experimental in React 19
-import { ViewTransition } from "react";
 
 interface FoodListProps {
-	items: EatenProduct[];
+	items: (EatenProduct | SearchResult)[];
 	onItemClick?: (index: number) => void;
 }
 

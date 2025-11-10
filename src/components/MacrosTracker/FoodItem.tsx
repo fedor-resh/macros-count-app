@@ -1,14 +1,14 @@
-import { Badge, Box, Card, Group, Paper, Stack, Text } from "@mantine/core";
+import { Badge, Box, Group, Paper, Stack, Text } from "@mantine/core";
 import { useLayoutEffect, useRef, useState } from "react";
-import type { EatenProduct } from "@/types/types";
+import type { EatenProduct, SearchResult } from "@/types/types";
 import { FullscreenImage } from "./FullscreenImage";
 
-function isValidFoodItem(item: EatenProduct): boolean {
+function isValidFoodItem(item: EatenProduct | SearchResult): boolean {
 	return !!item.value && !!item.kcalories && !!item.protein;
 }
 
 interface FoodItemProps {
-	item: EatenProduct;
+	item: EatenProduct | SearchResult;
 	index: number;
 	onItemClick?: (index: number) => void;
 }
@@ -44,9 +44,14 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 						<Badge variant="light" color="blue.6">
 							{item.protein ? `${item.protein} г` : "-"}
 						</Badge>
+						{"source" in item && item.source === "eaten" && (
+							<Badge variant="light" color="green.9">
+								мой
+							</Badge>
+						)}
 					</Group>
 				</Stack>
-				{item.imageUrl && (
+				{"imageUrl" in item && item.imageUrl && (
 					<Box
 						style={{
 							marginRight: -12,

@@ -8,6 +8,7 @@ import { getFormattedDate } from "../utils/dateUtils";
 export const foodKeys = {
 	all: ["foods"] as const,
 	weeklyFoods: (monday: string) => ["foods", monday] as const,
+	products: (query: string) => ["products", query] as const,
 };
 
 export function getMondayOfWeek(date: string) {
@@ -50,17 +51,25 @@ export function useGetWeeklyFoodsQuery(date: string | null) {
 	});
 }
 
-export function useGetFoodsHistoryQuery(limit = 50) {
+export function useGetFoodsHistoryQuery(query = "", limit = 50) {
 	const userId = useAuthStore((state) => state.user?.id);
 	return useQuery({
-		queryKey: [],
+		queryKey: ["foods-history", query, limit],
 		queryFn: async () => {
-			const { data, error } = await supabase
+			let queryBuilder = supabase
 				.from("eaten_products")
 				.select("*")
 				.eq("userId", userId)
-				.order("createdAt", { ascending: false })
-				.limit(limit);
+				.order("createdAt", { ascending: false });
+
+			// Add search filter if query is provided
+			if (query.trim()) {
+				queryBuilder = queryBuilder.ilike("name", `%${query.trim()}%`);
+			}
+
+			queryBuilder = queryBuilder.limit(limit);
+
+			const { data, error } = await queryBuilder;
 
 			if (error) {
 				throw error;
@@ -70,6 +79,32 @@ export function useGetFoodsHistoryQuery(limit = 50) {
 		},
 		enabled: !!userId,
 		staleTime: 1000 * 60 * 5,
+	});
+}
+
+// Search products from products table
+export function useSearchProductsQuery(query: string, limit = 20) {
+	return useQuery({
+		queryKey: foodKeys.products(query),
+		queryFn: async () => {
+			if (!query.trim()) {
+				return [];
+			}
+
+			const { data, error } = await supabase
+				.from("products")
+				.select("*")
+				.ilike("name", `%${query.trim()}%`)
+				.limit(limit);
+
+			if (error) {
+				throw error;
+			}
+
+			return data;
+		},
+		enabled: query.trim().length > 0,
+		staleTime: 1000 * 60 * 10, // 10 minutes
 	});
 }
 

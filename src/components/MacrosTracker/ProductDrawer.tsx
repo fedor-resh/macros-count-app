@@ -26,17 +26,14 @@ export function ProductDrawer({ opened, onClose, product }: ProductDrawerProps) 
 			name: (value: string) => (value.trim().length === 0 ? "Название обязательно" : null),
 			value: (value: number) => {
 				if (value <= 0) return "Вес должен быть больше 0";
-				if (value % 1 !== 0) return "Вес должен быть целым числом";
 				return null;
 			},
 			kcalories: (value: number) => {
 				if (value < 0) return "Калории не могут быть отрицательными";
-				if (value % 1 !== 0) return "Калории должны быть целым числом";
 				return null;
 			},
 			protein: (value: number) => {
 				if (value < 0) return "Белки не могут быть отрицательными";
-				if (value % 1 !== 0) return "Белки должны быть целым числом";
 				return null;
 			},
 		},

@@ -2,17 +2,18 @@ import { ActionIcon, Group, Loader, Paper, Stack, Text, TextInput } from "@manti
 import { IconArrowLeft, IconSearch } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGetFoodsHistoryQuery } from "../api/foodQueries";
+import { useGetFoodsHistoryQuery, useSearchProductsQuery } from "../api/foodQueries";
 import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
 import { FoodList } from "../components/MacrosTracker/FoodList";
 import { useDateStore } from "../stores/dateStore";
-import type { EatenProduct } from "../types/types";
+import type { SearchResult } from "../types/types";
 
 export function AddProductSearchPage() {
 	const [query, setQuery] = useState("");
-	const { data: foodsHistory = [], isLoading, isError } = useGetFoodsHistoryQuery();
+	const { data: foodsHistory = [], isLoading: isLoadingHistory, isError: isErrorHistory } = useGetFoodsHistoryQuery(query, query.trim() ? 2 : 10);
+	const { data: productsData = [], isLoading: isLoadingProducts } = useSearchProductsQuery(query, 20);
 	const [drawerOpened, setDrawerOpened] = useState(false);
-	const [selectedProduct, setSelectedProduct] = useState<EatenProduct | null>(null);
+	const [selectedProduct, setSelectedProduct] = useState<SearchResult | null>(null);
 	const selectedDate = useDateStore((state) => state.selectedDate);
 	const navigate = useNavigate();
 
@@ -20,32 +21,38 @@ export function AddProductSearchPage() {
 		window.scrollTo({ top: 0, behavior: "auto" });
 	}, []);
 
-	const uniqueProducts = useMemo(() => {
-		const seen = new Set<string>();
-		const unique: EatenProduct[] = [];
+	// Combine results from eaten_products and products
+	const searchResults = useMemo((): SearchResult[] => {
+		// Convert eaten products to SearchResult
+		const eatenResults = foodsHistory.map((item) => ({
+			id: item.id,
+			name: item.name,
+			kcalories: item.kcalories,
+			protein: item.protein,
+			fat: null,
+			carbs: null,
+			unit: item.unit,
+			value: item.value,
+			source: "eaten" as const,
+		}));
 
-		for (const product of foodsHistory) {
-			const key = product.name.trim().toLowerCase();
-			if (seen.has(key)) {
-				continue;
-			}
-			seen.add(key);
-			unique.push(product);
-		}
+		// Convert products to SearchResult
+		const productsResults = productsData.map((item) => ({
+			id: item.id,
+			name: item.name,
+			kcalories: item.kcalories,
+			protein: item.protein,
+			fat: item.fat,
+			carbs: item.carbs,
+			unit: item.unit,
+			value: item.serving_value,
+			source: "products" as const,
+		}));
 
-		return unique;
-	}, [foodsHistory]);
+		return [...eatenResults, ...productsResults];
+	}, [foodsHistory, productsData]);
 
-	const filteredProducts = useMemo(() => {
-		const normalized = query.trim().toLowerCase();
-		if (!normalized) {
-			return uniqueProducts;
-		}
-
-		return uniqueProducts.filter((product) => product.name.toLowerCase().includes(normalized));
-	}, [query, uniqueProducts]);
-
-	const handleSelectProduct = (product: EatenProduct) => {
+	const handleSelectProduct = (product: SearchResult) => {
 		setSelectedProduct(product);
 		setDrawerOpened(true);
 	};
@@ -65,9 +72,14 @@ export function AddProductSearchPage() {
 			value: selectedProduct.value ?? 100,
 			kcalories: selectedProduct.kcalories,
 			protein: selectedProduct.protein,
+			fat: selectedProduct.fat,
+			carbs: selectedProduct.carbs,
 			unit: selectedProduct.unit,
 		};
 	}, [selectedProduct]);
+
+	const isLoading = isLoadingHistory || (query.trim() && isLoadingProducts);
+	const isError = isErrorHistory;
 
 	return (
 		<Stack gap="lg">
@@ -115,7 +127,7 @@ export function AddProductSearchPage() {
 					>
 						<Group gap="sm" align="center">
 							<Loader size="sm" color="orange" />
-							<Text c="#9a9a9a">Загружаем историю продуктов…</Text>
+							<Text c="#9a9a9a">Загружаем продукты…</Text>
 						</Group>
 					</Paper>
 				) : null}
@@ -137,8 +149,8 @@ export function AddProductSearchPage() {
 
 				{!isLoading && !isError ? (
 					<FoodList
-						items={filteredProducts}
-						onItemClick={(index) => handleSelectProduct(filteredProducts[index])}
+						items={searchResults}
+						onItemClick={(index) => handleSelectProduct(searchResults[index])}
 					/>
 				) : null}
 			</Stack>

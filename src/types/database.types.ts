@@ -1,4 +1,10 @@
-export type Json =
+[?25l[?2004h
+                                                                                                   
+  >  1. gwhqshlpglptxsexagcz [name: macros count app, org: wjtpodutsdlqksbvmrfi, region: eu-west-1]
+                                                                                                   
+                                                                                                   
+    ↑/k up • ↓/j down • / filter • q quit • ? more                                                 
+                                                                                                   [6A [J[2K[?2004l[?25h[?1002l[?1003l[?1006lexport type Json =
   | string
   | number
   | boolean
@@ -50,6 +56,48 @@ export type Database = {
           unit?: string | null
           userId?: string | null
           value?: number | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          brand: string | null
+          carbs: number | null
+          created_at: string | null
+          fat: number | null
+          id: number
+          kcalories: number | null
+          name: string
+          protein: number | null
+          serving_value: number | null
+          unit: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          brand?: string | null
+          carbs?: number | null
+          created_at?: string | null
+          fat?: number | null
+          id?: never
+          kcalories?: number | null
+          name: string
+          protein?: number | null
+          serving_value?: number | null
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          brand?: string | null
+          carbs?: number | null
+          created_at?: string | null
+          fat?: number | null
+          id?: never
+          kcalories?: number | null
+          name?: string
+          protein?: number | null
+          serving_value?: number | null
+          unit?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
