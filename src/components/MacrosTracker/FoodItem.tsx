@@ -1,4 +1,4 @@
-import { Box, Card, Group, Paper, Text } from "@mantine/core";
+import { Badge, Box, Card, Group, Paper, Stack, Text } from "@mantine/core";
 import { useLayoutEffect, useRef, useState } from "react";
 import type { EatenProduct } from "@/types/types";
 import { FullscreenImage } from "./FullscreenImage";
@@ -32,10 +32,10 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 			ref={cardRef}
 		>
 			<Group gap="md" justify="space-between" align="start" wrap="nowrap">
-				<div>
+				<Stack gap={5}>
 					<Text fw={550}>{item.name}</Text>
 					<Group gap="md">
-						<Text span inherit c="dark.1" w={50}>
+						{/* <Text span inherit c="dark.1" w={50}>
 							{item.value ? `${item.value}г` : "-"}
 						</Text>
 						<Text span inherit c="orange.9" w={50} fw={400}>
@@ -43,9 +43,18 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 						</Text>
 						<Text span inherit c="blue.6" w={50}>
 							{item.protein ? `${item.protein}г` : "-"}
-						</Text>
+						</Text> */}
+						<Badge variant="light" color="dark.1" >
+							{item.value ? `${item.value}г` : "-"}
+						</Badge>
+						<Badge variant="light" color="orange.9">
+							{item.kcalories ? `${item.kcalories}к` : "-"}
+						</Badge>
+						<Badge variant="light" color="blue.6">
+							{item.protein ? `${item.protein} г` : "-"}
+						</Badge>
 					</Group>
-				</div>
+				</Stack>
 				{item.imageUrl && (
 					<Box
 						style={{
