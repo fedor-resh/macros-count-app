@@ -1,9 +1,12 @@
-import { Button, Drawer, NumberInput, Stack, TextInput } from "@mantine/core";
+import { ActionIcon, Button, NumberInput, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { useEffect } from "react";
+import { IconX } from "@tabler/icons-react";
 import { useAddFoodMutation } from "../../api/foodQueries";
+import { AboveKeyboardWrapper } from "./AboveKeyboardWrapper";
 import { useAuthStore } from "../../stores/authStore";
 import { getFormattedDate } from "../../utils/dateUtils";
-import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface AddProductDrawerProps {
 	selectedDate?: string;
@@ -33,6 +36,7 @@ export function AddProductDrawer({
 }: AddProductDrawerProps) {
 	const user = useAuthStore((state) => state.user);
 	const { mutate: addFood, isPending: isLoading } = useAddFoodMutation();
+	const navigate = useNavigate();
 
 	const form = useForm<AddProductDrawerValues>({
 		mode: "controlled",
@@ -68,6 +72,7 @@ export function AddProductDrawer({
 		},
 	});
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: form is controlled
 	useEffect(() => {
 		if (!opened) {
 			return;
@@ -78,7 +83,7 @@ export function AddProductDrawer({
 		} else {
 			form.reset();
 		}
-	}, [opened, initialProduct, form]);
+	}, [opened, initialProduct]);
 
 	const handleSubmit = async (values: typeof form.values) => {
 		if (!user?.id || values.value === "" || values.kcalories === "" || values.protein === "") {
@@ -102,6 +107,7 @@ export function AddProductDrawer({
 				},
 			},
 		);
+		navigate("/");
 	};
 
 	const handleClose = () => {
@@ -109,88 +115,125 @@ export function AddProductDrawer({
 		onClose();
 	};
 
+	if (!opened) {
+		return null;
+	}
+
+	const productTitle = initialProduct?.name ?? form.values.name ?? "Добавить продукт";
+
 	return (
-		<Drawer
-			opened={opened}
-			onClose={handleClose}
-			title="Добавить продукт"
-			position="bottom"
-			size="500px"
-			styles={{
-				title: { color: "#d9d9d9", fontSize: "1.25rem", fontWeight: 600 },
-				header: {
+		<AboveKeyboardWrapper bottomOffset={16} autoFocus focusSelector='input[name="value"]'>
+			<div
+				style={{
+					width: "100%",
 					backgroundColor: "#1a1a1a",
-					borderBottom: "1px solid #2a2a2a",
-				},
-				body: { backgroundColor: "#1a1a1a", padding: "1.5rem" },
-				content: { backgroundColor: "#1a1a1a" },
-			}}
-		>
-			<form onSubmit={form.onSubmit(handleSubmit)}>
-				<Stack gap="md">
-					<TextInput
-						label="Название продукта"
-						placeholder="Введите название"
-						{...form.getInputProps("name")}
-						styles={{
-							label: { color: "#d9d9d9", marginBottom: "0.5rem" },
-							input: {
-								backgroundColor: "#2a2a2a",
-								border: "1px solid #3a3a3a",
-								color: "#d9d9d9",
-								"&:focus": { borderColor: "#ff7428" },
-							},
-						}}
-					/>
+					border: "1px solid #2a2a2a",
+					borderRadius: 16,
+					padding: "12px 16px",
+					boxShadow: "0 6px 24px rgba(0, 0, 0, 0.45)",
+				}}
+			>
+				<div
+					style={{
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "space-between",
+						marginBottom: 8,
+						gap: 12,
+					}}
+				>
+					<Text c="#d9d9d9" fw={600} size="sm" style={{ flex: 1, minWidth: 0 }}>
+						{productTitle}
+					</Text>
+					<ActionIcon
+						variant="subtle"
+						color="gray"
+						aria-label="Закрыть"
+						onClick={handleClose}
+						style={{ color: "#9a9a9a" }}
+					>
+						<IconX size={18} />
+					</ActionIcon>
+				</div>
 
-					<NumberInput
-						label="Граммы"
-						placeholder="100"
-						min={0}
-						step={1}
-						suffix="г"
-						{...form.getInputProps("value")}
-						styles={{
-							label: { color: "#d9d9d9", marginBottom: "0.5rem" },
-							input: {
-								backgroundColor: "#2a2a2a",
-								border: "1px solid #3a3a3a",
-								color: "#d9d9d9",
-								"&:focus": { borderColor: "#ff7428" },
-							},
+				<form onSubmit={form.onSubmit(handleSubmit)}>
+					<input type="hidden" value={form.values.name} name="name" />
+					<div
+						style={{
+							display: "grid",
+							gridTemplateColumns: "repeat(3, minmax(0, 1fr)) auto",
+							gap: 8,
 						}}
-						autoFocus
-					/>
+					>
+						<NumberInput
+							name="value"
+							placeholder="Граммы"
+							min={1}
+							step={1}
+							suffix="г"
+							hideControls
+							{...form.getInputProps("value")}
+							styles={{
+								input: {
+									backgroundColor: "#2a2a2a",
+									border: "1px solid #3a3a3a",
+									color: "#d9d9d9",
+									paddingInline: 12,
+								},
+							}}
+							onFocusCapture={(event) => {
+								event.currentTarget.select();
+							}}
+						/>
 
-					<NumberInput
-						label="Калории (на 100г)"
-						placeholder="0"
-						min={0}
-						step={1}
-						suffix="ккал"
-						{...form.getInputProps("kcalories")}
-						styles={{
-							label: { color: "#ff7428" },
-						}}
-					/>
+						<NumberInput
+							name="kcalories"
+							placeholder="ккал/100г"
+							min={0}
+							step={1}
+							suffix="ккал"
+							hideControls
+							{...form.getInputProps("kcalories")}
+							styles={{
+								input: {
+									backgroundColor: "#2a2a2a",
+									border: "1px solid #3a3a3a",
+									color: "#ff7428",
+									paddingInline: 12,
+								},
+							}}
+							onFocusCapture={(event) => {
+								event.currentTarget.select();
+							}}
+						/>
 
-					<NumberInput
-						label="Белки (на 100г)"
-						placeholder="0"
-						min={0}
-						step={1}
-						suffix="г"
-						{...form.getInputProps("protein")}
-						styles={{
-							label: { color: "#3d7cff" },
-						}}
-					/>
+						<NumberInput
+							name="protein"
+							placeholder="белок/100г"
+							min={0}
+							step={1}
+							suffix="г"
+							hideControls
+							{...form.getInputProps("protein")}
+							styles={{
+								input: {
+									backgroundColor: "#2a2a2a",
+									border: "1px solid #3a3a3a",
+									color: "#3d7cff",
+									paddingInline: 12,
+								},
+							}}
+							onFocusCapture={(event) => {
+								event.currentTarget.select();
+							}}
+						/>
 
-					<Button type="submit" loading={isLoading} fullWidth mt="md">
-						Сохранить
-					</Button>
-				</Stack>
-			</form>
-		</Drawer>
+						<Button type="submit" loading={isLoading} style={{ backgroundColor: "#ff7428" }}>
+							Сохранить
+						</Button>
+					</div>
+				</form>
+			</div>
+		</AboveKeyboardWrapper>
 	);
 }

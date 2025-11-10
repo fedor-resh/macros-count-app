@@ -1,8 +1,11 @@
-import { Badge, Group, Loader, Paper, Stack, Text, TextInput } from "@mantine/core";
-import { IconSearch } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { ActionIcon, Group, Loader, Paper, Stack, Text, TextInput } from "@mantine/core";
+import { IconArrowLeft, IconSearch } from "@tabler/icons-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useGetFoodsHistoryQuery } from "../api/foodQueries";
 import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
+import { AboveKeyboardWrapper } from "../components/MacrosTracker/AboveKeyboardWrapper";
+import { FoodList } from "../components/MacrosTracker/FoodList";
 import { useDateStore } from "../stores/dateStore";
 import type { EatenProduct } from "../types/types";
 
@@ -12,6 +15,11 @@ export function AddProductSearchPage() {
 	const [drawerOpened, setDrawerOpened] = useState(false);
 	const [selectedProduct, setSelectedProduct] = useState<EatenProduct | null>(null);
 	const selectedDate = useDateStore((state) => state.selectedDate);
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		window.scrollTo({ top: 0, behavior: "auto" });
+	}, []);
 
 	const uniqueProducts = useMemo(() => {
 		const seen = new Set<string>();
@@ -63,19 +71,43 @@ export function AddProductSearchPage() {
 	}, [selectedProduct]);
 
 	return (
-		<Stack gap="lg">
-			<TextInput
-				autoFocus
-				placeholder="Введите название продукта"
-				leftSection={<IconSearch size={18} />}
-				value={query}
-				onChange={(event) => setQuery(event.currentTarget.value)}
-				style={{
-					viewTransitionName: "search-input",
-				}}
-			/>
+		<Stack gap="lg" style={{ minHeight: "100vh", paddingBottom: "120px" }}>
+			<AboveKeyboardWrapper bottomOffset={16} autoFocus>
+				<div
+					style={{
+						display: "flex",
+						alignItems: "center",
+						gap: 12,
+						paddingInline: 16,
+					}}
+				>
+					<ActionIcon
+						variant="subtle"
+						aria-label="Назад"
+						onClick={() => navigate("/", { viewTransition: true })}
+						style={{
+							backgroundColor: "rgba(42, 42, 42, 0.8)",
+							color: "#d9d9d9",
+						}}
+					>
+						<IconArrowLeft size={20} />
+					</ActionIcon>
 
-			<Stack gap="sm">
+					<TextInput
+						placeholder="Введите название продукта"
+						leftSection={<IconSearch size={18} />}
+						value={query}
+						onChange={(event) => setQuery(event.currentTarget.value)}
+						name="search-input"
+						style={{
+							viewTransitionName: "search-input",
+							flex: 1,
+						}}
+					/>
+				</div>
+			</AboveKeyboardWrapper>
+
+			<Stack gap="sm" style={{ flex: 1, overflowY: "auto", paddingBottom: 16, paddingInline: 16 }}>
 				{isLoading ? (
 					<Paper
 						withBorder
@@ -104,67 +136,11 @@ export function AddProductSearchPage() {
 					</Paper>
 				) : null}
 
-				{!isLoading && !isError
-					? filteredProducts.map((product) => (
-							<Paper
-								key={product.id}
-								withBorder
-								p="md"
-								onClick={() => handleSelectProduct(product)}
-								style={{
-									backgroundColor: "#1a1a1a",
-									borderColor: "#2a2a2a",
-									cursor: "pointer",
-								}}
-							>
-								<Stack gap={4}>
-									<Group justify="space-between" align="flex-start">
-										<Text fw={600} c="#d9d9d9">
-											{product.name}
-										</Text>
-										<Group gap={8}>
-											<Badge color="orange" variant="light">
-												{product.kcalories ?? "—"} ккал
-											</Badge>
-											<Badge color="blue" variant="light">
-												{product.protein ?? "—"} г белка
-											</Badge>
-										</Group>
-									</Group>
-									<Group gap={8}>
-										{product.value ? (
-											<Badge color="gray" variant="light">
-												{product.value}
-												{product.unit ? ` ${product.unit}` : ""}
-											</Badge>
-										) : null}
-										{product.date ? (
-											<Text size="xs" c="#6a6a6a">
-												Дата: {product.date}
-											</Text>
-										) : null}
-									</Group>
-									<Text size="xs" c="#6a6a6a">
-										Нажмите, чтобы повторно использовать этот продукт
-									</Text>
-								</Stack>
-							</Paper>
-					  ))
-					: null}
-
-				{!isLoading && !isError && filteredProducts.length === 0 ? (
-					<Paper
-						withBorder
-						p="xl"
-						style={{ backgroundColor: "#1a1a1a", borderColor: "#2a2a2a" }}
-					>
-						<Stack gap="xs" align="center">
-							<Text c="#9a9a9a">Ничего не найдено</Text>
-							<Text size="sm" c="#6a6a6a">
-								Попробуйте изменить запрос или добавить продукт вручную.
-							</Text>
-						</Stack>
-					</Paper>
+				{!isLoading && !isError ? (
+					<FoodList
+						items={filteredProducts}
+						onItemClick={(index) => handleSelectProduct(filteredProducts[index])}
+					/>
 				) : null}
 			</Stack>
 

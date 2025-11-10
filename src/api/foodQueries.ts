@@ -95,6 +95,8 @@ export function useAddFoodMutation() {
 }
 
 export function useUpdateFoodMutation() {
+	const queryClient = useQueryClient();
+
 	return useMutation({
 		mutationFn: async (
 			params: InsertEatenProduct & {
@@ -113,7 +115,11 @@ export function useUpdateFoodMutation() {
 			}
 			return data;
 		},
-		meta: { invalidateKeys: [foodKeys.all] },
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: foodKeys.all,
+			});
+		},
 	});
 }
 
