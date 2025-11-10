@@ -70,7 +70,7 @@ export function AddProductSearchPage() {
 	}, [selectedProduct]);
 
 	return (
-		<Stack gap="lg" style={{ minHeight: "100vh", paddingBottom: "120px", paddingInline: 16 }}>
+		<Stack gap="lg">
 			<div
 				style={{
 					display: "flex",

@@ -35,15 +35,6 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 				<Stack gap={5}>
 					<Text fw={550}>{item.name}</Text>
 					<Group gap="md">
-						{/* <Text span inherit c="dark.1" w={50}>
-							{item.value ? `${item.value}г` : "-"}
-						</Text>
-						<Text span inherit c="orange.9" w={50} fw={400}>
-							{item.kcalories ? `${item.kcalories}к` : "-"}
-						</Text>
-						<Text span inherit c="blue.6" w={50}>
-							{item.protein ? `${item.protein}г` : "-"}
-						</Text> */}
 						<Badge variant="light" color="dark.1" >
 							{item.value ? `${item.value}г` : "-"}
 						</Badge>
