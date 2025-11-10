@@ -1,6 +1,6 @@
 import type { Database } from "./database.types";
 
-export type EatenProductTable = Database["public"]["Tables"]["eaten_product"];
+export type EatenProductTable = Database["public"]["Tables"]["eaten_products"];
 
 export type EatenProduct = EatenProductTable["Row"];
 

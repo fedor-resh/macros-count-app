@@ -37,7 +37,7 @@ export async function insertEatenProduct(
 	data: EatenProductInsert,
 ): Promise<{ id?: number }> {
 	const { data: insertedData, error } = await supabaseClient
-		.from("eaten_product")
+		.from("eaten_products")
 		.insert(data)
 		.select();
 

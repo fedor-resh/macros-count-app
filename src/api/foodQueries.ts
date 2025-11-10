@@ -34,7 +34,7 @@ export function useGetWeeklyFoodsQuery(date: string | null) {
 			endDate.setDate(endDate.getDate() + 6);
 			console.log("end", endDate.toLocaleDateString("ru-RU", { weekday: "short" }));
 			const { data, error } = await supabase
-				.from("eaten_product")
+				.from("eaten_products")
 				.select("*")
 				.eq("userId", userId)
 				.gte("date", monday)
@@ -56,7 +56,7 @@ export function useGetFoodsHistoryQuery(limit = 200) {
 		queryKey: [],
 		queryFn: async () => {
 			const { data, error } = await supabase
-				.from("eaten_product")
+				.from("eaten_products")
 				.select("*")
 				.eq("userId", userId)
 				.order("createdAt", { ascending: false })
@@ -79,7 +79,7 @@ export function useAddFoodMutation() {
 
 	return useMutation({
 		mutationFn: async (foodData: InsertEatenProduct) => {
-			const { data, error } = await supabase.from("eaten_product").insert(foodData).select();
+			const { data, error } = await supabase.from("eaten_products").insert(foodData).select();
 
 			if (error) {
 				throw error;
@@ -105,7 +105,7 @@ export function useUpdateFoodMutation() {
 		) => {
 			const { id, ...foodData } = params;
 			const { data, error } = await supabase
-				.from("eaten_product")
+				.from("eaten_products")
 				.update(foodData)
 				.eq("id", id)
 				.select();
@@ -128,7 +128,7 @@ export function useDeleteFoodMutation() {
 
 	return useMutation({
 		mutationFn: async (id: number) => {
-			const { data, error } = await supabase.from("eaten_product").delete().eq("id", id).select();
+			const { data, error } = await supabase.from("eaten_products").delete().eq("id", id).select();
 
 			if (error) {
 				throw error;

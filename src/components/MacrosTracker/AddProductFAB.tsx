@@ -67,7 +67,6 @@ export function AddProductFAB() {
 					display: "flex",
 					alignItems: "center",
 					gap: 12,
-					padding: "12px 16px",
 					zIndex: 3,
 				}}
 			>
@@ -76,29 +75,22 @@ export function AddProductFAB() {
 					placeholder="Поиск продуктов..."
 					onClick={navigateToSearch}
 					onFocus={navigateToSearch}
-					leftSection={<IconSearch size={18} />}
-					style={{ flex: 1 }}
+					leftSection={<IconSearch size={20} />}
+					size="lg"
+					style={{ flex: 1, viewTransitionName: "search-input" }}
 					styles={{
 						input: {
-							backgroundColor: "#2a2a2a",
-							color: "#d9d9d9",
-							borderColor: "#3a3a3a",
-							cursor: "pointer",
-							viewTransitionName: "search-input",
+							backgroundColor: "var(--mantine-color-dark-6)",
+							boxShadow: "var(--mantine-shadow-lg)",
+							border: "1px solid var(--mantine-color-dark-3)",
 						},
 					}}
 				/>
 
 				<ActionIcon
 					size={48}
-					radius="lg"
 					aria-label="Сделать фото"
 					onClick={handlePhotoClick}
-					disabled={uploadPhotoMutation.isPending}
-					style={{
-						backgroundColor: "#ff7428",
-						color: "#1a1a1a",
-					}}
 				>
 					<IconCamera size={24} stroke={2} />
 				</ActionIcon>

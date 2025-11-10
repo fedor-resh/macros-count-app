@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetFoodsHistoryQuery } from "../api/foodQueries";
 import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
-import { AboveKeyboardWrapper } from "../components/MacrosTracker/AboveKeyboardWrapper";
 import { FoodList } from "../components/MacrosTracker/FoodList";
 import { useDateStore } from "../stores/dateStore";
 import type { EatenProduct } from "../types/types";
@@ -71,43 +70,43 @@ export function AddProductSearchPage() {
 	}, [selectedProduct]);
 
 	return (
-		<Stack gap="lg" style={{ minHeight: "100vh", paddingBottom: "120px" }}>
-			<AboveKeyboardWrapper bottomOffset={16} autoFocus>
-				<div
+		<Stack gap="lg" style={{ minHeight: "100vh", paddingBottom: "120px", paddingInline: 16 }}>
+			<div
+				style={{
+					display: "flex",
+					alignItems: "center",
+					gap: 12,
+				}}
+			>
+				<ActionIcon
+					variant="default"
+					aria-label="Назад"
+					size="xl"
 					style={{
-						display: "flex",
-						alignItems: "center",
-						gap: 12,
-						paddingInline: 16,
+						height: 50,
+						width: 60,
 					}}
+					onClick={() => navigate("/", { viewTransition: true })}
 				>
-					<ActionIcon
-						variant="subtle"
-						aria-label="Назад"
-						onClick={() => navigate("/", { viewTransition: true })}
-						style={{
-							backgroundColor: "rgba(42, 42, 42, 0.8)",
-							color: "#d9d9d9",
-						}}
-					>
-						<IconArrowLeft size={20} />
-					</ActionIcon>
+					<IconArrowLeft size={20} />
+				</ActionIcon>
 
-					<TextInput
-						placeholder="Введите название продукта"
-						leftSection={<IconSearch size={18} />}
-						value={query}
-						onChange={(event) => setQuery(event.currentTarget.value)}
-						name="search-input"
-						style={{
-							viewTransitionName: "search-input",
-							flex: 1,
-						}}
-					/>
-				</div>
-			</AboveKeyboardWrapper>
+				<TextInput
+					placeholder="Введите название продукта"
+					leftSection={<IconSearch size={20} />}
+					value={query}
+					onChange={(event) => setQuery(event.currentTarget.value)}
+					name="search-input"
+					autoFocus
+					size="lg"
+					style={{
+						viewTransitionName: "search-input",
+						width: "100%",
+					}}
+				/>
+			</div>
 
-			<Stack gap="sm" style={{ flex: 1, overflowY: "auto", paddingBottom: 16, paddingInline: 16 }}>
+			<Stack gap="sm" style={{ flex: 1, overflowY: "auto", paddingBottom: 16 }}>
 				{isLoading ? (
 					<Paper
 						withBorder

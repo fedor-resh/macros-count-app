@@ -14,7 +14,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      eaten_product: {
+      eaten_products: {
         Row: {
           createdAt: string
           date: string | null

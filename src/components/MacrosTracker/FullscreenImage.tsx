@@ -68,7 +68,6 @@ export function FullscreenImage({ src, style }: FullscreenImageProps) {
 				display: "flex",
 				alignItems: "center",
 				justifyContent: "center",
-				backgroundColor: "rgba(0, 0, 0, 0.9)",
 			}}
 			onClick={handleToggle}
 		>
