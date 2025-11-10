@@ -1,17 +1,3 @@
-[?25l[?2004h
-                                                                                                   
-  >  1. gwhqshlpglptxsexagcz [name: macros count app, org: wjtpodutsdlqksbvmrfi, region: eu-west-1]
-                                                                                                   
-                                                                                                   
-    ↑/k up • ↓/j down • / filter • q quit • ? more                                                 
-                                                                                                   [6A [J[2K[?2004l[?25h[?1002l[?1003l[?1006lexport type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
-
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
