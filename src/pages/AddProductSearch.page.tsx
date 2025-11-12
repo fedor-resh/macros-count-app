@@ -2,12 +2,12 @@ import { ActionIcon, Badge, Group, Loader, Paper, Stack, Text, TextInput } from 
 import { IconArrowLeft, IconSearch } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGetFoodsHistoryQuery, useSearchProductsQuery } from "../api/foodQueries";
-import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
-import { FoodList } from "../components/FoodList";
-import { useDateStore } from "../stores/dateStore";
-import { EatenProduct } from "@/types/types";
 import type { FoodItem } from "@/components/FoodList/types";
+import type { EatenProduct } from "@/types/types";
+import { useGetFoodsHistoryQuery, useSearchProductsQuery } from "../api/foodQueries";
+import { FoodList } from "../components/FoodList";
+import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
+import { useDateStore } from "../stores/dateStore";
 
 export function AddProductSearchPage() {
 	const [query, setQuery] = useState("");
@@ -54,19 +54,6 @@ export function AddProductSearchPage() {
 		setSelectedProduct(null);
 	};
 
-	const drawerInitialProduct = useMemo(() => {
-		if (!selectedProduct) {
-			return undefined;
-		}
-
-		return {
-			name: selectedProduct.name,
-			value: selectedProduct.value,
-			kcalories: selectedProduct.kcalories,
-			protein: selectedProduct.protein,
-		};
-	}, [selectedProduct]);
-
 	const isLoading = isLoadingHistory || (query.trim() && isLoadingProducts);
 	const isError = isErrorHistory;
 
@@ -108,39 +95,18 @@ export function AddProductSearchPage() {
 			</div>
 
 			<Stack gap="sm" style={{ flex: 1, overflowY: "auto", paddingBottom: 16 }}>
-				{isLoading ? (
-					<Paper withBorder p="xl" style={{ backgroundColor: "#1a1a1a", borderColor: "#2a2a2a" }}>
-						<Group gap="sm" align="center">
-							<Loader size="sm" color="orange" />
-							<Text c="#9a9a9a">Загружаем продукты…</Text>
-						</Group>
-					</Paper>
-				) : null}
-
-				{!isLoading && isError ? (
-					<Paper withBorder p="xl" style={{ backgroundColor: "#1a1a1a", borderColor: "#2a2a2a" }}>
-						<Stack gap="xs" align="center">
-							<Text c="#e66a6a">Не удалось загрузить продукты</Text>
-							<Text size="sm" c="#9a9a9a">
-								Попробуйте обновить страницу позже.
-							</Text>
-						</Stack>
-					</Paper>
-				) : null}
-
-				{!isLoading && !isError ? (
-					<FoodList
-						items={searchResults}
-						onItemClick={(index) => handleSelectProduct(searchResults[index])}
-					/>
-				) : null}
+				<FoodList
+					isLoading={!!isLoading}
+					items={searchResults}
+					onItemClick={(index) => handleSelectProduct(searchResults[index])}
+				/>
 			</Stack>
 
 			<AddProductDrawer
 				selectedDate={selectedDate ?? undefined}
 				opened={drawerOpened}
 				onClose={handleDrawerClose}
-				initialProduct={drawerInitialProduct}
+				initialProduct={selectedProduct!}
 			/>
 		</Stack>
 	);

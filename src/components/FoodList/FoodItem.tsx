@@ -37,13 +37,13 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 					<Text fw={550}>{item.name}</Text>
 					<Group gap="md">
 						<Badge variant="light" color="dark.1">
-							{item.value ? `${item.value}г` : "-"}
+							{item.value ? `${item.value} г` : "-"}
 						</Badge>
 						<Badge variant="light" color="orange.9">
-							{item.kcalories ? `${item.kcalories}к` : "-"}
+							{item.kcalories ? `${item.kcalories} к` : "-"}
 						</Badge>
 						<Badge variant="light" color="blue.6">
-							{item.protein ? `${item.protein} г` : "-"}
+							{item.protein ? `${item.protein} б` : "-"}
 						</Badge>
 						{item.badges}
 					</Group>
