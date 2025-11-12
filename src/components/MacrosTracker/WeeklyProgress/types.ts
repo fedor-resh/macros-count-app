@@ -10,4 +10,3 @@ export interface DayProgress {
 	isActive: boolean;
 	onClick: () => void;
 }
-

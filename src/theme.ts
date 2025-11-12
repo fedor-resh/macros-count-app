@@ -20,5 +20,5 @@ export const theme = createTheme({
 				bg: "var(--mantine-color-dark-8)",
 			},
 		},
-	}
+	},
 });

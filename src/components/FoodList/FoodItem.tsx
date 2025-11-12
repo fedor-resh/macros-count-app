@@ -1,14 +1,15 @@
 import { Badge, Box, Group, Paper, Stack, Text } from "@mantine/core";
 import { useLayoutEffect, useRef, useState } from "react";
-import type { EatenProduct, SearchResult } from "@/types/types";
-import { FullscreenImage } from "./FullscreenImage";
+import type { EatenProduct } from "../../types/types";
+import { FullscreenImage } from "../MacrosTracker/FullscreenImage";
+import type { FoodItem as FoodItemType } from "./types";
 
-function isValidFoodItem(item: EatenProduct | SearchResult): boolean {
+function isValidFoodItem(item: EatenProduct): boolean {
 	return !!item.value && !!item.kcalories && !!item.protein;
 }
 
-interface FoodItemProps {
-	item: EatenProduct | SearchResult;
+export interface FoodItemProps {
+	item: FoodItemType;
 	index: number;
 	onItemClick?: (index: number) => void;
 }
@@ -35,7 +36,7 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 				<Stack gap={5}>
 					<Text fw={550}>{item.name}</Text>
 					<Group gap="md">
-						<Badge variant="light" color="dark.1" >
+						<Badge variant="light" color="dark.1">
 							{item.value ? `${item.value}г` : "-"}
 						</Badge>
 						<Badge variant="light" color="orange.9">
@@ -44,11 +45,7 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 						<Badge variant="light" color="blue.6">
 							{item.protein ? `${item.protein} г` : "-"}
 						</Badge>
-						{"source" in item && item.source === "eaten" && (
-							<Badge variant="light" color="green.9">
-								мой
-							</Badge>
-						)}
+						{item.badges}
 					</Group>
 				</Stack>
 				{"imageUrl" in item && item.imageUrl && (

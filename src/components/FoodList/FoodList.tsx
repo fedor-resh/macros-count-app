@@ -1,9 +1,9 @@
 import { Group, Stack, Text } from "@mantine/core";
-import type { EatenProduct, SearchResult } from "@/types/types";
 import { FoodItem } from "./FoodItem";
+import type { FoodItem as FoodItemType } from "./types";
 
-interface FoodListProps {
-	items: (EatenProduct | SearchResult)[];
+export interface FoodListProps {
+	items: FoodItemType[];
 	onItemClick?: (index: number) => void;
 }
 

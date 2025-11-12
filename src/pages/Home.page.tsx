@@ -4,7 +4,7 @@ import { useGetWeeklyFoodsQuery } from "../api/foodQueries";
 import { useGetUserGoalsQuery } from "../api/userQueries";
 import { AddProductFAB } from "../components/MacrosTracker/AddProductFAB";
 import { CircularGraph } from "../components/MacrosTracker/CircularGraph";
-import { FoodList } from "../components/MacrosTracker/FoodList";
+import { FoodList } from "../components/FoodList";
 import { ProductDrawer } from "../components/MacrosTracker/ProductDrawer";
 import { WeeklyProgress } from "../components/MacrosTracker/WeeklyProgress";
 import { useDateStore } from "../stores/dateStore";

@@ -15,4 +15,3 @@ export function startTransition(callback: ViewTransitionCallback) {
 		callback();
 	}
 }
-

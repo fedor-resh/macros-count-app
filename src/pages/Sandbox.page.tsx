@@ -14,14 +14,14 @@ const useSandboxStore = create<SandboxStore>((set) => ({
 	f: foods,
 	setF: (f: string[]) => {
 		document.startViewTransition(() => {
-				set({ f });
+			set({ f });
 		});
 	},
 }));
 
 export function SandboxPage() {
-    const f = useSandboxStore((state) => state.f);
-    const setF = useSandboxStore((state) => state.setF);
+	const f = useSandboxStore((state) => state.f);
+	const setF = useSandboxStore((state) => state.setF);
 
 	return (
 		<Box
@@ -39,36 +39,39 @@ export function SandboxPage() {
 				<Text c="dimmed" size="sm">
 					Click shuffle to see browser View Transition animations.
 				</Text>
-				
+
 				<Group gap="md">
-					{f.map(food=> (
+					{f.map((food) => (
 						<Box
 							key={food}
 							p="md"
 							bg="dark.7"
-							style={{ 
+							style={{
 								borderRadius: "var(--mantine-radius-md)",
-                                viewTransitionName: food,
+								viewTransitionName: food,
 							}}
 						>
-							<Text fz={24} fw={600}>{food}</Text>
+							<Text fz={24} fw={600}>
+								{food}
+							</Text>
 						</Box>
-                        
 					))}
-                    
 				</Group>
 
-				<Button variant="light" onClick={() => startTransition(() => setF(f.toSorted(()=>Math.random() - 0.5)))} mt="md">
+				<Button
+					variant="light"
+					onClick={() => startTransition(() => setF(f.toSorted(() => Math.random() - 0.5)))}
+					mt="md"
+				>
 					Shuffle
 				</Button>
-                <Button variant="light" onClick={() => setF(f.slice(1)) } mt="md">
-                    Prev
-                </Button>
-                <Button variant="light" onClick={() => setF([foods[f.length], ...f]) } mt="md">
-                    Next
-                </Button>
+				<Button variant="light" onClick={() => setF(f.slice(1))} mt="md">
+					Prev
+				</Button>
+				<Button variant="light" onClick={() => setF([foods[f.length], ...f])} mt="md">
+					Next
+				</Button>
 			</Group>
 		</Box>
 	);
 }
-

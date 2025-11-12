@@ -45,13 +45,13 @@ export function FullscreenImage({ src, style }: FullscreenImageProps) {
 				src={src}
 				ref={ref}
 				alt="Food"
-				style={{ 
+				style={{
 					position: "relative",
 					borderTopRightRadius: "10px",
 					borderBottomRightRadius: "10px",
-					cursor: "pointer", 
+					cursor: "pointer",
 					viewTransitionName: `${IMAGE_TRANSITION_NAME}-${id}`,
-					...style 
+					...style,
 				}}
 				onClick={handleToggle}
 			/>

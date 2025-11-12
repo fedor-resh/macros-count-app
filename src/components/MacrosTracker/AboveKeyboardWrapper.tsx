@@ -25,7 +25,7 @@ export function AboveKeyboardWrapper({
 	style,
 	className,
 	autoFocus,
-	focusSelector = "input, textarea, select, [contenteditable=\"true\"]",
+	focusSelector = 'input, textarea, select, [contenteditable="true"]',
 }: AboveKeyboardWrapperProps) {
 	const [top, setTop] = useState(0);
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -96,4 +96,3 @@ export function AboveKeyboardWrapper({
 		</div>
 	);
 }
-

@@ -8,8 +8,7 @@ export function prepareEatenProductData(
 	date?: string,
 ): EatenProductInsert {
 	const today = new Date().toLocaleDateString("sv-SE");
-	const normalizedDate =
-		typeof date === "string" && date.trim().length > 0 ? date.trim() : today;
+	const normalizedDate = typeof date === "string" && date.trim().length > 0 ? date.trim() : today;
 
 	const data: EatenProductInsert = {
 		name: analysis.food_name || "Продукт",

@@ -28,7 +28,10 @@ export interface UploadPhotoPayload {
 	date: string;
 }
 
-export async function uploadPhoto({ file, date }: UploadPhotoPayload): Promise<UploadPhotoResponse> {
+export async function uploadPhoto({
+	file,
+	date,
+}: UploadPhotoPayload): Promise<UploadPhotoResponse> {
 	try {
 		// Get the current session
 		const {

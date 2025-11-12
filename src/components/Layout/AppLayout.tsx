@@ -35,7 +35,11 @@ export function AppLayout() {
 							onClick={() => navigate("/")}
 							style={{ display: "flex", alignItems: "center" }}
 						>
-							<img src={faviconUrl} alt="Home" style={{ width: 32, height: 32, cursor: "pointer" }} />
+							<img
+								src={faviconUrl}
+								alt="Home"
+								style={{ width: 32, height: 32, cursor: "pointer" }}
+							/>
 						</UnstyledButton>
 						<Group gap="xs">
 							<DatePickerInput

@@ -35,22 +35,22 @@ export function AddProductFAB() {
 				date: selectedDate,
 			},
 			{
-			onSuccess: (result) => {
-				notifications.show({
-					title: "Успешно",
-					message: `Фото проанализировано: ${result.analysis.food_name}`,
-					color: "green",
-				});
-			},
-			onError: (error) => {
-				const message = error instanceof Error ? error.message : "Не удалось загрузить фото";
-				notifications.show({ title: "Ошибка", message, color: "red" });
-			},
-			onSettled: () => {
-				if (cameraInputRef.current) {
-					cameraInputRef.current.value = "";
-				}
-			},
+				onSuccess: (result) => {
+					notifications.show({
+						title: "Успешно",
+						message: `Фото проанализировано: ${result.analysis.food_name}`,
+						color: "green",
+					});
+				},
+				onError: (error) => {
+					const message = error instanceof Error ? error.message : "Не удалось загрузить фото";
+					notifications.show({ title: "Ошибка", message, color: "red" });
+				},
+				onSettled: () => {
+					if (cameraInputRef.current) {
+						cameraInputRef.current.value = "";
+					}
+				},
 			},
 		);
 	};
@@ -80,15 +80,15 @@ export function AddProductFAB() {
 					style={{ flex: 1, viewTransitionName: "search-input" }}
 				/>
 
-<Paper>
-				<ActionIcon
-					size={50}
-					aria-label="Сделать фото"
-					onClick={handlePhotoClick}
-					variant="light"
-				>
-					<IconCamera size={24} stroke={2} />
-				</ActionIcon>
+				<Paper>
+					<ActionIcon
+						size={50}
+						aria-label="Сделать фото"
+						onClick={handlePhotoClick}
+						variant="light"
+					>
+						<IconCamera size={24} stroke={2} />
+					</ActionIcon>
 				</Paper>
 			</div>
 

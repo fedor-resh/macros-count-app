@@ -1,19 +1,27 @@
-import { ActionIcon, Group, Loader, Paper, Stack, Text, TextInput } from "@mantine/core";
+import { ActionIcon, Badge, Group, Loader, Paper, Stack, Text, TextInput } from "@mantine/core";
 import { IconArrowLeft, IconSearch } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetFoodsHistoryQuery, useSearchProductsQuery } from "../api/foodQueries";
 import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
-import { FoodList } from "../components/MacrosTracker/FoodList";
+import { FoodList } from "../components/FoodList";
 import { useDateStore } from "../stores/dateStore";
-import type { SearchResult } from "../types/types";
+import { EatenProduct } from "@/types/types";
+import type { FoodItem } from "@/components/FoodList/types";
 
 export function AddProductSearchPage() {
 	const [query, setQuery] = useState("");
-	const { data: foodsHistory = [], isLoading: isLoadingHistory, isError: isErrorHistory } = useGetFoodsHistoryQuery(query, query.trim() ? 2 : 10);
-	const { data: productsData = [], isLoading: isLoadingProducts } = useSearchProductsQuery(query, 20);
+	const {
+		data: foodsHistory = [],
+		isLoading: isLoadingHistory,
+		isError: isErrorHistory,
+	} = useGetFoodsHistoryQuery(query, query.trim() ? 2 : 10);
+	const { data: productsData = [], isLoading: isLoadingProducts } = useSearchProductsQuery(
+		query,
+		20,
+	);
 	const [drawerOpened, setDrawerOpened] = useState(false);
-	const [selectedProduct, setSelectedProduct] = useState<SearchResult | null>(null);
+	const [selectedProduct, setSelectedProduct] = useState<EatenProduct | null>(null);
 	const selectedDate = useDateStore((state) => state.selectedDate);
 	const navigate = useNavigate();
 
@@ -22,37 +30,21 @@ export function AddProductSearchPage() {
 	}, []);
 
 	// Combine results from eaten_products and products
-	const searchResults = useMemo((): SearchResult[] => {
+	const searchResults = useMemo((): FoodItem[] => {
 		// Convert eaten products to SearchResult
 		const eatenResults = foodsHistory.map((item) => ({
-			id: item.id,
-			name: item.name,
-			kcalories: item.kcalories,
-			protein: item.protein,
-			fat: null,
-			carbs: null,
-			unit: item.unit,
-			value: item.value,
-			source: "eaten" as const,
+			...item,
+			badges: (
+				<Badge variant="light" color="green.9">
+					мой
+				</Badge>
+			),
 		}));
 
-		// Convert products to SearchResult
-		const productsResults = productsData.map((item) => ({
-			id: item.id,
-			name: item.name,
-			kcalories: item.kcalories,
-			protein: item.protein,
-			fat: item.fat,
-			carbs: item.carbs,
-			unit: item.unit,
-			value: item.serving_value,
-			source: "products" as const,
-		}));
-
-		return [...eatenResults, ...productsResults];
+		return [...eatenResults, ...productsData];
 	}, [foodsHistory, productsData]);
 
-	const handleSelectProduct = (product: SearchResult) => {
+	const handleSelectProduct = (product: FoodItem) => {
 		setSelectedProduct(product);
 		setDrawerOpened(true);
 	};
@@ -69,12 +61,9 @@ export function AddProductSearchPage() {
 
 		return {
 			name: selectedProduct.name,
-			value: selectedProduct.value ?? 100,
+			value: selectedProduct.value,
 			kcalories: selectedProduct.kcalories,
 			protein: selectedProduct.protein,
-			fat: selectedProduct.fat,
-			carbs: selectedProduct.carbs,
-			unit: selectedProduct.unit,
 		};
 	}, [selectedProduct]);
 
@@ -120,11 +109,7 @@ export function AddProductSearchPage() {
 
 			<Stack gap="sm" style={{ flex: 1, overflowY: "auto", paddingBottom: 16 }}>
 				{isLoading ? (
-					<Paper
-						withBorder
-						p="xl"
-						style={{ backgroundColor: "#1a1a1a", borderColor: "#2a2a2a" }}
-					>
+					<Paper withBorder p="xl" style={{ backgroundColor: "#1a1a1a", borderColor: "#2a2a2a" }}>
 						<Group gap="sm" align="center">
 							<Loader size="sm" color="orange" />
 							<Text c="#9a9a9a">Загружаем продукты…</Text>
@@ -133,11 +118,7 @@ export function AddProductSearchPage() {
 				) : null}
 
 				{!isLoading && isError ? (
-					<Paper
-						withBorder
-						p="xl"
-						style={{ backgroundColor: "#1a1a1a", borderColor: "#2a2a2a" }}
-					>
+					<Paper withBorder p="xl" style={{ backgroundColor: "#1a1a1a", borderColor: "#2a2a2a" }}>
 						<Stack gap="xs" align="center">
 							<Text c="#e66a6a">Не удалось загрузить продукты</Text>
 							<Text size="sm" c="#9a9a9a">
@@ -164,4 +145,3 @@ export function AddProductSearchPage() {
 		</Stack>
 	);
 }
-

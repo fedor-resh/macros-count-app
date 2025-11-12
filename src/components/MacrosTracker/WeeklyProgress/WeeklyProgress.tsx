@@ -88,10 +88,7 @@ function createWeekDays({
 	return days;
 }
 
-export function WeeklyProgress({
-	caloriesGoal = 3000,
-	proteinGoal = 150,
-}: WeeklyProgressProps) {
+export function WeeklyProgress({ caloriesGoal = 3000, proteinGoal = 150 }: WeeklyProgressProps) {
 	const { selectedDate, setSelectedDate } = useDateStore();
 	const [referenceMonday, setReferenceMonday] = useState<string>(() =>
 		getMondayOfWeek(selectedDate ?? getFormattedDate()),
@@ -118,9 +115,7 @@ export function WeeklyProgress({
 	);
 
 	const handleWeekChange = (direction: number) => {
-		const baseForSelection = selectedDate
-			? new Date(selectedDate)
-			: new Date(referenceMonday);
+		const baseForSelection = selectedDate ? new Date(selectedDate) : new Date(referenceMonday);
 		baseForSelection.setDate(baseForSelection.getDate() + direction * 7);
 		setSelectedDate(getFormattedDate(baseForSelection));
 
@@ -163,4 +158,3 @@ export function WeeklyProgress({
 		</Group>
 	);
 }
-
