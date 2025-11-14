@@ -6,7 +6,7 @@ export function LoginPage() {
 		<Container size="xs" py="xl">
 			<Stack gap="lg">
 				<Title order={2} ta="center">
-					Macros Count App
+					Bite
 				</Title>
 				<AuthenticationForm />
 			</Stack>

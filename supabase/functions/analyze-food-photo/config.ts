@@ -11,7 +11,7 @@ export function getSiteUrl(): string {
 }
 
 export function getSiteName(): string {
-	return Deno.env.get("SITE_NAME") || "Macros Count App";
+	return Deno.env.get("SITE_NAME") || "Bite";
 }
 
 export function getSupabaseConfig() {
