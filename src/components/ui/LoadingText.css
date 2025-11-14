@@ -1,0 +1,45 @@
+@keyframes dotAnimation1 {
+	0%,
+	100% {
+		opacity: 0;
+	}
+	33%,
+	80% {
+		opacity: 1;
+	}
+}
+
+@keyframes dotAnimation2 {
+	0%,
+	33%,
+	100% {
+		opacity: 0;
+	}
+	66%,
+	80% {
+		opacity: 1;
+	}
+}
+
+@keyframes dotAnimation3 {
+	0%,
+	66%,
+	100% {
+		opacity: 0;
+	}
+	80% {
+		opacity: 1;
+	}
+}
+
+.loading-dot-1 {
+	animation: dotAnimation1 1.5s infinite;
+}
+
+.loading-dot-2 {
+	animation: dotAnimation2 1.5s infinite;
+}
+
+.loading-dot-3 {
+	animation: dotAnimation3 1.5s infinite;
+}

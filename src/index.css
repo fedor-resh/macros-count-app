@@ -51,3 +51,19 @@ body {
 @view-transition {
 	navigation: auto;
 }
+
+/* Border breathing animation */
+@keyframes breatheBorder {
+	0%,
+	100% {
+		border-color: var(--mantine-color-dark-6);
+	}
+	50% {
+		border-color: var(--mantine-color-orange-6);
+	}
+}
+
+.breathing-border {
+	animation: breatheBorder 2s ease-in-out infinite;
+	cursor: default;
+}

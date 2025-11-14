@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
-import { supabase } from "../lib/supabase";
-import { compressImage } from "../utils/imageCompression";
 import { queryClient } from "@/lib/queryClient";
+import type { EatenProduct } from "@/types/types";
+import { compressImage } from "../utils/imageCompression";
 import { foodKeys, getMondayOfWeek } from "./foodQueries";
-import { EatenProduct } from "@/types/types";
+import { fetchWithAuthFormData } from "./queryUtils";
 
 export interface FoodAnalysis {
 	food_name: string;
@@ -32,73 +32,49 @@ export async function uploadPhoto({
 	file,
 	date,
 }: UploadPhotoPayload): Promise<UploadPhotoResponse> {
-	try {
-		// Get the current session
-		const {
-			data: { session },
-			error: authError,
-		} = await supabase.auth.getSession();
+	const compressedFile = await compressImage(file);
 
-		if (authError || !session) {
-			throw new Error("User not authenticated");
-		}
+	const formData = new FormData();
+	formData.append("photo", compressedFile);
+	formData.append("date", date);
 
-		// Compress image before upload
-		const compressedFile = await compressImage(file);
-
-		// Create form data
-		const formData = new FormData();
-		formData.append("photo", compressedFile);
-		formData.append("date", date);
-
-		// Get the Supabase URL
-		const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-
-		// Call the edge function
-		const response = await fetch(`${supabaseUrl}/functions/v1/analyze-food-photo`, {
-			method: "POST",
-			headers: {
-				Authorization: `Bearer ${session.access_token}`,
-			},
-			body: formData,
-		});
-
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
-			throw new Error(errorData.error || `Server error: ${response.status}`);
-		}
-
-		const data: UploadPhotoResponse = await response.json();
-		return data;
-	} catch (error) {
-		if (error instanceof Error) {
-			throw new Error(`Failed to upload photo: ${error.message}`);
-		}
-		throw new Error("Failed to upload photo: Unknown error");
-	}
+	return fetchWithAuthFormData<UploadPhotoResponse>("analyze-food-photo", formData);
 }
 
 export function useUploadPhotoMutation() {
 	return useMutation({
 		mutationKey: ["uploadPhoto"],
 		mutationFn: uploadPhoto,
-		onMutate: ({ date }) => {
+		onMutate: async ({ date, file }) => {
 			const monday = getMondayOfWeek(date);
+
+			// Create a temporary URL for the image preview
+			const imagePreviewUrl = URL.createObjectURL(file);
+
+			// Create a temporary loading item with image
+			const loadingItem: Partial<EatenProduct> = {
+				id: -Date.now(),
+				name: "Анализируем фото...",
+				date: date,
+				imageUrl: imagePreviewUrl,
+				createdAt: new Date().toISOString(),
+			};
+
 			queryClient.setQueryData(foodKeys.weeklyFoods(monday), (old: EatenProduct[] = []) => {
-				console.log(old);
-				return [
-					...old,
-					{
-						id: Math.random(),
-						name: "loading...",
-					},
-				];
+				return [loadingItem as EatenProduct, ...old];
 			});
+
+			return { monday, imagePreviewUrl };
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: foodKeys.all,
 			});
+		},
+		onSettled: (_data, _error, _variables, context) => {
+			if (context?.imagePreviewUrl) {
+				URL.revokeObjectURL(context.imagePreviewUrl);
+			}
 		},
 	});
 }

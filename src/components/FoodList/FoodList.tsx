@@ -12,10 +12,6 @@ export interface FoodListProps {
 }
 
 export function FoodList({ items, onItemClick, isLoading }: FoodListProps) {
-	const isFetching = useIsFetching({ queryKey: foodKeys.all });
-	const isUploadingPhoto = useIsMutating({ mutationKey: ["uploadPhoto"] });
-	const isInvalidating = isFetching > 0 || isUploadingPhoto > 0;
-
 	if (isLoading) {
 		return (
 			<Stack gap="xs">
@@ -29,11 +25,10 @@ export function FoodList({ items, onItemClick, isLoading }: FoodListProps) {
 	return (
 		<Stack gap="xs">
 			{items.length === 0 && (
-				<Text size="md" c="#d9d9d9" style={{ width: "100%" }}>
+				<Text size="md" c="#d9d9d9" style={{ width: "100%" }} ta="center" w="100%">
 					Нет продуктов
 				</Text>
 			)}
-			{isInvalidating && <FoodItemLoader />}
 			{items.map((item, index) => (
 				<div key={item.id}>
 					<FoodItem item={item} index={index} onItemClick={onItemClick} />

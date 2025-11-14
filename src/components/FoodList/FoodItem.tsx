@@ -1,7 +1,8 @@
-import { Badge, Box, Group, Paper, Stack, Text } from "@mantine/core";
+import { Badge, Box, Group, Paper, Skeleton, Stack, Text } from "@mantine/core";
 import { useLayoutEffect, useRef, useState } from "react";
 import type { EatenProduct } from "../../types/types";
 import { FullscreenImage } from "../MacrosTracker/FullscreenImage";
+import { LoadingText } from "../ui";
 import type { FoodItem as FoodItemType } from "./types";
 
 function isValidFoodItem(item: EatenProduct): boolean {
@@ -17,6 +18,7 @@ export interface FoodItemProps {
 export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 	const cardRef = useRef<HTMLDivElement>(null);
 	const [cardHeight, setCardHeight] = useState<number>(0);
+	const isLoading = item.name === "Анализируем фото...";
 
 	useLayoutEffect(() => {
 		if (cardRef.current) {
@@ -29,23 +31,34 @@ export function FoodItem({ item, index, onItemClick }: FoodItemProps) {
 			p="sm"
 			withBorder
 			bd={isValidFoodItem(item) ? "1px solid var(--mantine-color-dark-6)" : "1px solid orange"}
-			onClick={() => onItemClick?.(index)}
+			onClick={() => !isLoading && onItemClick?.(index)}
 			ref={cardRef}
+			className={isLoading ? "breathing-border" : undefined}
 		>
 			<Group gap="md" justify="space-between" align="start" wrap="nowrap">
 				<Stack gap={5}>
-					<Text fw={550}>{item.name}</Text>
+					{isLoading ? <LoadingText text="Анализируем фото" /> : <Text fw={550}>{item.name}</Text>}
 					<Group gap="md">
-						<Badge variant="light" color="dark.1">
-							{item.value ? `${item.value} г` : "-"}
-						</Badge>
-						<Badge variant="light" color="orange.9">
-							{item.kcalories ? `${item.kcalories} к` : "-"}
-						</Badge>
-						<Badge variant="light" color="blue.6">
-							{item.protein ? `${item.protein} б` : "-"}
-						</Badge>
-						{item.badges}
+						{isLoading ? (
+							<>
+								<Skeleton height={22} width={60} radius="sm" />
+								<Skeleton height={22} width={60} radius="sm" />
+								<Skeleton height={22} width={60} radius="sm" />
+							</>
+						) : (
+							<>
+								<Badge variant="light" color="dark.1">
+									{item.value ? `${item.value} г` : "-"}
+								</Badge>
+								<Badge variant="light" color="orange.9">
+									{item.kcalories ? `${item.kcalories} к` : "-"}
+								</Badge>
+								<Badge variant="light" color="blue.6">
+									{item.protein ? `${item.protein} б` : "-"}
+								</Badge>
+								{item.badges}
+							</>
+						)}
 					</Group>
 				</Stack>
 				{"imageUrl" in item && item.imageUrl && (
