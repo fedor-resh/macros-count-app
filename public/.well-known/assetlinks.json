@@ -3,7 +3,7 @@
 		"relation": ["delegate_permission/common.handle_all_urls"],
 		"target": {
 			"namespace": "android_app",
-			"package_name": "com.yourcompany.bite",
+			"package_name": "ru.fedorresh.macros_count_app.twa",
 			"sha256_cert_fingerprints": [
 				"18:54:20:BD:FD:75:85:45:43:E1:6F:A9:91:69:57:9D:4A:20:97:8C:79:11:CB:16:BB:92:4B:7F:E7:0F:C5:2A"
 			]
