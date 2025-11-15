@@ -99,7 +99,7 @@ export function DayMiniGraph({
 			size="xl"
 			py={30}
 			onClick={onClick}
-			bd={isToday ? "2px solid #ff742833" : "none"}
+			bd={isToday && !isActive ? "2px solid rgba(216, 101, 39, 0.2)" : "2px solid transparent"}
 		>
 			{content}
 		</ActionIcon>
