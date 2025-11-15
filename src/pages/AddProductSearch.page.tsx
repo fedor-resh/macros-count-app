@@ -11,11 +11,10 @@ import { useDateStore } from "../stores/dateStore";
 
 export function AddProductSearchPage() {
 	const [query, setQuery] = useState("");
-	const {
-		data: foodsHistory = [],
-		isLoading: isLoadingHistory,
-		isError: isErrorHistory,
-	} = useGetFoodsHistoryQuery(query, query.trim() ? 2 : 10);
+	const { data: foodsHistory = [], isLoading: isLoadingHistory } = useGetFoodsHistoryQuery(
+		query,
+		query.trim() ? 2 : 10,
+	);
 	const { data: productsData = [], isLoading: isLoadingProducts } = useSearchProductsQuery(
 		query,
 		20,
@@ -34,6 +33,7 @@ export function AddProductSearchPage() {
 		// Convert eaten products to SearchResult
 		const eatenResults = foodsHistory.map((item) => ({
 			...item,
+			value: item.value ?? 100,
 			badges: (
 				<Badge variant="light" color="green.9">
 					мой
@@ -55,7 +55,6 @@ export function AddProductSearchPage() {
 	};
 
 	const isLoading = isLoadingHistory || (query.trim() && isLoadingProducts);
-	const isError = isErrorHistory;
 
 	return (
 		<Stack gap="lg">
