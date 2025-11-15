@@ -82,9 +82,9 @@ function createWeekDays({
 			proteinExceeded,
 			isActive: dateStr === selectedDate,
 			onClick: () => setSelectedDate(dateStr),
+			isToday: dateStr === getFormattedDate(),
 		});
 	}
-
 	return days;
 }
 

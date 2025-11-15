@@ -9,4 +9,5 @@ export interface DayProgress {
 	proteinExceeded: boolean;
 	isActive: boolean;
 	onClick: () => void;
+	isToday: boolean;
 }

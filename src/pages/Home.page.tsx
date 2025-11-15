@@ -14,7 +14,7 @@ import { getFormattedDate } from "../utils/dateUtils";
 export function HomePage() {
 	const selectedDate = useDateStore((state) => state.selectedDate);
 	const { data: weeklyFoods = [] } = useGetWeeklyFoodsQuery(selectedDate);
-	const { data: userGoals } = useGetUserGoalsQuery();
+	const { data: userGoals, isLoading: isUserGoalsLoading } = useGetUserGoalsQuery();
 
 	const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
 	const [editDrawerOpened, setEditDrawerOpened] = useState(false);
@@ -72,7 +72,7 @@ export function HomePage() {
 				/>
 				<WeeklyProgress caloriesGoal={caloriesGoal} proteinGoal={proteinGoal} />
 
-				{!hasFilledParameters && <CalorieGoalReminder />}
+				{!hasFilledParameters && !isUserGoalsLoading && <CalorieGoalReminder />}
 				<FoodList items={eatenProducts} onItemClick={handleItemClick} />
 				<Space h="100px" />
 			</Stack>

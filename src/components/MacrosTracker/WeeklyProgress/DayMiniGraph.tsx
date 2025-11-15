@@ -1,4 +1,5 @@
 import { ActionIcon, Box, RingProgress, Stack, Text } from "@mantine/core";
+import { getFormattedDate } from "@/utils/dateUtils";
 import type { DayProgress } from "./types";
 
 export function DayMiniGraph({
@@ -11,6 +12,7 @@ export function DayMiniGraph({
 	proteinExceeded,
 	isActive,
 	onClick,
+	isToday,
 }: DayProgress) {
 	const content = (
 		<Stack gap={4} align="center">
@@ -97,7 +99,7 @@ export function DayMiniGraph({
 			size="xl"
 			py={30}
 			onClick={onClick}
-			style={{ cursor: "pointer" }}
+			bd={isToday ? "2px solid #ff742833" : "none"}
 		>
 			{content}
 		</ActionIcon>

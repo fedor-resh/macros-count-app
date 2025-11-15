@@ -33,7 +33,6 @@ export function useGetWeeklyFoodsQuery(date: string | null) {
 			// Calculate date range for last 7 days
 			const endDate = new Date(monday);
 			endDate.setDate(endDate.getDate() + 6);
-			console.log("end", endDate.toLocaleDateString("ru-RU", { weekday: "short" }));
 			const { data, error } = await supabase
 				.from("eaten_products")
 				.select("*")
