@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
 	Button,
 	Divider,
@@ -13,10 +12,12 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
+import { useEffect, useState } from "react";
 import { useUpdateUserParamsMutation } from "../../api/userQueries";
+import { useAuthStore } from "../../stores/authStore";
 import {
-	calculateGoals,
 	type ActivityLevel,
+	calculateGoals,
 	type Gender,
 	type Goal,
 } from "../../utils/calorieCalculator";
@@ -25,7 +26,6 @@ import type {
 	CalculatorParams,
 	CalorieCalculatorProps,
 } from "./CalorieCalculator.types";
-import { useAuthStore } from "../../stores/authStore";
 
 export function CalorieCalculator({
 	isLoading = false,
@@ -133,7 +133,7 @@ export function CalorieCalculator({
 	};
 
 	return (
-		<Paper p="xl" radius="md" withBorder>
+		<Paper p="xl" radius="md" withBorder id="calorie-calculator">
 			<form onSubmit={form.onSubmit(handleCalculate)}>
 				<Stack gap="md">
 					<Title order={4}>Калькулятор целей</Title>

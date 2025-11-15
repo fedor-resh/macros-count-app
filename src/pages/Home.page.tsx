@@ -2,9 +2,10 @@ import { Container, Space, Stack } from "@mantine/core";
 import { useMemo, useState } from "react";
 import { useGetWeeklyFoodsQuery } from "../api/foodQueries";
 import { useGetUserGoalsQuery } from "../api/userQueries";
-import { AddProductFAB } from "../components/MacrosTracker/AddProductFAB";
-import { CircularGraph } from "../components/MacrosTracker/CircularGraph";
 import { FoodList } from "../components/FoodList";
+import { AddProductFAB } from "../components/MacrosTracker/AddProductFAB";
+import { CalorieGoalReminder } from "../components/MacrosTracker/CalorieGoalReminder";
+import { CircularGraph } from "../components/MacrosTracker/CircularGraph";
 import { ProductDrawer } from "../components/MacrosTracker/ProductDrawer";
 import { WeeklyProgress } from "../components/MacrosTracker/WeeklyProgress";
 import { useDateStore } from "../stores/dateStore";
@@ -57,6 +58,9 @@ export function HomePage() {
 	const caloriesGoal = userGoals?.caloriesGoal ?? 3000;
 	const proteinGoal = userGoals?.proteinGoal ?? 150;
 
+	// Check if user has filled in their parameters
+	const hasFilledParameters = !!userGoals?.weight && !!userGoals?.height && !!userGoals?.age;
+
 	return (
 		<Container size="sm" py="xl" px="0" my="0">
 			<Stack gap="xl">
@@ -67,6 +71,8 @@ export function HomePage() {
 					proteinGoal={proteinGoal}
 				/>
 				<WeeklyProgress caloriesGoal={caloriesGoal} proteinGoal={proteinGoal} />
+
+				{!hasFilledParameters && <CalorieGoalReminder />}
 				<FoodList items={eatenProducts} onItemClick={handleItemClick} />
 				<Space h="100px" />
 			</Stack>
