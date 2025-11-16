@@ -72,7 +72,7 @@ export function HomePage() {
 				/>
 				<WeeklyProgress caloriesGoal={caloriesGoal} proteinGoal={proteinGoal} />
 
-				{!hasFilledParameters && !isUserGoalsLoading && <CalorieGoalReminder />}
+				{userGoals && !hasFilledParameters && !isUserGoalsLoading && <CalorieGoalReminder />}
 				<FoodList items={eatenProducts} onItemClick={handleItemClick} />
 				<Space h="100px" />
 			</Stack>
