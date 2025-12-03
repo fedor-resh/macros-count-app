@@ -1,19 +1,18 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import {
-	createErrorResponse,
-	createSuccessResponse,
-	createLowConfidenceResponse,
-} from "./responses.ts";
-import { handleCorsPreflight } from "./cors.ts";
 import { createSupabaseClient, getAuthenticatedUser } from "./auth.ts";
+import { handleCorsPreflight } from "./cors.ts";
+import { insertEatenProduct, prepareEatenProductData } from "./database.ts";
 import { parseFormData, processFile } from "./file-handler.ts";
-import { uploadImage, getPublicUrl } from "./storage.ts";
 import { analyzeFoodImage } from "./llm.ts";
 import { extractAnalysisFromResponse, validateConfidence } from "./parser.ts";
-import { prepareEatenProductData, insertEatenProduct } from "./database.ts";
+import {
+	createErrorResponse,
+	createLowConfidenceResponse,
+	createSuccessResponse,
+} from "./responses.ts";
+import { getPublicUrl, uploadImage } from "./storage.ts";
 import type { FoodAnalysis } from "./types.ts";
 
-serve(async (req) => {
+export default async function handler(req: Request): Promise<Response> {
 	// Handle CORS preflight requests
 	if (req.method === "OPTIONS") {
 		return handleCorsPreflight();
@@ -71,4 +70,4 @@ serve(async (req) => {
 	const { id: insertedId } = await insertEatenProduct(supabaseClient, dataToInsert);
 
 	return createSuccessResponse(publicUrl, fileInfo.fullPath, nutritionData, insertedId);
-});
+}
