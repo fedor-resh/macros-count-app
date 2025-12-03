@@ -1,19 +1,20 @@
 import { ActionIcon, Paper, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCamera, IconSearch } from "@tabler/icons-react";
+import { IconCamera, IconPlus, IconSearch } from "@tabler/icons-react";
 import type { ChangeEvent } from "react";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUploadPhotoMutation } from "../../api/photoQueries";
-import { startTransition } from "../../utils/viewTransition";
 import { useDateStore } from "../../stores/dateStore";
-import { getFormattedDate } from "../../utils/dateUtils";
+import { useProductDrawerStore } from "../../stores/productDrawerStore";
+import { startTransition } from "../../utils/viewTransition";
 
 export function AddProductFAB() {
 	const navigate = useNavigate();
 	const uploadPhotoMutation = useUploadPhotoMutation();
 	const cameraInputRef = useRef<HTMLInputElement>(null);
 	const selectedDate = useDateStore((state) => state.selectedDate);
+	const openForAdd = useProductDrawerStore((state) => state.openForAdd);
 
 	const navigateToSearch = () => {
 		startTransition(() => {
@@ -79,6 +80,18 @@ export function AddProductFAB() {
 					size="lg"
 					style={{ flex: 1, viewTransitionName: "search-input" }}
 				/>
+
+				<Paper>
+					<ActionIcon
+						size={50}
+						aria-label="Добавить вручную"
+						onClick={() => openForAdd()}
+						variant="light"
+						color="gray"
+					>
+						<IconPlus size={24} stroke={2} />
+					</ActionIcon>
+				</Paper>
 
 				<Paper>
 					<ActionIcon

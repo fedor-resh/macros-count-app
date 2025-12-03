@@ -1,5 +1,5 @@
 import { Container, Space, Stack } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useGetWeeklyFoodsQuery } from "../api/foodQueries";
 import { useGetUserGoalsQuery } from "../api/userQueries";
 import { FoodList } from "../components/FoodList";
@@ -9,15 +9,14 @@ import { CircularGraph } from "../components/MacrosTracker/CircularGraph";
 import { ProductDrawer } from "../components/MacrosTracker/ProductDrawer";
 import { WeeklyProgress } from "../components/MacrosTracker/WeeklyProgress";
 import { useDateStore } from "../stores/dateStore";
+import { useProductDrawerStore } from "../stores/productDrawerStore";
 import { getFormattedDate } from "../utils/dateUtils";
 
 export function HomePage() {
 	const selectedDate = useDateStore((state) => state.selectedDate);
 	const { data: weeklyFoods = [] } = useGetWeeklyFoodsQuery(selectedDate);
 	const { data: userGoals, isLoading: isUserGoalsLoading } = useGetUserGoalsQuery();
-
-	const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
-	const [editDrawerOpened, setEditDrawerOpened] = useState(false);
+	const openForEdit = useProductDrawerStore((state) => state.openForEdit);
 
 	const eatenProducts = useMemo(() => {
 		const targetDate = selectedDate || getFormattedDate();
@@ -43,17 +42,11 @@ export function HomePage() {
 	}, [eatenProducts]);
 
 	const handleItemClick = (index: number) => {
-		setSelectedProductIndex(index);
-		setEditDrawerOpened(true);
+		const product = eatenProducts[index];
+		if (product) {
+			openForEdit(product);
+		}
 	};
-
-	const handleEditDrawerClose = () => {
-		setEditDrawerOpened(false);
-		setSelectedProductIndex(null);
-	};
-
-	const selectedProduct =
-		selectedProductIndex !== null ? eatenProducts[selectedProductIndex] : null;
 
 	const caloriesGoal = userGoals?.caloriesGoal ?? 3000;
 	const proteinGoal = userGoals?.proteinGoal ?? 150;
@@ -78,12 +71,7 @@ export function HomePage() {
 			</Stack>
 
 			<AddProductFAB />
-
-			<ProductDrawer
-				opened={editDrawerOpened}
-				onClose={handleEditDrawerClose}
-				product={selectedProduct}
-			/>
+			<ProductDrawer />
 		</Container>
 	);
 }

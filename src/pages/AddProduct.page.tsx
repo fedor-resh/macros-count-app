@@ -9,25 +9,21 @@ import {
 	IconSearch,
 } from "@tabler/icons-react";
 import type { ChangeEvent } from "react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUploadPhotoMutation } from "../api/photoQueries";
-import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
+import { ProductDrawer } from "../components/MacrosTracker/ProductDrawer";
 import { useDateStore } from "../stores/dateStore";
-import { getFormattedDate } from "../utils/dateUtils";
+import { useProductDrawerStore } from "../stores/productDrawerStore";
 import { startTransition } from "../utils/viewTransition";
 
 export function AddProductPage() {
 	const navigate = useNavigate();
-	const [drawerOpened, setDrawerOpened] = useState(false);
+	const openForAdd = useProductDrawerStore((state) => state.openForAdd);
 	const uploadPhotoMutation = useUploadPhotoMutation();
 	const cameraInputRef = useRef<HTMLInputElement>(null);
 	const galleryInputRef = useRef<HTMLInputElement>(null);
 	const selectedDate = useDateStore((state) => state.selectedDate);
-
-	const handleDrawerClose = () => {
-		setDrawerOpened(false);
-	};
 
 	const navigateBack = () => {
 		navigate("/");
@@ -134,7 +130,7 @@ export function AddProductPage() {
 					<Button
 						{...commonButtonProps}
 						leftSection={<IconPlus size={20} />}
-						onClick={() => setDrawerOpened(true)}
+						onClick={() => openForAdd()}
 					>
 						Добавить вручную
 					</Button>
@@ -187,11 +183,7 @@ export function AddProductPage() {
 				style={{ display: "none" }}
 			/>
 
-			<AddProductDrawer
-				selectedDate={selectedDate}
-				opened={drawerOpened}
-				onClose={handleDrawerClose}
-			/>
+			<ProductDrawer />
 		</div>
 	);
 }

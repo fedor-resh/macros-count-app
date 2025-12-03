@@ -1,13 +1,12 @@
-import { ActionIcon, Badge, Group, Loader, Paper, Stack, Text, TextInput } from "@mantine/core";
+import { ActionIcon, Badge, Stack, TextInput } from "@mantine/core";
 import { IconArrowLeft, IconSearch } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { FoodItem } from "@/components/FoodList/types";
-import type { EatenProduct } from "@/types/types";
 import { useGetFoodsHistoryQuery, useSearchProductsQuery } from "../api/foodQueries";
 import { FoodList } from "../components/FoodList";
-import { AddProductDrawer } from "../components/MacrosTracker/AddProductDrawer";
-import { useDateStore } from "../stores/dateStore";
+import { ProductDrawer } from "../components/MacrosTracker/ProductDrawer";
+import { useProductDrawerStore } from "../stores/productDrawerStore";
 
 export function AddProductSearchPage() {
 	const [query, setQuery] = useState("");
@@ -19,9 +18,7 @@ export function AddProductSearchPage() {
 		query,
 		20,
 	);
-	const [drawerOpened, setDrawerOpened] = useState(false);
-	const [selectedProduct, setSelectedProduct] = useState<EatenProduct | null>(null);
-	const selectedDate = useDateStore((state) => state.selectedDate);
+	const openForAdd = useProductDrawerStore((state) => state.openForAdd);
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -45,13 +42,7 @@ export function AddProductSearchPage() {
 	}, [foodsHistory, productsData]);
 
 	const handleSelectProduct = (product: FoodItem) => {
-		setSelectedProduct(product);
-		setDrawerOpened(true);
-	};
-
-	const handleDrawerClose = () => {
-		setDrawerOpened(false);
-		setSelectedProduct(null);
+		openForAdd(product);
 	};
 
 	const isLoading = isLoadingHistory || (query.trim() && isLoadingProducts);
@@ -101,12 +92,7 @@ export function AddProductSearchPage() {
 				/>
 			</Stack>
 
-			<AddProductDrawer
-				selectedDate={selectedDate ?? undefined}
-				opened={drawerOpened}
-				onClose={handleDrawerClose}
-				initialProduct={selectedProduct!}
-			/>
+			<ProductDrawer />
 		</Stack>
 	);
 }
