@@ -2,9 +2,9 @@ package repo
 
 import "time"
 
-// JSON tags mirror the column names Supabase/PostgREST exposed, which the
-// frontend types in src/types/database.types.ts are generated from:
-// eaten_products and users use quoted camelCase columns, products is snake_case.
+// JSON tags match the column names the frontend types in
+// src/types/database.types.ts expect: eaten_products and users use quoted
+// camelCase columns, products is snake_case.
 
 type EatenProduct struct {
 	ID        int64     `json:"id"`

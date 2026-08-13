@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/fedor-resh/macros-count-app/backend/internal/events"
+	"github.com/fedor-resh/bite/backend/internal/events"
 )
 
 type SSEHandler struct {

@@ -5,46 +5,33 @@ import "testing"
 func setRequiredEnv(t *testing.T) {
 	t.Helper()
 	t.Setenv("DATABASE_URL", "postgresql://localhost/test")
-	t.Setenv("SUPABASE_URL", "https://test.supabase.co")
 	t.Setenv("OPENROUTER_API_KEY", "key")
-	t.Setenv("SUPABASE_SERVICE_ROLE_KEY", "")
-	t.Setenv("STORAGE_DRIVER", "")
-	t.Setenv("PUBLIC_BASE_URL", "")
+	t.Setenv("AUTH_JWT_SECRET", "test-secret-at-least-32-characters-long")
+	t.Setenv("PUBLIC_BASE_URL", "https://example.com/")
 	t.Setenv("AUTO_MIGRATE", "")
+	t.Setenv("GOOGLE_CLIENT_ID", "")
+	t.Setenv("GOOGLE_CLIENT_SECRET", "")
+	t.Setenv("CORS_ALLOWED_ORIGINS", "")
 }
 
-func TestLoad_SupabaseDriverRequiresServiceRoleKey(t *testing.T) {
+func TestLoad_RequiresAuthSecretAndPublicBaseURL(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("STORAGE_DRIVER", "supabase")
-
+	t.Setenv("AUTH_JWT_SECRET", "")
 	if _, err := Load(); err == nil {
-		t.Fatal("expected error without SUPABASE_SERVICE_ROLE_KEY")
+		t.Fatal("expected error without AUTH_JWT_SECRET")
 	}
 
-	t.Setenv("SUPABASE_SERVICE_ROLE_KEY", "sr-key")
-	cfg, err := Load()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if cfg.StorageDriver != StorageDriverSupabase {
-		t.Fatalf("unexpected driver %q", cfg.StorageDriver)
-	}
-}
-
-func TestLoad_DiskDriverRequiresPublicBaseURL(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("STORAGE_DRIVER", "disk")
-
+	t.Setenv("PUBLIC_BASE_URL", "")
 	if _, err := Load(); err == nil {
 		t.Fatal("expected error without PUBLIC_BASE_URL")
 	}
 
-	t.Setenv("PUBLIC_BASE_URL", "https://example.com/")
+	setRequiredEnv(t)
 	cfg, err := Load()
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Disk-драйвер не требует service role key, а слэш в базовом URL срезается.
 	if cfg.PublicBaseURL != "https://example.com" {
 		t.Fatalf("unexpected PublicBaseURL %q", cfg.PublicBaseURL)
 	}
@@ -53,18 +40,21 @@ func TestLoad_DiskDriverRequiresPublicBaseURL(t *testing.T) {
 	}
 }
 
-func TestLoad_UnknownDriverRejected(t *testing.T) {
+func TestLoad_GoogleKeysMustBePaired(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("STORAGE_DRIVER", "s3")
-
+	t.Setenv("GOOGLE_CLIENT_ID", "id")
 	if _, err := Load(); err == nil {
-		t.Fatal("expected error for unknown storage driver")
+		t.Fatal("expected error when only GOOGLE_CLIENT_ID is set")
+	}
+
+	t.Setenv("GOOGLE_CLIENT_SECRET", "secret")
+	if _, err := Load(); err != nil {
+		t.Fatal(err)
 	}
 }
 
 func TestLoad_AutoMigrateFlag(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("SUPABASE_SERVICE_ROLE_KEY", "sr-key")
 	t.Setenv("AUTO_MIGRATE", "true")
 
 	cfg, err := Load()

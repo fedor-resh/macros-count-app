@@ -29,9 +29,9 @@ func scanUser(row pgx.Row) (User, error) {
 	return u, err
 }
 
-// GetOrCreate provisions the profile row on first access. On Supabase this
-// was done by the handle_new_user trigger on auth.users; upsert-on-read keeps
-// working after the database moves off Supabase (Phase 2).
+// GetOrCreate provisions the profile row on first access. Registration and
+// Google login already insert the row; this is a safety net for tokens whose
+// profile was never written.
 func (r *Users) GetOrCreate(ctx context.Context, userID string) (User, error) {
 	if _, err := r.db.Exec(ctx,
 		`INSERT INTO users (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`, userID); err != nil {

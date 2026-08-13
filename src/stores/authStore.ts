@@ -1,55 +1,56 @@
-import type { Session, User } from "@supabase/supabase-js";
 import { create } from "zustand";
-import { supabase } from "../lib/supabase";
+import {
+	type AuthUser,
+	login as loginRequest,
+	logout as logoutRequest,
+	refreshSession,
+	register as registerRequest,
+	setAccessToken,
+} from "../lib/authClient";
 
 interface AuthState {
-	session: Session | null;
-	user: User | null;
+	user: AuthUser | null;
 	loading: boolean;
-	setSession: (session: Session | null) => void;
+	setUser: (user: AuthUser | null) => void;
+	signIn: (email: string, password: string) => Promise<void>;
+	signUp: (email: string, password: string) => Promise<void>;
 	signOut: () => Promise<void>;
 	initialize: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-	session: null,
 	user: null,
 	loading: true,
 
-	setSession: (session) => {
-		set({
-			session,
-			user: session?.user ?? null,
-			loading: false,
-		});
+	setUser: (user) => {
+		set({ user, loading: false });
+	},
+
+	signIn: async (email, password) => {
+		const session = await loginRequest(email, password);
+		set({ user: session.user, loading: false });
+	},
+
+	signUp: async (email, password) => {
+		const session = await registerRequest(email, password);
+		set({ user: session.user, loading: false });
 	},
 
 	signOut: async () => {
-		await supabase.auth.signOut();
-		set({
-			session: null,
-			user: null,
-		});
+		await logoutRequest();
+		set({ user: null });
 	},
 
 	initialize: async () => {
-		// Get initial session
-		const {
-			data: { session },
-		} = await supabase.auth.getSession();
-		set({
-			session,
-			user: session?.user ?? null,
-			loading: false,
-		});
-
-		// Listen for auth changes
-		supabase.auth.onAuthStateChange((_event, session) => {
+		try {
+			const session = await refreshSession();
 			set({
-				session,
 				user: session?.user ?? null,
 				loading: false,
 			});
-		});
+		} catch {
+			setAccessToken(null);
+			set({ user: null, loading: false });
+		}
 	},
 }));

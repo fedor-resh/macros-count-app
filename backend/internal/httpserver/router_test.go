@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fedor-resh/macros-count-app/backend/internal/events"
-	"github.com/fedor-resh/macros-count-app/backend/internal/repo"
+	"github.com/fedor-resh/bite/backend/internal/events"
+	"github.com/fedor-resh/bite/backend/internal/repo"
 )
 
 // Эти тесты — замена гарантий RLS: пользователь A не может читать и менять

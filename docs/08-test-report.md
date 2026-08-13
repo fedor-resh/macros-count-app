@@ -29,7 +29,7 @@ npm run test:coverage     # с отчётом покрытия (v8)
  RUN  v2.1.9
 
  ✓ src/utils/dateUtils.test.ts                              (4 tests)
- ✓ supabase/functions/analyze-food-photo/parser.test.ts    (8 tests)
+ ✓ src/lib/authClient.test.ts
  ✓ src/utils/calorieCalculator.test.ts                     (15 tests)
  ✓ src/api/foodQueries.test.ts                              (4 tests)
 

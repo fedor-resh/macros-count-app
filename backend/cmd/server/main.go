@@ -12,14 +12,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/fedor-resh/macros-count-app/backend/internal/analysis"
-	"github.com/fedor-resh/macros-count-app/backend/internal/auth"
-	"github.com/fedor-resh/macros-count-app/backend/internal/config"
-	"github.com/fedor-resh/macros-count-app/backend/internal/events"
-	"github.com/fedor-resh/macros-count-app/backend/internal/httpserver"
-	"github.com/fedor-resh/macros-count-app/backend/internal/repo"
-	"github.com/fedor-resh/macros-count-app/backend/internal/storage"
-	"github.com/fedor-resh/macros-count-app/backend/migrations"
+	"github.com/fedor-resh/bite/backend/internal/analysis"
+	"github.com/fedor-resh/bite/backend/internal/auth"
+	"github.com/fedor-resh/bite/backend/internal/config"
+	"github.com/fedor-resh/bite/backend/internal/events"
+	"github.com/fedor-resh/bite/backend/internal/httpserver"
+	"github.com/fedor-resh/bite/backend/internal/repo"
+	"github.com/fedor-resh/bite/backend/internal/storage"
+	"github.com/fedor-resh/bite/backend/migrations"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
@@ -41,8 +41,7 @@ func run() error {
 		return err
 	}
 
-	// AUTO_MIGRATE применяет goose-миграции на старте. Включать только для
-	// собственного Postgres — против Supabase-БД это не должно запускаться.
+	// AUTO_MIGRATE применяет goose-миграции на старте.
 	if cfg.AutoMigrate {
 		if err := runMigrations(ctx, cfg.DatabaseURL); err != nil {
 			return fmt.Errorf("apply migrations: %w", err)
@@ -61,7 +60,7 @@ func run() error {
 		return err
 	}
 
-	verifier, err := auth.NewVerifier(ctx, cfg.SupabaseURL, cfg.AuthJWKSURL, cfg.SupabaseJWTSecret)
+	verifier, err := auth.NewTokens(cfg.AuthJWTSecret, cfg.PublicBaseURL)
 	if err != nil {
 		return err
 	}
@@ -71,24 +70,27 @@ func run() error {
 	llm := analysis.NewOpenRouterClient(cfg.OpenRouterAPIKey, cfg.SiteURL, cfg.SiteName)
 	analysisService := analysis.NewService(eatenProducts, llm, broker)
 
-	var store storage.Storage
-	var imagesHandler http.Handler
-	switch cfg.StorageDriver {
-	case config.StorageDriverDisk:
-		disk := storage.NewDisk(cfg.DataDir, cfg.PublicBaseURL)
-		store = disk
-		imagesHandler = httpserver.ImagesHandler(disk.Root())
-	default:
-		store = storage.NewSupabase(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey)
+	disk := storage.NewDisk(cfg.DataDir, cfg.PublicBaseURL)
+	accounts := repo.NewAccounts(pool)
+
+	var google auth.GoogleExchanger
+	if cfg.GoogleClientID != "" {
+		google = auth.NewGoogle(
+			cfg.GoogleClientID,
+			cfg.GoogleClientSecret,
+			cfg.PublicBaseURL+"/api/v1/auth/google/callback",
+		)
 	}
+	authHandler := httpserver.NewAuthHandler(accounts, verifier, google, cfg.PublicBaseURL)
 
 	router := httpserver.NewRouter(verifier, httpserver.Handlers{
+		Auth:          authHandler,
 		EatenProducts: httpserver.NewEatenProductsHandler(eatenProducts),
 		Products:      httpserver.NewProductsHandler(repo.NewProducts(pool)),
 		Users:         httpserver.NewUsersHandler(repo.NewUsers(pool)),
-		Photo:         httpserver.NewPhotoHandler(store, eatenProducts, analysisService),
+		Photo:         httpserver.NewPhotoHandler(disk, eatenProducts, analysisService),
 		SSE:           httpserver.NewSSEHandler(broker),
-		Images:        imagesHandler,
+		Images:        httpserver.ImagesHandler(disk.Root()),
 	}, cfg.CORSAllowedOrigins)
 
 	server := &http.Server{
@@ -100,7 +102,7 @@ func run() error {
 
 	errCh := make(chan error, 1)
 	go func() {
-		slog.Info("server listening", "addr", server.Addr, "storage", cfg.StorageDriver)
+		slog.Info("server listening", "addr", server.Addr)
 		errCh <- server.ListenAndServe()
 	}()
 

@@ -1,43 +1,45 @@
-# Миграция бэкенда на Go
+# Архитектура бэкенда
 
-Go API (`backend/`) заменяет PostgREST, edge function `analyze-food-photo`,
-Supabase Postgres и Supabase Storage. **В Supabase остаётся только Auth**
-(email/пароль + Google): Go проверяет Supabase JWT (JWKS или legacy HS256).
-
-Статус: Фаза 1 (Go API) — в проде; Фазы 2–3 (свой Postgres + картинки на
-диске) — код готов, катовер по runbook ниже.
-
-## Архитектура (Фазы 1–3)
+Go API (`backend/`) обслуживает данные, картинки, анализ фото и авторизацию.
+Фронтенд ходит только на `/api/v1` и `/images`.
 
 ```
 браузер ──► Caddy (TLS, один origin)
               ├── /api/*    ──► Go API ──► Postgres (compose, goose-миграции)
-              │                    └────► OpenRouter (gemini-3-flash, data-URL)
+              │                    ├────► OpenRouter (gemini-3-flash, data-URL)
+              │                    └────► Google OAuth (опционально)
               ├── /images/* ──► Go API (файлы с volume /data/images)
-              └── /*        ──► frontend (vite build + serve)
+              └── /*        ──► frontend (vite build + Caddy)
 
-auth: фронт логинится через supabase.auth, Go верифицирует access token.
+auth: POST /api/v1/auth/login|register|refresh|logout, Google /auth/google/*.
+      access JWT 15 мин (Bearer), refresh 30 дней (httpOnly cookie).
 realtime: SSE GET /api/v1/events (пуш статуса анализа фото).
 бэкапы: сервис backup — ежесуточный pg_dump в ./backups (ретенция 14).
 ```
 
 ## API
 
-Все эндпоинты под `/api/v1`, JWT обязателен (кроме `/healthz` и `/images/*`).
-Формы JSON совпадают с `src/types/database.types.ts` — файл заморожен как
-контракт API (`npm run gen:types` больше не актуален).
+Все эндпоинты под `/api/v1`. JWT обязателен, кроме `/auth/*`, `/healthz` и `/images/*`.
+Формы JSON совпадают с `src/types/database.types.ts` — файл заморожен как контракт API.
 
 | Метод и путь | Назначение |
 |---|---|
+| `POST /auth/register` | регистрация `{email, password}` → access + refresh cookie |
+| `POST /auth/login` | вход `{email, password}` |
+| `POST /auth/refresh` | новый access по refresh cookie (ротация) |
+| `POST /auth/logout` | отозвать refresh, сбросить cookie |
+| `GET /auth/google/start` | редирект на Google (если задан `GOOGLE_CLIENT_ID`) |
+| `GET /auth/google/callback` | обмен code, cookie, редирект на `/auth/callback` |
 | `GET /eaten-products?from=&to=` | еда за период |
 | `GET /eaten-products?search=&limit=` | история / поиск по своей еде |
 | `POST /eaten-products` | добавить (userId всегда из токена) |
 | `PATCH /eaten-products/{id}` | изменить (404, если строка чужая) |
 | `DELETE /eaten-products/{id}` | удалить (404, если строка чужая) |
 | `GET /products?search=&limit=` | поиск по каталогу |
-| `GET /me` | профиль (upsert-on-read — заменяет старый триггер handle_new_user) |
+| `GET /me` | профиль (upsert-on-read) |
 | `PUT /me/goals` | цели `{caloriesGoal, proteinGoal}` |
 | `PATCH /me` | частичное обновление параметров |
+| `POST /me/password` | смена пароля `{password}` (только залогиненный) |
 | `POST /photos/analyze` | multipart `photo`+`date` → `{id, status:"pending", imageUrl}` |
 | `GET /events` | SSE: `event: analysis`, `data: {id, status, name}` |
 | `GET /images/{userId}/{file}` | картинки еды (без auth, immutable cache) |
@@ -45,36 +47,31 @@ realtime: SSE GET /api/v1/events (пуш статуса анализа фото)
 ## Схема БД
 
 Источник истины — goose-миграции `backend/migrations/` (embedded в бинарь,
-применяются на старте при `AUTO_MIGRATE=true`). Отличия от Supabase-схемы:
-нет FK на `auth.users`, нет RLS (авторизация в Go: `WHERE "userId"` из
-токена), нет триггера `handle_new_user`, добавлены индексы по
-`("userId", date)` и `("userId", "createdAt" DESC)`.
-
-**`AUTO_MIGRATE=true` включать только против собственного Postgres** —
-дев-бэкенд, смотрящий в Supabase-БД, не должен накатывать туда миграции.
+применяются на старте при `AUTO_MIGRATE=true`). Авторизация в Go:
+`WHERE "userId"` из токена. Аккаунты живут в `public.users` (`email`,
+`password_hash`, `google_sub`); refresh-токены — в `refresh_tokens` (sha256).
 
 ## Хранилище картинок
 
-`STORAGE_DRIVER=disk` (боевой) или `supabase` (переходный, Фаза 1).
-Disk: файлы в `{DATA_DIR}/images/{userId}/photo-{ts}.{ext}`, отдаёт сам Go
+Файлы в `{DATA_DIR}/images/{userId}/photo-{ts}.{ext}`, отдаёт сам Go
 на `/images/*` с `Cache-Control: immutable`. LLM получает картинку как
-base64 `data:`-URL прямо из байтов загрузки — публичная доступность файла
-для анализа не нужна.
+base64 `data:`-URL прямо из байтов загрузки.
 
 ## Запуск в разработке
 
 ```bash
-# Локальный Postgres
 docker compose up -d postgres
 
-# Единый .env в корне (см. .env.example): для локального Postgres —
-# DATABASE_URL=postgresql://postgres:PASSWORD@localhost:55432/postgres,
-# AUTO_MIGRATE=true, STORAGE_DRIVER=disk,
-# DATA_DIR=./.data, PUBLIC_BASE_URL=http://localhost:8080
+# .env: DATABASE_URL на localhost:55432, AUTO_MIGRATE=true,
+# AUTH_JWT_SECRET, PUBLIC_BASE_URL=http://localhost:5173
 npm run backend:dev
-
-# Фронтенд — Vite проксирует /api и /images на :8080
 npm run dev
+```
+
+Перенос аккаунтов из старого Supabase Auth (разово):
+
+```bash
+./scripts/migrate-auth.sh
 ```
 
 ## Тесты

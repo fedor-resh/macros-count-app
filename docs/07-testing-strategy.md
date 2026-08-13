@@ -94,7 +94,7 @@ UI-компоненты, хук-обвязки TanStack Query и Edge Runtime с
 
 - 100 % тестов проходят (`npm run test:run`);
 - покрытие модулей `src/utils/` (без `imageCompression`, `viewTransition`) — ≥ 80 % lines;
-- покрытие `supabase/functions/analyze-food-photo/responseAdapter.ts` — ≥ 90 % lines;
+- покрытие `src/lib/authClient.ts` — проверяется повтором запроса после 401;
 - запуск занимает ≤ 10 секунд на dev-машине.
 
 Фактические значения — в [`docs/08-test-report.md`](08-test-report.md).

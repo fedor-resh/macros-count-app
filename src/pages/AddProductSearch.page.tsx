@@ -49,8 +49,7 @@ export function AddProductSearchPage() {
 				</Badge>
 			),
 		}));
-		// Строки products имеют другую форму (snake_case, нет date/status);
-		// раньше сюда попадал нетипизированный ответ supabase — поведение сохранено.
+		// Строки products имеют другую форму (snake_case, нет date/status).
 		return [...eatenResults, ...productsData] as FoodItem[];
 	}, [productsData, foodsHistoryUnique]);
 

@@ -1,6 +1,6 @@
 # Весь стек одной командой: Caddy (TLS + единый origin), Go API, Postgres,
-# статика фронтенда, ежесуточный бэкап. В Supabase остаётся только Auth
-# (email/пароль + Google OAuth).
+# статика фронтенда, ежесуточный бэкап. Авторизация — своя (email/пароль и
+# опционально Google OAuth).
 #
 # Один и тот же файл работает на VPS (amd64) и на Raspberry Pi 5 (arm64):
 # образы собираются на месте, готовых бинарников не требуется. Нужна
@@ -105,17 +105,17 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres?sslmode=disable
       AUTO_MIGRATE: "true"
-      STORAGE_DRIVER: disk
       DATA_DIR: /data
       # Абсолютный URL картинки сохраняется в БД, поэтому это должен быть тот
       # адрес, по которому приложение открывают: смена origin позже оставит
       # старые строки указывающими в никуда. APP_ORIGIN нужен только когда
       # адрес не https://DOMAIN (например LAN по http://IP).
       PUBLIC_BASE_URL: ${APP_ORIGIN:-https://${DOMAIN:-localhost}}
-      SUPABASE_URL: ${SUPABASE_URL}
-      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:-}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?set AUTH_JWT_SECRET in .env}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
-      SITE_URL: ${SITE_URL:-https://macros-count-app.com}
+      SITE_URL: ${SITE_URL:-https://bite.fedorresh.ru}
       SITE_NAME: ${SITE_NAME:-Bite}
       TZ: ${TZ:-Etc/UTC}
     volumes:
@@ -136,9 +136,8 @@ services:
       args:
         # Vite вшивает эти значения в бандл на этапе сборки, не в рантайме:
         # после их изменения фронтенд нужно пересобрать (--build).
-        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:?set VITE_SUPABASE_URL in .env}
-        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:?set VITE_SUPABASE_ANON_KEY in .env}
         VITE_API_URL: /api/v1
+        VITE_GOOGLE_AUTH: ${VITE_GOOGLE_AUTH:-}
     restart: unless-stopped
     <<: *logging
     environment:

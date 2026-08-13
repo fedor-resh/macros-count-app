@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/fedor-resh/macros-count-app/backend/internal/repo"
+	"github.com/fedor-resh/bite/backend/internal/repo"
 	"github.com/go-chi/chi/v5"
 )
 

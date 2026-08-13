@@ -69,7 +69,7 @@ export function CalorieCalculator({
 		}
 	}, [initialParams]);
 
-	// Сохраняем параметры в Supabase при изменении (с debounce)
+	// Сохраняем параметры профиля при изменении (с debounce)
 	useEffect(() => {
 		// Не сохраняем, если это начальные значения
 		const isInitialState =

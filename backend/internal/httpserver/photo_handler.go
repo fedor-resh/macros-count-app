@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fedor-resh/macros-count-app/backend/internal/storage"
+	"github.com/fedor-resh/bite/backend/internal/storage"
 )
 
 const maxUploadBytes = 15 << 20 // frontend compresses images before upload

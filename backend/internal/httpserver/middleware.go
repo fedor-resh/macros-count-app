@@ -15,9 +15,9 @@ type TokenVerifier interface {
 	Verify(tokenString string) (string, error)
 }
 
-// AuthMiddleware verifies the Supabase-issued Bearer token and stores the
-// user id in the request context. Every data query below must scope by this
-// id — it is the authorization boundary that replaces RLS.
+// AuthMiddleware verifies the Bearer access token and stores the user id in
+// the request context. Every data query below must scope by this id — it is
+// the authorization boundary.
 func AuthMiddleware(verifier TokenVerifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -65,6 +65,7 @@ func corsMiddleware(allowedOrigins []string) func(http.Handler) http.Handler {
 				w.Header().Set("Vary", "Origin")
 				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
 				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+				w.Header().Set("Access-Control-Allow-Credentials", "true")
 				w.Header().Set("Access-Control-Max-Age", "86400")
 			}
 			if r.Method == http.MethodOptions {

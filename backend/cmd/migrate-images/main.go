@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fedor-resh/macros-count-app/backend/internal/storage"
+	"github.com/fedor-resh/bite/backend/internal/storage"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

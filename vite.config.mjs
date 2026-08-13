@@ -1,9 +1,16 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import tsconfigPaths from "vite-tsconfig-paths";
 
+const srcDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "src");
+
 export default defineConfig({
+	resolve: {
+		alias: { "@": srcDir },
+	},
 	plugins: [
 		react({
 			babel: {
@@ -23,37 +30,37 @@ export default defineConfig({
 				display: "standalone",
 				icons: [
 					{
-						src: "https://macros-count-app.fedorresh.ru/android/android-launchericon-48-48.png",
+						src: "/android/android-launchericon-48-48.png",
 						sizes: "48x48",
 						type: "image/png",
 						purpose: "any",
 					},
 					{
-						src: "https://macros-count-app.fedorresh.ru/android/android-launchericon-72-72.png",
+						src: "/android/android-launchericon-72-72.png",
 						sizes: "72x72",
 						type: "image/png",
 						purpose: "any",
 					},
 					{
-						src: "https://macros-count-app.fedorresh.ru/android/android-launchericon-96-96.png",
+						src: "/android/android-launchericon-96-96.png",
 						sizes: "96x96",
 						type: "image/png",
 						purpose: "any",
 					},
 					{
-						src: "https://macros-count-app.fedorresh.ru/android/android-launchericon-144-144.png",
+						src: "/android/android-launchericon-144-144.png",
 						sizes: "144x144",
 						type: "image/png",
 						purpose: "any",
 					},
 					{
-						src: "https://macros-count-app.fedorresh.ru/android/android-launchericon-192-192.png",
+						src: "/android/android-launchericon-192-192.png",
 						sizes: "192x192",
 						type: "image/png",
 						purpose: "any maskable",
 					},
 					{
-						src: "https://macros-count-app.fedorresh.ru/android/android-launchericon-512-512.png",
+						src: "/android/android-launchericon-512-512.png",
 						sizes: "512x512",
 						type: "image/png",
 						purpose: "any maskable",
@@ -67,22 +74,7 @@ export default defineConfig({
 				navigateFallbackDenylist: [/^\/api\//],
 				runtimeCaching: [
 					{
-						urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-						handler: "NetworkFirst",
-						options: {
-							cacheName: "supabase-cache",
-							expiration: {
-								maxEntries: 50,
-								maxAgeSeconds: 60 * 60 * 24, // 24 hours
-							},
-							cacheableResponse: {
-								statuses: [0, 200],
-							},
-						},
-					},
-					{
-						// Картинки еды с собственного бэкенда (Фаза 3): имена файлов
-						// с таймстемпом, никогда не меняются — можно кэшировать надолго.
+						// Картинки еды: имена файлов с таймстемпом, никогда не меняются.
 						urlPattern: /\/images\/.+\.(png|jpe?g|webp|heic)$/i,
 						handler: "CacheFirst",
 						options: {
@@ -113,10 +105,7 @@ export default defineConfig({
 			include: [
 				"src/utils/**/*.ts",
 				"src/api/foodQueries.ts",
-				"supabase/functions/analyze-food-photo/responseAdapter.ts",
-				"supabase/functions/analyze-food-photo/parser.ts",
-				"supabase/functions/analyze-food-photo/llmProvider.ts",
-				"supabase/functions/analyze-food-photo/llm.ts",
+				"src/lib/authClient.ts",
 			],
 			exclude: [
 				"src/utils/imageCompression.ts",
@@ -141,8 +130,6 @@ export default defineConfig({
 					icons: ["@tabler/icons-react"],
 					// TanStack Query
 					"react-query": ["@tanstack/react-query"],
-					// Supabase
-					supabase: ["@supabase/supabase-js"],
 				},
 			},
 		},

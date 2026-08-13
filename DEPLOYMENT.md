@@ -11,20 +11,21 @@
               ├── /images/* ──► Go API (файлы на диске)
               └── /*        ──► frontend (React + Vite)
 
-Supabase используется ТОЛЬКО для Auth (email/пароль + Google OAuth).
+Авторизация: email/пароль и опционально Google OAuth — свои эндпоинты Go
+(`/api/v1/auth/*`), access JWT в памяти браузера, refresh в httpOnly cookie.
 ```
 
 Три независимых куска, которые нужно поднять: **Postgres**, **Go API** (`backend/`) и **фронтенд** (React/Vite). Локально они запускаются как три процесса; на сервере — как контейнеры в одном `docker-compose.yml` (VPS на amd64 и Raspberry Pi 5 на arm64 разворачиваются одинаково).
 
-Подробности о самой миграции с Supabase, схеме БД и API — в [docs/10-go-backend-migration.md](docs/10-go-backend-migration.md). Этот файл — только про запуск.
+Подробности о схеме БД и API — в [docs/10-go-backend-migration.md](docs/10-go-backend-migration.md). Этот файл — только про запуск.
 
 ## Что нужно установить
 
 - **Node.js 20+** и npm
 - **Go 1.25+** ([go.dev/dl](https://go.dev/dl/)) — только для локальной разработки бэкенда; на VPS Go не нужен, бэкенд собирается в Docker
 - **Docker + Docker Compose** — для локального Postgres и для полного стека на VPS
-- Проект **Supabase** (бесплатного тира достаточно) — понадобятся URL, anon key и, если у проекта legacy-подпись токенов, JWT secret (Dashboard → Settings → API)
 - Ключ **OpenRouter** ([openrouter.ai](https://openrouter.ai)) — для анализа фото еды
+- (опционально) OAuth-клиент в [Google Cloud Console](https://console.cloud.google.com/) — для входа через Google
 
 ---
 
@@ -46,11 +47,11 @@ cp .env.example .env
 
 Заполнить:
 
-- `SUPABASE_URL` / `VITE_SUPABASE_URL` и `VITE_SUPABASE_ANON_KEY` — из Supabase Dashboard → Project Settings → API.
-- `SUPABASE_JWT_SECRET` — если у проекта legacy-подпись токенов (Dashboard → Settings → API → JWT Secret).
+- `AUTH_JWT_SECRET` — случайная строка (~32+ символов) для подписи access-токенов.
 - `OPENROUTER_API_KEY` — для анализа фото.
 - `POSTGRES_PASSWORD` — любой (например `local`); подставьте его же в `DATABASE_URL`. `POSTGRES_HOST_PORT` можно не трогать (по умолчанию `55432`, специально не `5432`, чтобы не конфликтовать с другим локальным Postgres на машине).
-- Остальное (`DOMAIN`, `CADDY_TLS`, `APP_ORIGIN`, `TZ`, `BACKUP_*`, `SUPABASE_DB_URL`) — только для сервера, локально не используется.
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` и `VITE_GOOGLE_AUTH=true` — только если нужен вход через Google. Redirect URI в Google Cloud Console: `http://localhost:5173/api/v1/auth/google/callback`.
+- Остальное (`DOMAIN`, `CADDY_TLS`, `APP_ORIGIN`, `TZ`, `BACKUP_*`) — только для сервера, локально не используется.
 
 **3. Postgres**
 
@@ -76,7 +77,7 @@ npm run dev
 
 Откройте **http://localhost:5173**. Vite проксирует `/api` и `/images` на бэкенд — CORS настраивать не нужно.
 
-**6. Google-логин (если нужен)** — добавьте `http://localhost:5173` в Supabase Dashboard → Authentication → URL Configuration → Redirect URLs, иначе после входа через Google будет редирект в никуда.
+**6. Google-логин (если нужен)** — в Google Cloud Console добавьте Redirect URI `http://localhost:5173/api/v1/auth/google/callback` (через Vite-прокси) и выставьте `VITE_GOOGLE_AUTH=true`.
 
 ### Повседневная разработка
 
@@ -103,12 +104,12 @@ npm run backend:test
 
 | Симптом | Причина |
 |---|---|
-| Все запросы к `/api/*` → 401 | `SUPABASE_JWT_SECRET` в `.env` пустой или не совпадает с Dashboard → Settings → API → JWT Secret |
+| Все запросы к `/api/*` → 401 | access-токен истёк и refresh-cookie нет/отозвана — войдите заново; либо `AUTH_JWT_SECRET` сменился после выпуска токенов |
 | `npm run db:up` падает: `ports are not available` | Порт `55432` (или что вы указали в `POSTGRES_HOST_PORT`) уже занят другим Postgres на этой машине — смените `POSTGRES_HOST_PORT` в `.env` на свободный и поправьте порт в `DATABASE_URL` |
 | Бэкенд не стартует, жалуется на `DATABASE_URL` | Postgres не поднят (`npm run db:up`) или пароль/порт в `DATABASE_URL` не совпадает с `POSTGRES_PASSWORD`/`POSTGRES_HOST_PORT` |
 | Фронт не может достучаться до `/api` | `npm run backend:dev` не запущен, или порт `8080` занят |
 | Фото зависает в статусе "анализируем" | Смотрите консоль `backend:dev` — там залогируется ошибка от OpenRouter (неверный `OPENROUTER_API_KEY`, недоступна модель и т.п.) |
-| Google-логин редиректит не туда | В Supabase Dashboard не добавлен текущий origin (`localhost:5173` в деве, домен на VPS) в Redirect URLs |
+| Google-логин редиректит не туда | в Google Cloud Console не добавлен текущий Redirect URI (`http://localhost:5173/api/v1/auth/google/callback` в деве, `https://<DOMAIN>/api/v1/auth/google/callback` на сервере) |
 
 ---
 
@@ -142,7 +143,7 @@ sudo systemctl enable docker
 ### 1. Код и `.env`
 
 ```bash
-git clone <repo> && cd macros-count-app
+git clone <repo> && cd bite
 cp .env.example .env
 ```
 
@@ -152,11 +153,11 @@ cp .env.example .env
 | `CADDY_TLS` | `internal` или email для Let's Encrypt — см. следующий пункт |
 | `APP_ORIGIN` | пусто, если приложение доступно по `https://$DOMAIN`; иначе полный origin (например `http://192.168.1.50`) |
 | `POSTGRES_PASSWORD` | любой надёжный пароль, придумывается один раз |
-| `SUPABASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Supabase Dashboard → Project Settings → API |
-| `SUPABASE_JWT_SECRET` | только если у проекта legacy HS256-подпись токенов |
+| `AUTH_JWT_SECRET` | случайная строка для подписи access-JWT |
 | `OPENROUTER_API_KEY` | ключ [openrouter.ai](https://openrouter.ai) |
 | `TZ` | часовой пояс, например `Europe/Moscow` |
-| `SUPABASE_DB_URL` | только для разового переноса данных из Supabase, иначе пусто |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | OAuth-клиент в Google Cloud Console; Redirect URI: `https://$DOMAIN/api/v1/auth/google/callback` |
+| `VITE_GOOGLE_AUTH` | `true`, если нужна кнопка Google (вшивается при сборке фронта) |
 
 `APP_ORIGIN` попадает в БД: URL каждой картинки сохраняется абсолютным. Менять его после начала эксплуатации — значит сломать ссылки на уже загруженные фото (как починить — в «Частых проблемах»). Поэтому адрес стоит выбрать сразу.
 
@@ -205,14 +206,15 @@ docker compose ps                       # все сервисы healthy
 curl -k https://<DOMAIN>/healthz        # -> ok
 ```
 
-Затем откройте сайт в браузере и войдите. Для Google-логина добавьте `https://<DOMAIN>` в Supabase Dashboard → Authentication → URL Configuration → Redirect URLs.
+Затем откройте сайт в браузере и войдите. Для Google-логина добавьте Redirect URI `https://<DOMAIN>/api/v1/auth/google/callback` в Google Cloud Console.
 
-### 5. Перенос данных из Supabase
+### 5. Перенос данных и аккаунтов из Supabase
 
-Только если в Supabase-проекте уже есть пользователи и записи. Выполняется один раз; чеклист с откатом — в разделе «Runbook катовера на VPS» файла [docs/10-go-backend-migration.md](docs/10-go-backend-migration.md):
+Только если в старом Supabase-проекте уже есть пользователи и записи. Выполняется один раз:
 
 ```bash
 ./scripts/migrate-db.sh
+./scripts/migrate-auth.sh
 docker compose run --rm migrate-images
 ```
 
@@ -251,12 +253,11 @@ docker compose exec postgres pg_dump -U postgres postgres | gzip > backups/manua
 | Caddy в логах не может получить сертификат | DNS не указывает на машину или снаружи закрыт порт 80. Перейти на `CADDY_TLS=internal` + Cloudflare Tunnel |
 | Камера не открывается на телефоне | сертификат браузеру не доверяется. Нужен валидный сертификат (домен/туннель) либо установленный корневой сертификат Caddy |
 | Старые фото отдают 404 после смены адреса | в БД лежат абсолютные URL с прежним origin. Зайти в `docker compose exec postgres psql -U postgres` и выполнить `UPDATE eaten_products SET "imageUrl" = replace("imageUrl", 'https://старый', 'https://новый');` |
-| `docker compose up` жалуется на required variable | в `.env` не заполнены `POSTGRES_PASSWORD` / `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` |
-| Все `/api/*` → 401 | `SUPABASE_JWT_SECRET` не совпадает с Dashboard → Settings → API → JWT Secret |
+| `docker compose up` жалуется на required variable | в `.env` не заполнены `POSTGRES_PASSWORD` / `AUTH_JWT_SECRET` |
+| Все `/api/*` → 401 | access-токен истёк; либо сменился `AUTH_JWT_SECRET` — войдите заново |
 
 ### Откат
 
-- Вернуть `DATABASE_URL` на Supabase pooler и `AUTO_MIGRATE=""` — данные в Supabase остаются нетронутыми (изменения после катовера придётся переносить руками).
-- Для картинок — `STORAGE_DRIVER=supabase` + `SUPABASE_SERVICE_ROLE_KEY`, пока бакет `images` в Supabase не удалён.
+Восстановить БД из `./backups` (`pg_restore` / `psql` из `.sql.gz`) и откатить код на предыдущий git-тег. Картинки живут в volume `images_data`.
 
-Подробнее — в [docs/10-go-backend-migration.md](docs/10-go-backend-migration.md).
+Подробнее про API и схему — в [docs/10-go-backend-migration.md](docs/10-go-backend-migration.md).

@@ -64,9 +64,8 @@ export function AppLayout() {
 							/>
 							<UnstyledButton onClick={() => navigate("/profile")}>
 								<Avatar
-									src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture}
-									alt={user?.user_metadata?.full_name || user?.email || "User"}
-									name={user?.user_metadata?.full_name || user?.email || "User"}
+									alt={user?.email || "User"}
+									name={user?.email || "User"}
 									radius="xl"
 									size="md"
 									style={{ cursor: "pointer" }}

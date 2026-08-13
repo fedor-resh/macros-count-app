@@ -4,6 +4,7 @@ import { AppLayout } from "./components/Layout/AppLayout";
 import { AboutPage } from "./pages/About.page";
 import { AddProductPage } from "./pages/AddProduct.page";
 import { AddProductSearchPage } from "./pages/AddProductSearch.page";
+import { AuthCallbackPage } from "./pages/AuthCallback.page";
 import { HomePage } from "./pages/Home.page";
 import { LoginPage } from "./pages/Login.page";
 import { ProfilePage } from "./pages/Profile.page";
@@ -13,6 +14,10 @@ const router = createBrowserRouter([
 	{
 		path: "/login",
 		element: <LoginPage />,
+	},
+	{
+		path: "/auth/callback",
+		element: <AuthCallbackPage />,
 	},
 	{
 		path: "/",

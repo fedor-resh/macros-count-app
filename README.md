@@ -1,4 +1,4 @@
-# Macros Count App
+# Bite
 
 Frontend app plus research scripts for building and evaluating food-photo datasets.
 
@@ -8,7 +8,7 @@ Frontend app plus research scripts for building and evaluating food-photo datase
 
 ## Dataset Pipeline
 
-The research pipeline for dataset enrichment and ML dataset assembly is documented in [scripts/README.md](/c:/Users/fedor/WebstormProjects/macros-count-app/scripts/README.md).
+The research pipeline for dataset enrichment and ML dataset assembly is documented in [scripts/README.md](scripts/README.md).
 
 Main commands:
 
@@ -20,8 +20,8 @@ Main commands:
 
 Current generated artifacts:
 
-- [scripts/output/dataset-enriched.csv](/c:/Users/fedor/WebstormProjects/macros-count-app/scripts/output/dataset-enriched.csv:1)
-- [scripts/output/training.csv](/c:/Users/fedor/WebstormProjects/macros-count-app/scripts/output/training.csv:1)
+- [scripts/output/dataset-enriched.csv](scripts/output/dataset-enriched.csv)
+- [scripts/output/training.csv](scripts/output/training.csv)
 
 ## App Development
 
@@ -52,8 +52,8 @@ Current generated artifacts:
 
 | Категория | Шаблон | Реализация |
 |-----------|--------|------------|
-| Порождающий | **Factory Method** | [supabase/functions/analyze-food-photo/llmProvider.ts](supabase/functions/analyze-food-photo/llmProvider.ts) — `createLlmProvider` + `OpenRouterProvider` |
-| Структурный | **Adapter** | [supabase/functions/analyze-food-photo/responseAdapter.ts](supabase/functions/analyze-food-photo/responseAdapter.ts) — `GeminiResponseAdapter` |
+| Порождающий | **Factory Method** | [backend/internal/analysis/openrouter.go](backend/internal/analysis/openrouter.go) — интерфейс `LLM` + `NewOpenRouterClient` |
+| Структурный | **Adapter** | [backend/internal/analysis/parser.go](backend/internal/analysis/parser.go) — нормализация ответа LLM к `FoodAnalysis` |
 | Поведенческий | **Strategy** | [src/utils/bmrStrategy.ts](src/utils/bmrStrategy.ts) — `MifflinStJeorStrategy` / `HarrisBenedictStrategy` |
 
 ### Контрольная команда

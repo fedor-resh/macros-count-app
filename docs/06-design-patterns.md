@@ -4,8 +4,8 @@
 
 | Категория | Шаблон | Файл | Цель внедрения |
 |-----------|--------|------|----------------|
-| Порождающий | Factory Method | [`supabase/functions/analyze-food-photo/llm.ts`](../supabase/functions/analyze-food-photo/llm.ts), [`llmProvider.ts`](../supabase/functions/analyze-food-photo/llmProvider.ts) | Подмена LLM-провайдера / модели без изменения вызывающего кода |
-| Структурный | Adapter | [`supabase/functions/analyze-food-photo/parser.ts`](../supabase/functions/analyze-food-photo/parser.ts), [`responseAdapter.ts`](../supabase/functions/analyze-food-photo/responseAdapter.ts) | Нормализация «сырого» ответа LLM к доменной структуре `FoodAnalysis` |
+| Порождающий | Factory Method | [`backend/internal/analysis/service.go`](../backend/internal/analysis/service.go), [`openrouter.go`](../backend/internal/analysis/openrouter.go) | Подмена LLM-провайдера без изменения вызывающего кода |
+| Структурный | Adapter | [`backend/internal/analysis/parser.go`](../backend/internal/analysis/parser.go) | Нормализация «сырого» ответа LLM к доменной структуре `FoodAnalysis` |
 | Поведенческий | Strategy | [`src/utils/calorieCalculator.ts`](../src/utils/calorieCalculator.ts), [`bmrStrategy.ts`](../src/utils/bmrStrategy.ts) | Выбор формулы расчёта BMR (Mifflin–St Jeor / Harris–Benedict) |
 
 ## 6.1. Factory Method — LLM-провайдеры

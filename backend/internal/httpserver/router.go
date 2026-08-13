@@ -8,13 +8,13 @@ import (
 )
 
 type Handlers struct {
+	Auth          *AuthHandler
 	EatenProducts *EatenProductsHandler
 	Products      *ProductsHandler
 	Users         *UsersHandler
 	Photo         *PhotoHandler
 	SSE           *SSEHandler
-	// Images serves /images/* when disk storage is active; nil otherwise.
-	Images http.Handler
+	Images        http.Handler
 }
 
 func NewRouter(verifier TokenVerifier, h Handlers, corsAllowedOrigins []string) http.Handler {
@@ -37,21 +37,30 @@ func NewRouter(verifier TokenVerifier, h Handlers, corsAllowedOrigins []string) 
 	}
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Use(AuthMiddleware(verifier))
+		if h.Auth != nil {
+			r.Mount("/auth", h.Auth.Routes())
+		}
 
-		r.Get("/eaten-products", h.EatenProducts.List)
-		r.Post("/eaten-products", h.EatenProducts.Create)
-		r.Patch("/eaten-products/{id}", h.EatenProducts.Update)
-		r.Delete("/eaten-products/{id}", h.EatenProducts.Delete)
+		r.Group(func(r chi.Router) {
+			r.Use(AuthMiddleware(verifier))
 
-		r.Get("/products", h.Products.Search)
+			r.Get("/eaten-products", h.EatenProducts.List)
+			r.Post("/eaten-products", h.EatenProducts.Create)
+			r.Patch("/eaten-products/{id}", h.EatenProducts.Update)
+			r.Delete("/eaten-products/{id}", h.EatenProducts.Delete)
 
-		r.Get("/me", h.Users.Me)
-		r.Put("/me/goals", h.Users.UpsertGoals)
-		r.Patch("/me", h.Users.UpdateParams)
+			r.Get("/products", h.Products.Search)
 
-		r.Post("/photos/analyze", h.Photo.Analyze)
-		r.Get("/events", h.SSE.Stream)
+			r.Get("/me", h.Users.Me)
+			r.Put("/me/goals", h.Users.UpsertGoals)
+			r.Patch("/me", h.Users.UpdateParams)
+			if h.Auth != nil {
+				r.Post("/me/password", h.Auth.ChangePassword)
+			}
+
+			r.Post("/photos/analyze", h.Photo.Analyze)
+			r.Get("/events", h.SSE.Stream)
+		})
 	})
 
 	return r

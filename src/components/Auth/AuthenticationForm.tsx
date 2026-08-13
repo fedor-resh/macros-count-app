@@ -15,32 +15,36 @@ import { useForm } from "@mantine/form";
 import { upperFirst, useToggle } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-	useSignInMutation,
-	useSignInWithGoogleMutation,
-	useSignUpMutation,
-} from "../../api/userQueries";
+import { useSignInMutation, useSignUpMutation } from "../../api/userQueries";
+import { googleStartUrl } from "../../lib/authClient";
 import { useAuthStore } from "../../stores/authStore";
 import { GoogleButton } from "./GoogleButton";
 
+const googleEnabled = import.meta.env.VITE_GOOGLE_AUTH === "true";
+
 export function AuthenticationForm(props: PaperProps) {
 	const navigate = useNavigate();
-	const session = useAuthStore((state) => state.session);
+	const user = useAuthStore((state) => state.user);
 	const [type, toggle] = useToggle(["login", "register"]);
 	const [error, setError] = useState<string | null>(null);
 
 	const { mutate: signIn, isPending: isSigningIn } = useSignInMutation();
 	const { mutate: signUp, isPending: isSigningUp } = useSignUpMutation();
-	const { mutate: signInWithGoogle, isPending: isGoogleLoading } = useSignInWithGoogleMutation();
 
-	const loading = isSigningIn || isSigningUp || isGoogleLoading;
+	const loading = isSigningIn || isSigningUp;
 
-	// Redirect if already logged in
 	useEffect(() => {
-		if (session) {
+		if (user) {
 			navigate("/");
 		}
-	}, [session, navigate]);
+	}, [user, navigate]);
+
+	useEffect(() => {
+		const params = new URLSearchParams(window.location.search);
+		if (params.get("error") === "google") {
+			setError("Ошибка при входе через Google");
+		}
+	}, []);
 
 	const form = useForm({
 		initialValues: {
@@ -56,36 +60,30 @@ export function AuthenticationForm(props: PaperProps) {
 		},
 	});
 
-	const handleSubmit = async (values: typeof form.values) => {
+	const handleSubmit = (values: typeof form.values) => {
 		setError(null);
 
 		if (type === "register") {
 			signUp(
-				{
-					email: values.email,
-					password: values.password,
-				},
+				{ email: values.email, password: values.password },
 				{
 					onSuccess: () => {
-						setError("Проверьте вашу почту для подтверждения регистрации");
+						navigate("/");
 					},
-					onError: (err: any) => {
-						setError(err.message || "Произошла ошибка при регистрации");
+					onError: (err: unknown) => {
+						setError(err instanceof Error ? err.message : "Произошла ошибка при регистрации");
 					},
 				},
 			);
 		} else {
 			signIn(
-				{
-					email: values.email,
-					password: values.password,
-				},
+				{ email: values.email, password: values.password },
 				{
 					onSuccess: () => {
 						navigate("/");
 					},
-					onError: (err: any) => {
-						setError(err.message || "Произошла ошибка при входе");
+					onError: (err: unknown) => {
+						setError(err instanceof Error ? err.message : "Произошла ошибка при входе");
 					},
 				},
 			);
@@ -93,13 +91,7 @@ export function AuthenticationForm(props: PaperProps) {
 	};
 
 	const handleGoogleLogin = () => {
-		setError(null);
-
-		signInWithGoogle(undefined, {
-			onError: (err: any) => {
-				setError(err.message || "Ошибка при входе через Google");
-			},
-		});
+		window.location.assign(googleStartUrl());
 	};
 
 	return (
@@ -108,21 +100,24 @@ export function AuthenticationForm(props: PaperProps) {
 				Добро пожаловать, {type === "login" ? "войдите" : "зарегистрируйтесь"}
 			</Text>
 
-			<GoogleButton
-				radius="xl"
-				onClick={handleGoogleLogin}
-				disabled={loading}
-				fullWidth
-				mb="md"
-				mt="md"
-			>
-				Google
-			</GoogleButton>
-
-			<Divider label="Или используйте email" labelPosition="center" my="lg" />
+			{googleEnabled && (
+				<>
+					<GoogleButton
+						radius="xl"
+						onClick={handleGoogleLogin}
+						disabled={loading}
+						fullWidth
+						mb="md"
+						mt="md"
+					>
+						Google
+					</GoogleButton>
+					<Divider label="Или используйте email" labelPosition="center" my="lg" />
+				</>
+			)}
 
 			{error && (
-				<Text c="red" size="sm" mb="md">
+				<Text c="red" size="sm" mb="md" mt={googleEnabled ? undefined : "md"}>
 					{error}
 				</Text>
 			)}

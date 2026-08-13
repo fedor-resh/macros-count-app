@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/fedor-resh/macros-count-app/backend/internal/repo"
+	"github.com/fedor-resh/bite/backend/internal/repo"
 )
 
 type ProductsRepo interface {

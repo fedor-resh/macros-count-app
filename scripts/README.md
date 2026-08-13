@@ -1,18 +1,11 @@
 # Dataset Enrichment And Training Pipeline
 
-> **⚠️ Не работает после Фазы 2 миграции на Go-бэкенд:** `export-dataset.ts`
-> читает `eaten_products` через Supabase service role key, а данные переехали
-> в собственный Postgres (см. `docs/10-go-backend-migration.md`). Перед
-> следующим использованием пайплайна скрипт нужно переписать на прямое
-> подключение к `DATABASE_URL` (npm-пакет `pg`). Остальные шаги пайплайна
-> работают с локальными CSV и не затронуты.
+This directory contains the research pipeline for building an ML-ready dataset from food photos.
 
-This directory now contains the research pipeline for building an ML-ready dataset from food photos.
-
-Current pipeline as of April 19, 2026:
+Current pipeline:
 
 1. `export-dataset.ts`
-   Reads `id`, `imageUrl`, `kcalories` from Supabase `eaten_products`.
+   Reads `id`, `imageUrl`, `kcalories` from Postgres (`DATABASE_URL` или `docker compose exec postgres psql`).
 2. `classify-images.ts`
    Classifies each image into `nutrition_label`, `label`, `product`, `non_edible`.
 3. `enrich-features.ts`

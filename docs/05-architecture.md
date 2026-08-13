@@ -2,77 +2,74 @@
 
 ## 5.1. Архитектурный стиль
 
-**Macros Count App** построен по схеме **Client-Side React PWA + BaaS (Supabase) + Serverless Edge Function**:
+**Bite** построен по схеме **React PWA + Go API + Postgres**:
 
 - толстый клиент на React 19 (Mantine UI, Zustand, TanStack Query) исполняется в браузере как Progressive Web App;
-- персистентность, аутентификация, файловое хранилище и Realtime-канал обеспечивает Supabase (Postgres + Auth + Storage + Realtime);
-- единственная server-side точка с произвольной бизнес-логикой — Deno-Edge Function `analyze-food-photo`, которая выполняет долгий вызов LLM в фоне и обновляет БД.
+- персистентность, авторизация, файлы и SSE обеспечивает свой Go-бэкенд и Postgres в Docker Compose;
+- анализ фото еды — фоновая горутина, которая вызывает OpenRouter (Gemini 3 Flash) и пушит статус по SSE.
 
 Такое разделение даёт три преимущества:
 
-1. отсутствие выделенного сервера и контейнерной инфраструктуры (cost = 0 на старте);
-2. встроенный Realtime-канал заменяет ручной push (WebSocket) для асинхронных результатов LLM;
-3. ML-операции изолированы в одной функции, что упрощает замену провайдера (см. Factory Method в [`06-design-patterns.md`](06-design-patterns.md)).
+1. весь стек поднимается одной командой `docker compose up` (VPS или Raspberry Pi 5);
+2. SSE заменяет ручной push для асинхронных результатов LLM;
+3. ML-операции изолированы за интерфейсом `LLM` (см. Factory Method в [`06-design-patterns.md`](06-design-patterns.md)).
 
 ## 5.2. C4: System Context (L1)
 
 ```mermaid
 graph LR
     User[Пользователь]
-    App["Macros Count App<br/>(PWA, React 19)"]
-    Supabase["Supabase<br/>Postgres / Auth / Storage / Realtime"]
-    Edge["Edge Function<br/>analyze-food-photo (Deno)"]
+    App["Bite<br/>(PWA, React 19)"]
+    API["Go API"]
+    DB[("Postgres")]
     OpenRouter["OpenRouter API<br/>Gemini 3 Flash"]
+    Google["Google OAuth"]
 
     User -->|HTTPS| App
-    App -->|JS SDK| Supabase
-    App -->|multipart/form-data| Edge
-    Edge -->|service-role JWT| Supabase
-    Edge -->|REST + Bearer| OpenRouter
-    Supabase -->|WebSocket Realtime| App
+    App -->|Bearer JWT / cookie| API
+    API --> DB
+    API -->|REST| OpenRouter
+    App -->|redirect| Google
+    Google -->|callback| API
 ```
 
 **Внешние акторы:**
 
 - **Пользователь** — конечный потребитель приложения через мобильный/десктоп-браузер.
-- **OpenRouter** — внешний шлюз для мультимодальных LLM (используется модель Google Gemini 3 Flash).
-- **Supabase** — внешний управляемый BaaS-сервис.
+- **OpenRouter** — внешний шлюз для мультимодальных LLM (Google Gemini 3 Flash).
+- **Google** — опциональный провайдер OAuth.
 
 ## 5.3. C4: Containers (L2)
 
 ```mermaid
 graph TB
     subgraph Browser["Браузер (PWA)"]
-        SW["Service Worker<br/>(vite-plugin-pwa)"]
-        UI["React UI<br/>+ Mantine"]
-        Store["Zustand stores<br/>(authStore, dateStore)"]
-        Query["TanStack Query<br/>(cache + persistence)"]
-        SDK["@supabase/supabase-js"]
+        SW["Service Worker"]
+        UI["React UI + Mantine"]
+        Store["Zustand stores"]
+        Query["TanStack Query"]
     end
 
-    subgraph SupabaseCloud["Supabase Cloud"]
-        Auth["Supabase Auth<br/>(GoTrue)"]
-        DB[("PostgreSQL<br/>users / products /<br/>eaten_products")]
-        Storage["Object Storage<br/>(bucket: food-photos)"]
-        Realtime["Realtime engine<br/>(WAL → WS)"]
-        EdgeRT["Edge Runtime (Deno)"]
+    subgraph Server["Docker Compose"]
+        Caddy["Caddy TLS"]
+        API["Go API"]
+        DB[("PostgreSQL")]
+        Disk["Disk volume /data/images"]
     end
 
     OpenRouter[(OpenRouter / Gemini)]
+    Google[Google OAuth]
 
     UI --> Store
     UI --> Query
-    Query --> SDK
-    Store --> SDK
-    SDK --> Auth
-    SDK --> DB
-    SDK --> Storage
-    SDK <-->|WebSocket| Realtime
-    Realtime -.->|listens WAL| DB
-    UI -->|fetch FormData| EdgeRT
-    EdgeRT --> Storage
-    EdgeRT --> DB
-    EdgeRT --> OpenRouter
+    Query --> API
+    Store --> API
+    Caddy --> API
+    Caddy --> UI
+    API --> DB
+    API --> Disk
+    API --> OpenRouter
+    API --> Google
     SW -.->|caches| UI
 ```
 
@@ -81,44 +78,40 @@ graph TB
 | React UI | React 19, Mantine 8 | UI, маршрутизация, формы |
 | Zustand store | Zustand 5 | Глобальное in-memory состояние (auth, выбранная дата) |
 | TanStack Query | @tanstack/react-query 5 | Кэш серверных данных, оптимистичные мутации, персист в IndexedDB |
-| Service Worker | vite-plugin-pwa | Offline-кэш статики и Supabase-ответов (NetworkFirst) |
-| Supabase Auth | GoTrue | JWT-аутентификация, триггер на создание `public.users` |
-| PostgreSQL | Postgres 15 | Хранение домена + RLS-политики |
-| Storage | S3-совместимое | Хранение фотографий по пути `<userId>/<filename>` |
-| Realtime | Elixir-сервис | Доставка UPDATE-событий по подпискам |
-| Edge Function | Deno 1.x | Серверная логика загрузки фото и обращения к LLM |
+| Service Worker | vite-plugin-pwa | Offline-кэш статики и картинок |
+| Caddy | Caddy 2 | TLS, единый origin, раздача статики |
+| Go API | Go 1.25, chi | Авторизация, CRUD, анализ фото, SSE |
+| PostgreSQL | Postgres 17 | Хранение домена и аккаунтов |
+| Disk volume | Docker volume | Файлы фотографий `{userId}/photo-{ts}.{ext}` |
 
-## 5.4. C4: Components — Edge Function `analyze-food-photo` (L3)
+## 5.4. C4: Components — анализ фото (L3)
 
 ```mermaid
 graph LR
-    Req[HTTP Request<br/>multipart/form-data] --> Cors[cors.ts]
-    Cors --> Auth[auth.ts<br/>getAuthenticatedUser]
-    Auth --> File[file-handler.ts<br/>parseFormData / processFile]
-    File --> Stor[storage.ts<br/>uploadImage]
-    Stor --> DB1[database.ts<br/>insertEatenProduct status=pending]
-    DB1 --> Resp[responses.ts<br/>createPendingResponse 202]
-
-    DB1 -. background .-> LLM[llm.ts<br/>LlmProvider.analyze]
-    LLM --> Parser[parser.ts<br/>LlmResponseAdapter.adapt]
-    Parser --> DB2[database.ts<br/>updateEatenProductAnalysis]
-    Parser -. on error .-> DBErr[database.ts<br/>updateEatenProductStatus 'error']
+    Req[POST /api/v1/photos/analyze<br/>multipart] --> AuthMw[AuthMiddleware]
+    AuthMw --> Photo[PhotoHandler]
+    Photo --> Disk[storage.Disk.Upload]
+    Disk --> DB1[InsertPending status=pending]
+    DB1 --> Resp[202 pending]
+    DB1 -. goroutine .-> LLM[OpenRouterClient.Analyze]
+    LLM --> Parser[parser.ParseFoodAnalysis]
+    Parser --> DB2[UpdateAnalysis]
+    Parser -. on error .-> DBErr[UpdateStatus error]
+    DB2 --> SSE[Broker.Publish]
+    SSE --> Client[GET /api/v1/events]
 ```
 
 **Поток данных при загрузке фото:**
 
-1. Клиент → `POST /functions/v1/analyze-food-photo` (multipart: `file`, `date`).
-2. `cors.ts` обрабатывает preflight.
-3. `auth.ts` создаёт Supabase-клиент с JWT и валидирует пользователя.
-4. `file-handler.ts` извлекает файл и формирует путь `<userId>/<uuid>.<ext>`.
-5. `storage.ts` загружает файл в bucket `food-photos`.
-6. `database.ts` вставляет запись со статусом `pending`.
-7. Ответ 202 + `{ id, imageUrl, status: "pending" }` уходит клиенту немедленно.
-8. **В фоне** (`EdgeRuntime.waitUntil`):
-   - `llm.ts` через `LlmProvider.analyze(imageUrl)` отправляет фото в OpenRouter (Factory Method).
-   - `parser.ts` через `LlmResponseAdapter.adapt(raw)` нормализует JSON (Adapter).
-   - `database.ts` обновляет запись (`completed` + поля КБЖУ или `error`).
-9. Realtime-канал доставляет UPDATE-событие клиенту, UI снимает скелетон и показывает уведомление.
+1. Клиент → `POST /api/v1/photos/analyze` (multipart: `photo`, `date`) с Bearer access-токеном.
+2. `AuthMiddleware` проверяет JWT и кладёт `userId` в контекст.
+3. `PhotoHandler` сохраняет файл на диск и вставляет запись со статусом `pending`.
+4. Ответ 202 `{ id, imageUrl, status: "pending" }` уходит клиенту немедленно.
+5. **В фоне** (горутина):
+   - `OpenRouterClient.Analyze` отправляет фото в OpenRouter как data-URL.
+   - `parser` нормализует JSON к `FoodAnalysis` (Adapter).
+   - репозиторий обновляет запись (`completed` + КБЖУ или `error`).
+6. SSE `GET /api/v1/events` доставляет событие клиенту.
 
 ## 5.5. Поток данных при расчёте целей
 
@@ -145,7 +138,7 @@ sequenceDiagram
 ## 5.6. Структура исходного кода
 
 ```
-macros-count-app/
+bite/
 ├── src/
 │   ├── api/                  TanStack Query хуки + сервисы
 │   ├── components/           UI-компоненты (Mantine)
