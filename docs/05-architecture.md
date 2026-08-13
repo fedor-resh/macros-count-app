@@ -6,7 +6,7 @@
 
 - толстый клиент на React 19 (Mantine UI, Zustand, TanStack Query) исполняется в браузере как Progressive Web App;
 - персистентность, авторизация, файлы и SSE обеспечивает свой Go-бэкенд и Postgres в Docker Compose;
-- анализ фото еды — фоновая горутина, которая вызывает OpenRouter (Gemini 3 Flash) и пушит статус по SSE.
+- анализ фото еды — фоновая горутина, которая вызывает LLM-шлюз (provod.ai, Gemini 3.1 Flash Lite) и пушит статус по SSE.
 
 Такое разделение даёт три преимущества:
 
@@ -22,13 +22,13 @@ graph LR
     App["Bite<br/>(PWA, React 19)"]
     API["Go API"]
     DB[("Postgres")]
-    OpenRouter["OpenRouter API<br/>Gemini 3 Flash"]
+    LLM["LLM-шлюз<br/>provod.ai / Gemini 3.1 Flash Lite"]
     Google["Google OAuth"]
 
     User -->|HTTPS| App
     App -->|Bearer JWT / cookie| API
     API --> DB
-    API -->|REST| OpenRouter
+    API -->|REST| LLM
     App -->|redirect| Google
     Google -->|callback| API
 ```
@@ -36,7 +36,7 @@ graph LR
 **Внешние акторы:**
 
 - **Пользователь** — конечный потребитель приложения через мобильный/десктоп-браузер.
-- **OpenRouter** — внешний шлюз для мультимодальных LLM (Google Gemini 3 Flash).
+- **LLM-шлюз** — внешний OpenAI-совместимый провайдер мультимодальных моделей; по умолчанию provod.ai с Google Gemini 3.1 Flash Lite, адрес и модель задаются `LLM_BASE_URL` / `LLM_MODEL`.
 - **Google** — опциональный провайдер OAuth.
 
 ## 5.3. C4: Containers (L2)
@@ -57,7 +57,7 @@ graph TB
         Disk["Disk volume /data/images"]
     end
 
-    OpenRouter[(OpenRouter / Gemini)]
+    LLM[(LLM-шлюз / Gemini)]
     Google[Google OAuth]
 
     UI --> Store
@@ -68,7 +68,7 @@ graph TB
     Caddy --> UI
     API --> DB
     API --> Disk
-    API --> OpenRouter
+    API --> LLM
     API --> Google
     SW -.->|caches| UI
 ```
@@ -93,7 +93,7 @@ graph LR
     Photo --> Disk[storage.Disk.Upload]
     Disk --> DB1[InsertPending status=pending]
     DB1 --> Resp[202 pending]
-    DB1 -. goroutine .-> LLM[OpenRouterClient.Analyze]
+    DB1 -. goroutine .-> LLM[analysis.Client.Analyze]
     LLM --> Parser[parser.ParseFoodAnalysis]
     Parser --> DB2[UpdateAnalysis]
     Parser -. on error .-> DBErr[UpdateStatus error]
@@ -108,7 +108,7 @@ graph LR
 3. `PhotoHandler` сохраняет файл на диск и вставляет запись со статусом `pending`.
 4. Ответ 202 `{ id, imageUrl, status: "pending" }` уходит клиенту немедленно.
 5. **В фоне** (горутина):
-   - `OpenRouterClient.Analyze` отправляет фото в OpenRouter как data-URL.
+   - `analysis.Client.Analyze` отправляет фото в LLM-шлюз как data-URL.
    - `parser` нормализует JSON к `FoodAnalysis` (Adapter).
    - репозиторий обновляет запись (`completed` + КБЖУ или `error`).
 6. SSE `GET /api/v1/events` доставляет событие клиенту.

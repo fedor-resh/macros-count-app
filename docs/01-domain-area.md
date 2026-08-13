@@ -35,7 +35,7 @@
 | **Eaten Product** | Запись о съеденном продукте (имя, КБЖУ, дата, фото, статус анализа) |
 | **PWA** (Progressive Web App) | Веб-приложение с поддержкой установки, push-уведомлений и offline-режима через Service Worker |
 | **BaaS** (Backend-as-a-Service) | Модель поставки бэкенда (Supabase: Postgres + Auth + Storage + Edge Functions) |
-| **LLM** (Large Language Model) | В контексте проекта — мультимодальная модель Google Gemini 3 Flash через OpenRouter |
+| **LLM** (Large Language Model) | В контексте проекта — мультимодальная модель Google Gemini 3.1 Flash Lite через OpenAI-совместимый шлюз provod.ai |
 | **RLS** (Row-Level Security) | Механизм Postgres, ограничивающий доступ к строкам таблицы на уровне СУБД |
 | **Edge Function** | Serverless-функция на Deno, исполняющаяся на CDN-узлах Supabase |
 | **Realtime** | Подписка на изменения строк Postgres через WebSocket-канал Supabase |
@@ -47,7 +47,7 @@
 | MyFitnessPal | Большая база продуктов | Ручной поиск; платный фото-анализ; нет offline |
 | FatSecret | Бесплатное API | Устаревший UX; нет авто-распознавания |
 | Yazio | Удобный UI | Платная подписка для расширенных функций |
-| **Bite** | Фото-анализ из коробки, PWA, offline, бесплатно | Ограничен квотой OpenRouter, нет соц-функций |
+| **Bite** | Фото-анализ из коробки, PWA, offline, бесплатно | Ограничен квотой LLM-шлюза, нет соц-функций |
 
 ## 1.5. Краткая постановка задачи
 

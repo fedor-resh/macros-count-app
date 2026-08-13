@@ -123,6 +123,17 @@ func TestAdaptGeminiResponse_NonNumericValuesIgnored(t *testing.T) {
 	}
 }
 
+func TestAdaptGeminiResponse_JSONArray(t *testing.T) {
+	// Модель иногда отдаёт список блюд — берём первое, а не fallback.
+	raw := `[{"food_name":"Огурец","calories":41,"protein":0.9,"confidence":"high"}]`
+	result := AdaptGeminiResponse(raw)
+
+	if result.FoodName != "Огурец" {
+		t.Fatalf("food_name: expected Огурец, got %q", result.FoodName)
+	}
+	floatPtrEq(t, "calories", result.Calories, 41)
+}
+
 func TestExtractAnalysisFromResponse(t *testing.T) {
 	// TC-27: извлекает content из choices[0].message.content
 	body := `{"choices":[{"message":{"content":"{\"food_name\":\"Test\",\"confidence\":\"high\",\"calories\":100}"}}]}`

@@ -119,7 +119,9 @@ services:
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?set AUTH_JWT_SECRET in .env}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      LLM_API_KEY: ${LLM_API_KEY:?set LLM_API_KEY in .env}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.provod.ai/v1}
+      LLM_MODEL: ${LLM_MODEL:-google/gemini-3.1-flash-lite}
       SITE_URL: ${SITE_URL:-https://bite.fedorresh.ru}
       SITE_NAME: ${SITE_NAME:-Bite}
       TZ: ${TZ:-Etc/UTC}

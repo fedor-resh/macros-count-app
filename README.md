@@ -52,7 +52,7 @@ Current generated artifacts:
 
 | Категория | Шаблон | Реализация |
 |-----------|--------|------------|
-| Порождающий | **Factory Method** | [backend/internal/analysis/openrouter.go](backend/internal/analysis/openrouter.go) — интерфейс `LLM` + `NewOpenRouterClient` |
+| Порождающий | **Factory Method** | [backend/internal/analysis/llm.go](backend/internal/analysis/llm.go) — интерфейс `LLM` + `NewClient` |
 | Структурный | **Adapter** | [backend/internal/analysis/parser.go](backend/internal/analysis/parser.go) — нормализация ответа LLM к `FoodAnalysis` |
 | Поведенческий | **Strategy** | [src/utils/bmrStrategy.ts](src/utils/bmrStrategy.ts) — `MifflinStJeorStrategy` / `HarrisBenedictStrategy` |
 

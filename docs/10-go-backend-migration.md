@@ -6,7 +6,7 @@ Go API (`backend/`) обслуживает данные, картинки, ан�
 ```
 браузер ──► Caddy (TLS, один origin)
               ├── /api/*    ──► Go API ──► Postgres (compose, goose-миграции)
-              │                    ├────► OpenRouter (gemini-3-flash-preview, data-URL)
+              │                    ├────► LLM-шлюз (gemini-3.1-flash-lite, data-URL)
               │                    └────► Google OAuth (опционально)
               ├── /images/* ──► Go API (файлы с volume /data/images)
               └── /*        ──► frontend (vite build + Caddy)

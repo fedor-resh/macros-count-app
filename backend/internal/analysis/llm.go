@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -22,39 +23,50 @@ const Prompt = `Analyze this food image and provide nutritional information in J
 
 Only respond with valid JSON, no additional text.`
 
-const defaultModel = "google/gemini-3-flash-preview"
+// Дефолты провайдера: любой OpenAI-совместимый шлюз подходит, меняются
+// через LLM_BASE_URL и LLM_MODEL.
+const (
+	DefaultBaseURL = "https://api.provod.ai/v1"
+	DefaultModel   = "google/gemini-3.1-flash-lite"
+)
 
-type OpenRouterClient struct {
+// Client говорит с любым OpenAI-совместимым чат-эндпоинтом (provod.ai,
+// OpenRouter, сам OpenAI): различий в теле запроса для нашего сценария нет.
+type Client struct {
+	baseURL  string
 	apiKey   string
+	model    string
 	siteURL  string
 	siteName string
-	model    string
 	client   *http.Client
 }
 
-func NewOpenRouterClient(apiKey, siteURL, siteName string) *OpenRouterClient {
-	return &OpenRouterClient{
+func NewClient(baseURL, apiKey, model, siteURL, siteName string) *Client {
+	if baseURL == "" {
+		baseURL = DefaultBaseURL
+	}
+	if model == "" {
+		model = DefaultModel
+	}
+	return &Client{
+		baseURL:  strings.TrimRight(baseURL, "/"),
 		apiKey:   apiKey,
+		model:    model,
 		siteURL:  siteURL,
 		siteName: siteName,
-		model:    defaultModel,
 		client:   &http.Client{Timeout: 90 * time.Second},
 	}
 }
 
-func (c *OpenRouterClient) Analyze(ctx context.Context, imageURL string) (FoodAnalysis, error) {
+func (c *Client) Analyze(ctx context.Context, imageURL string) (FoodAnalysis, error) {
 	payload := map[string]any{
-		// Для fallback OpenRouter принимает один приоритетный список models.
-		// Одновременные model + models делают запрос неоднозначным и могут
-		// завершиться 400 до обращения к провайдеру.
-		"models":     []string{c.model, "google/gemini-2.5-flash"},
+		// Модель задаётся строкой: список models для fallback понимает не
+		// каждый шлюз (provod.ai отвечает на него 400).
+		"model":      c.model,
 		"max_tokens": 2048,
-		// Gemini 3 по умолчанию думает: thinking съедает лимит токенов,
-		// content остаётся пустым. low хватает для JSON по фото еды.
-		"reasoning": map[string]any{"effort": "low"},
-		"response_format": map[string]any{
-			"type": "json_object",
-		},
+		// response_format: json_object намеренно не шлём: Gemini с ним
+		// склонен заворачивать ответ в массив, а без него отдаёт объект,
+		// который ждёт AdaptGeminiResponse.
 		"messages": []map[string]any{
 			{
 				"role": "user",
@@ -71,14 +83,14 @@ func (c *OpenRouterClient) Analyze(ctx context.Context, imageURL string) (FoodAn
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		"https://openrouter.ai/api/v1/chat/completions", bytes.NewReader(body))
+		c.baseURL+"/chat/completions", bytes.NewReader(body))
 	if err != nil {
 		return FoodAnalysis{}, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("HTTP-Referer", c.siteURL)
-	req.Header.Set("X-OpenRouter-Title", c.siteName)
+	req.Header.Set("X-Title", c.siteName)
 
 	resp, err := c.client.Do(req)
 	if err != nil {

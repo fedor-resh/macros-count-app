@@ -4,7 +4,7 @@
 
 | Категория | Шаблон | Файл | Цель внедрения |
 |-----------|--------|------|----------------|
-| Порождающий | Factory Method | [`backend/internal/analysis/service.go`](../backend/internal/analysis/service.go), [`openrouter.go`](../backend/internal/analysis/openrouter.go) | Подмена LLM-провайдера без изменения вызывающего кода |
+| Порождающий | Factory Method | [`backend/internal/analysis/service.go`](../backend/internal/analysis/service.go), [`llm.go`](../backend/internal/analysis/llm.go) | Подмена LLM-провайдера без изменения вызывающего кода |
 | Структурный | Adapter | [`backend/internal/analysis/parser.go`](../backend/internal/analysis/parser.go) | Нормализация «сырого» ответа LLM к доменной структуре `FoodAnalysis` |
 | Поведенческий | Strategy | [`src/utils/calorieCalculator.ts`](../src/utils/calorieCalculator.ts), [`bmrStrategy.ts`](../src/utils/bmrStrategy.ts) | Выбор формулы расчёта BMR (Mifflin–St Jeor / Harris–Benedict) |
 
@@ -94,7 +94,7 @@ export async function analyzeFoodImage(
 
 ### Проблема
 
-OpenRouter возвращает `choices[0].message.content` как **строку**, формат которой зависит от модели:
+Шлюз возвращает `choices[0].message.content` как **строку**, формат которой зависит от модели:
 
 - Gemini оборачивает JSON в markdown-блок ```json ... ```;
 - OpenAI может вернуть «голый» JSON;

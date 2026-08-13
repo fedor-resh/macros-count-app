@@ -54,12 +54,27 @@ func fallbackAnalysis(rawText string) FoodAnalysis {
 	}
 }
 
+// parseObject достаёт объект из текста модели. Иногда вместо объекта
+// приходит массив с одним блюдом — берём первый элемент, а не считаем
+// весь ответ невалидным.
+func parseObject(jsonText string) (map[string]any, bool) {
+	var obj map[string]any
+	if err := json.Unmarshal([]byte(jsonText), &obj); err == nil {
+		return obj, true
+	}
+	var list []map[string]any
+	if err := json.Unmarshal([]byte(jsonText), &list); err == nil && len(list) > 0 {
+		return list[0], true
+	}
+	return nil, false
+}
+
 // AdaptGeminiResponse ports GeminiResponseAdapter.adapt: tolerant parse of the
 // raw LLM text, falling back to a low-confidence stub on invalid JSON.
 func AdaptGeminiResponse(rawText string) FoodAnalysis {
 	jsonText := extractJSONFromMarkdown(rawText)
-	var parsed map[string]any
-	if err := json.Unmarshal([]byte(jsonText), &parsed); err != nil {
+	parsed, ok := parseObject(jsonText)
+	if !ok {
 		return fallbackAnalysis(rawText)
 	}
 
@@ -120,8 +135,7 @@ func messageText(raw json.RawMessage) string {
 }
 
 // ExtractAnalysisFromResponse ports extractAnalysisFromResponse: pulls
-// choices[0].message.content out of an OpenRouter chat completion body and
-// adapts it.
+// choices[0].message.content out of a chat completion body and adapts it.
 func ExtractAnalysisFromResponse(body []byte) (FoodAnalysis, error) {
 	var data chatCompletionResponse
 	if err := json.Unmarshal(body, &data); err != nil {

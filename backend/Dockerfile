@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 	&& CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/migrate-images ./cmd/migrate-images
 
 FROM alpine:3.20
-# tzdata нужен для локальных дат приёмов пищи, ca-certificates — для OpenRouter и JWKS.
+# tzdata нужен для локальных дат приёмов пищи, ca-certificates — для LLM-шлюза и Google OAuth.
 RUN apk add --no-cache ca-certificates tzdata \
 	&& adduser -D -u 10001 app \
 	&& mkdir -p /data \

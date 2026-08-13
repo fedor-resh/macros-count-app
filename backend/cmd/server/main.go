@@ -67,7 +67,7 @@ func run() error {
 
 	broker := events.NewBroker()
 	eatenProducts := repo.NewEatenProducts(pool)
-	llm := analysis.NewOpenRouterClient(cfg.OpenRouterAPIKey, cfg.SiteURL, cfg.SiteName)
+	llm := analysis.NewClient(cfg.LLMBaseURL, cfg.LLMAPIKey, cfg.LLMModel, cfg.SiteURL, cfg.SiteName)
 	analysisService := analysis.NewService(eatenProducts, llm, broker)
 
 	disk := storage.NewDisk(cfg.DataDir, cfg.PublicBaseURL)

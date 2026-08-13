@@ -8,7 +8,7 @@
 браузер ──► Traefik/Dokploy (TLS)            [только на сервере]
               └─► Caddy (один origin)        [в деве эту роль играет Vite]
                     ├── /api/*    ──► Go API (backend/) ──► Postgres
-                    │                    └────► OpenRouter (анализ фото по фото)
+                    │                    └────► LLM-шлюз (анализ еды по фото)
                     ├── /images/* ──► Go API (файлы на диске)
                     └── /*        ──► frontend (React + Vite)
 
@@ -25,7 +25,7 @@
 - **Node.js 20+** и npm
 - **Go 1.25+** ([go.dev/dl](https://go.dev/dl/)) — только для локальной разработки бэкенда; на VPS Go не нужен, бэкенд собирается в Docker
 - **Docker + Docker Compose** — для локального Postgres и для полного стека на VPS
-- Ключ **OpenRouter** ([openrouter.ai](https://openrouter.ai)) — для анализа фото еды
+- Ключ к **LLM-шлюзу** с моделью, принимающей картинки: по умолчанию [provod.ai](https://provod.ai), но подойдёт любой OpenAI-совместимый (OpenRouter и т.п.) — для анализа фото еды
 - (опционально) OAuth-клиент в [Google Cloud Console](https://console.cloud.google.com/) — для входа через Google
 
 ---
@@ -49,7 +49,7 @@ cp .env.example .env
 Заполнить:
 
 - `AUTH_JWT_SECRET` — случайная строка (~32+ символов) для подписи access-токенов.
-- `OPENROUTER_API_KEY` — для анализа фото.
+- `LLM_API_KEY` — ключ шлюза для анализа фото. `LLM_BASE_URL` и `LLM_MODEL` менять не нужно, если остаётесь на provod.ai.
 - `POSTGRES_PASSWORD` — любой (например `local`); подставьте его же в `DATABASE_URL`. `POSTGRES_HOST_PORT` можно не трогать (по умолчанию `55432`, специально не `5432`, чтобы не конфликтовать с другим локальным Postgres на машине).
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` и `VITE_GOOGLE_AUTH=true` — только если нужен вход через Google. Redirect URI в Google Cloud Console: `http://localhost:5173/api/v1/auth/google/callback`.
 - Остальное (`DOMAIN`, `APP_ORIGIN`, `TZ`, `BACKUP_*`) — только для сервера, локально не используется.
@@ -109,7 +109,7 @@ npm run backend:test
 | `npm run db:up` падает: `ports are not available` | Порт `55432` (или что вы указали в `POSTGRES_HOST_PORT`) уже занят другим Postgres на этой машине — смените `POSTGRES_HOST_PORT` в `.env` на свободный и поправьте порт в `DATABASE_URL` |
 | Бэкенд не стартует, жалуется на `DATABASE_URL` | Postgres не поднят (`npm run db:up`) или пароль/порт в `DATABASE_URL` не совпадает с `POSTGRES_PASSWORD`/`POSTGRES_HOST_PORT` |
 | Фронт не может достучаться до `/api` | `npm run backend:dev` не запущен, или порт `8080` занят |
-| Фото зависает в статусе "анализируем" | Смотрите консоль `backend:dev` — там залогируется ошибка от OpenRouter (неверный `OPENROUTER_API_KEY`, недоступна модель и т.п.) |
+| Фото зависает в статусе "анализируем" или пишет «Ошибка анализа» | Смотрите консоль `backend:dev`: там залогируется ответ шлюза (неверный `LLM_API_KEY`, модель из `LLM_MODEL` недоступна или не принимает картинки). Список моделей: `curl -H "Authorization: Bearer $LLM_API_KEY" $LLM_BASE_URL/models` |
 | Google-логин редиректит не туда | в Google Cloud Console не добавлен текущий Redirect URI (`http://localhost:5173/api/v1/auth/google/callback` в деве, `https://<DOMAIN>/api/v1/auth/google/callback` на сервере) |
 
 ---
@@ -150,7 +150,8 @@ cp .env.example .env
 | `APP_ORIGIN` | пусто, если приложение доступно по `https://$DOMAIN`; иначе полный origin (например `http://192.168.1.50`) |
 | `POSTGRES_PASSWORD` | любой надёжный пароль, придумывается один раз |
 | `AUTH_JWT_SECRET` | случайная строка для подписи access-JWT |
-| `OPENROUTER_API_KEY` | ключ [openrouter.ai](https://openrouter.ai) |
+| `LLM_API_KEY` | ключ LLM-шлюза (по умолчанию [provod.ai](https://provod.ai)) |
+| `LLM_BASE_URL` / `LLM_MODEL` | пусто — если не меняете провайдера и модель |
 | `TZ` | часовой пояс, например `Europe/Moscow` |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | OAuth-клиент в Google Cloud Console; Redirect URI: `https://$DOMAIN/api/v1/auth/google/callback` |
 | `VITE_GOOGLE_AUTH` | `true`, если нужна кнопка Google (вшивается при сборке фронта) |

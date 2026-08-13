@@ -5,7 +5,7 @@ import "testing"
 func setRequiredEnv(t *testing.T) {
 	t.Helper()
 	t.Setenv("DATABASE_URL", "postgresql://localhost/test")
-	t.Setenv("OPENROUTER_API_KEY", "key")
+	t.Setenv("LLM_API_KEY", "key")
 	t.Setenv("AUTH_JWT_SECRET", "test-secret-at-least-32-characters-long")
 	t.Setenv("PUBLIC_BASE_URL", "https://example.com/")
 	t.Setenv("AUTO_MIGRATE", "")

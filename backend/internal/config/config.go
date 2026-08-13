@@ -13,7 +13,9 @@ type Config struct {
 	AuthJWTSecret      string
 	GoogleClientID     string
 	GoogleClientSecret string
-	OpenRouterAPIKey   string
+	LLMBaseURL         string
+	LLMAPIKey          string
+	LLMModel           string
 	SiteURL            string
 	SiteName           string
 	CORSAllowedOrigins []string
@@ -29,7 +31,9 @@ func Load() (*Config, error) {
 		AuthJWTSecret:      os.Getenv("AUTH_JWT_SECRET"),
 		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		OpenRouterAPIKey:   os.Getenv("OPENROUTER_API_KEY"),
+		LLMBaseURL:         os.Getenv("LLM_BASE_URL"),
+		LLMAPIKey:          os.Getenv("LLM_API_KEY"),
+		LLMModel:           os.Getenv("LLM_MODEL"),
 		SiteURL:            getEnv("SITE_URL", "https://bite.fedorresh.ru"),
 		SiteName:           getEnv("SITE_NAME", "Bite"),
 		DataDir:            getEnv("DATA_DIR", "/data"),
@@ -42,8 +46,8 @@ func Load() (*Config, error) {
 	if cfg.AuthJWTSecret == "" {
 		return nil, fmt.Errorf("AUTH_JWT_SECRET is required")
 	}
-	if cfg.OpenRouterAPIKey == "" {
-		return nil, fmt.Errorf("OPENROUTER_API_KEY is required")
+	if cfg.LLMAPIKey == "" {
+		return nil, fmt.Errorf("LLM_API_KEY is required")
 	}
 	if cfg.PublicBaseURL == "" {
 		return nil, fmt.Errorf("PUBLIC_BASE_URL is required")
