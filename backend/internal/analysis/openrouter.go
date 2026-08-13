@@ -44,7 +44,10 @@ func NewOpenRouterClient(apiKey, siteURL, siteName string) *OpenRouterClient {
 
 func (c *OpenRouterClient) Analyze(ctx context.Context, imageURL string) (FoodAnalysis, error) {
 	payload := map[string]any{
-		"model":      c.model,
+		// Для fallback OpenRouter принимает один приоритетный список models.
+		// Одновременные model + models делают запрос неоднозначным и могут
+		// завершиться 400 до обращения к провайдеру.
+		"models":     []string{c.model, "google/gemini-2.5-flash"},
 		"max_tokens": 2048,
 		// Gemini 3 по умолчанию думает: thinking съедает лимит токенов,
 		// content остаётся пустым. low хватает для JSON по фото еды.
@@ -52,8 +55,6 @@ func (c *OpenRouterClient) Analyze(ctx context.Context, imageURL string) (FoodAn
 		"response_format": map[string]any{
 			"type": "json_object",
 		},
-		// Если preview недоступен у провайдера — тот же запрос уйдёт в 2.5 Flash.
-		"models": []string{"google/gemini-2.5-flash"},
 		"messages": []map[string]any{
 			{
 				"role": "user",
@@ -77,7 +78,7 @@ func (c *OpenRouterClient) Analyze(ctx context.Context, imageURL string) (FoodAn
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("HTTP-Referer", c.siteURL)
-	req.Header.Set("X-Title", c.siteName)
+	req.Header.Set("X-OpenRouter-Title", c.siteName)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
