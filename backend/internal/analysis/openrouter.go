@@ -21,7 +21,7 @@ const Prompt = `Analyze this food image and provide nutritional information in J
 
 Only respond with valid JSON, no additional text.`
 
-const defaultModel = "google/gemini-3-flash"
+const defaultModel = "google/gemini-3-flash-preview"
 
 type OpenRouterClient struct {
 	apiKey   string

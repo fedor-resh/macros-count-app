@@ -46,7 +46,7 @@ export async function analyzeFoodImage(imageUrl: string): Promise<Response> {
         method: "POST",
         headers: { /* ... */ },
         body: JSON.stringify({
-            model: "google/gemini-3-flash",
+            model: "google/gemini-3-flash-preview",
             messages: [/* ... */],
         }),
     });
@@ -64,7 +64,7 @@ export interface LlmProvider {
 
 export class OpenRouterProvider implements LlmProvider {
     readonly name = "openrouter";
-    constructor(private readonly model: string = "google/gemini-3-flash") {}
+    constructor(private readonly model: string = "google/gemini-3-flash-preview") {}
     analyze(imageUrl: string): Promise<Response> { /* fetch ... */ }
 }
 
