@@ -1,15 +1,16 @@
 # Развёртывание
 
-Как поднять приложение локально для разработки и как выкатить его на VPS.
+Как поднять приложение локально для разработки и как выкатить его на сервер (Raspberry Pi 5 под Dokploy или обычный VPS).
 
 ## Из чего состоит приложение
 
 ```
-браузер ──► Caddy (TLS, один origin)         [на сервере; в деве — Vite]
-              ├── /api/*    ──► Go API (backend/) ──► Postgres
-              │                    └────► OpenRouter (анализ фото по фото)
-              ├── /images/* ──► Go API (файлы на диске)
-              └── /*        ──► frontend (React + Vite)
+браузер ──► Traefik/Dokploy (TLS)            [только на сервере]
+              └─► Caddy (один origin)        [в деве эту роль играет Vite]
+                    ├── /api/*    ──► Go API (backend/) ──► Postgres
+                    │                    └────► OpenRouter (анализ фото по фото)
+                    ├── /images/* ──► Go API (файлы на диске)
+                    └── /*        ──► frontend (React + Vite)
 
 Авторизация: email/пароль и опционально Google OAuth — свои эндпоинты Go
 (`/api/v1/auth/*`), access JWT в памяти браузера, refresh в httpOnly cookie.
@@ -51,7 +52,7 @@ cp .env.example .env
 - `OPENROUTER_API_KEY` — для анализа фото.
 - `POSTGRES_PASSWORD` — любой (например `local`); подставьте его же в `DATABASE_URL`. `POSTGRES_HOST_PORT` можно не трогать (по умолчанию `55432`, специально не `5432`, чтобы не конфликтовать с другим локальным Postgres на машине).
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` и `VITE_GOOGLE_AUTH=true` — только если нужен вход через Google. Redirect URI в Google Cloud Console: `http://localhost:5173/api/v1/auth/google/callback`.
-- Остальное (`DOMAIN`, `CADDY_TLS`, `APP_ORIGIN`, `TZ`, `BACKUP_*`) — только для сервера, локально не используется.
+- Остальное (`DOMAIN`, `APP_ORIGIN`, `TZ`, `BACKUP_*`) — только для сервера, локально не используется.
 
 **3. Postgres**
 
@@ -113,13 +114,13 @@ npm run backend:test
 
 ---
 
-## Сервер: VPS или Raspberry Pi 5
+## Сервер: Raspberry Pi 5 (или VPS) под Dokploy
 
-Весь стек описан в одном `docker-compose.yml` — пять сервисов, которые поднимаются одной командой:
+Весь стек описан в одном `docker-compose.yml` — пять сервисов, которые поднимаются одной командой. Наружу смотрит только `caddy`, и то через Traefik из Dokploy: TLS и домен — его забота, стеку сертификаты не нужны.
 
 | Сервис | Что делает |
 |---|---|
-| `caddy` | TLS и единый origin: `/api/*` и `/images/*` → `api`, всё остальное → `frontend` |
+| `caddy` | единый origin: `/api/*` и `/images/*` → `api`, всё остальное → `frontend`. Слушает только HTTP на 80 внутри сети |
 | `postgres` | БД, данные в volume `pg_data`, настройки под 4–8 GB RAM |
 | `api` | Go-бэкенд, картинки в volume `images_data`, миграции применяет сам |
 | `frontend` | собранная статика, раздаёт Caddy (не Node — экономия ~70 МБ RSS) |
@@ -132,13 +133,9 @@ npm run backend:test
 - **64-битная ОС.** `uname -m` должен вернуть `aarch64`: у Postgres 17 нет официальных 32-битных образов. На 32-битной системе контейнеры упадут с `exec format error`.
 - **Загрузка с NVMe или SSD, не с microSD.** Postgres и сборка фронтенда — это интенсивная запись; SD-карта деградирует за месяцы.
 - 4 GB RAM достаточно для работы, но сборке фронтенда нужен swap (см. «Частые проблемы»). На 8 GB нюансов нет.
-- Docker с compose-плагином и автозапуск, иначе после отключения питания стек не поднимется:
+- **Dokploy** ([dokploy.com](https://dokploy.com)) — его установщик ставит Docker с compose-плагином, поднимает Traefik на 80/443 и создаёт сеть `dokploy-network`, в которую включается наш стек. Автозапуск Docker он настраивает сам, так что после пропадания питания всё поднимется обратно.
 
-```bash
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER      # перелогиниться после этого
-sudo systemctl enable docker
-```
+Без Dokploy (обычный VPS с одним Docker) стек тоже работает, но тогда TLS должен делать сам Caddy: верните сервису `caddy` публикацию портов `80:80` и `443:443`, а в `Caddyfile` — адрес сайта `{$DOMAIN}` и директиву `tls`.
 
 ### 1. Код и `.env`
 
@@ -149,8 +146,7 @@ cp .env.example .env
 
 | Переменная | Чем заполнить |
 |---|---|
-| `DOMAIN` | адрес, по которому открывают приложение: домен или IP машины в сети |
-| `CADDY_TLS` | `internal` или email для Let's Encrypt — см. следующий пункт |
+| `DOMAIN` | домен, который заведён в Dokploy на сервис `caddy` (например `bite.fedorresh.ru`) |
 | `APP_ORIGIN` | пусто, если приложение доступно по `https://$DOMAIN`; иначе полный origin (например `http://192.168.1.50`) |
 | `POSTGRES_PASSWORD` | любой надёжный пароль, придумывается один раз |
 | `AUTH_JWT_SECRET` | случайная строка для подписи access-JWT |
@@ -161,37 +157,21 @@ cp .env.example .env
 
 `APP_ORIGIN` попадает в БД: URL каждой картинки сохраняется абсолютным. Менять его после начала эксплуатации — значит сломать ссылки на уже загруженные фото (как починить — в «Частых проблемах»). Поэтому адрес стоит выбрать сразу.
 
-### 2. Как запросы будут доходить до машины
+### 2. Домен и TLS через Dokploy
 
-Фотографирование еды работает только в secure context, то есть по HTTPS с сертификатом, которому доверяет браузер телефона. От этого зависит выбор варианта — особенно дома, где 80-й порт часто закрыт провайдером:
+Фотографирование еды работает только в secure context, то есть по HTTPS с сертификатом, которому доверяет браузер телефона. Этим занимается Traefik внутри Dokploy: он держит 80 и 443 и сам получает сертификат Let's Encrypt.
 
-| Вариант | `DOMAIN` | `CADDY_TLS` | Что нужно снаружи |
-|---|---|---|---|
-| Публичный домен | `bite.example.com` | `you@example.com` | A-запись на IP машины + проброс портов 80 и 443 |
-| Cloudflare Tunnel (обычно проще всего для Pi) | `bite.example.com` | `internal` | `cloudflared` на хосте, проброс портов не нужен |
-| Tailscale | `pi.tailnet.ts.net` | `internal` | `tailscale serve --bg https+insecure://localhost:443` |
-| Только LAN, чтобы попробовать | `192.168.1.50` | `internal` | ничего, но браузер будет предупреждать о сертификате |
+Стек подключается к его сети `dokploy-network` (она появляется при установке Dokploy) и не публикует портов вообще. В Dokploy:
 
-С Let's Encrypt (`CADDY_TLS=you@example.com`) Caddy получает сертификат сам при первом старте; DNS должен быть настроен заранее, иначе выдача не пройдёт.
+1. Создайте приложение типа **Docker Compose**, укажите репозиторий и путь `docker-compose.yml`.
+2. Перенесите содержимое `.env` в раздел **Environment** приложения.
+3. **Domains → Add Domain**: Host `bite.fedorresh.ru`, Service Name `caddy`, Container Port `80`, HTTPS включён, Certificate — `Let's Encrypt`. Метки Traefik Dokploy пропишет сам.
 
-Для Cloudflare Tunnel `cloudflared` должен ходить на Caddy по HTTPS, иначе получится цикл редиректов:
-
-```yaml
-ingress:
-  - hostname: bite.example.com
-    service: https://localhost:443
-    originRequest:
-      noTLSVerify: true      # сертификат от локального CA Caddy
-  - service: http_status:404
-```
-
-В LAN-варианте сертификат самоподписанный: чтобы заработали камера и PWA, корневой сертификат Caddy надо установить на устройства.
-
-```bash
-docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./caddy-root.crt
-```
+A-запись домена должна указывать на машину, а порты 80 и 443 быть доступны снаружи — иначе ACME-проверка не пройдёт. Дома, где провайдер закрывает 80-й, вместо проброса портов ставят Cloudflare Tunnel до Traefik или переключают Dokploy на DNS-challenge.
 
 ### 3. Запуск
+
+Через Dokploy — кнопкой **Deploy** в UI приложения. Из консоли на самой машине то же самое:
 
 ```bash
 docker compose up -d --build
@@ -202,11 +182,24 @@ docker compose up -d --build
 ### 4. Проверка
 
 ```bash
-docker compose ps                       # все сервисы healthy
-curl -k https://<DOMAIN>/healthz        # -> ok
+docker compose ps                    # все сервисы healthy
+curl https://<DOMAIN>/healthz        # -> ok
 ```
 
+Если `docker compose ps` зелёный, а домен не отвечает — дело в Traefik, а не в стеке: проверьте, что `caddy` попал в `dokploy-network` (`docker inspect <container> --format '{{json .NetworkSettings.Networks}}'`) и что домен в Dokploy указывает на сервис `caddy`, порт 80.
+
 Затем откройте сайт в браузере и войдите. Для Google-логина добавьте Redirect URI `https://<DOMAIN>/api/v1/auth/google/callback` в Google Cloud Console.
+
+### Полный стек на своей машине, без Dokploy
+
+Пригодится, чтобы проверить сборку перед деплоем. Сеть Dokploy создаётся заглушкой, а Caddy публикуется на localhost:
+
+```bash
+docker network create dokploy-network
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+```
+
+Открывать по **http://localhost** (без TLS). Для повседневной разработки это не нужно — есть `npm run dev`.
 
 ### 5. Перенос данных и аккаунтов из Supabase
 
@@ -250,8 +243,10 @@ docker compose exec postgres pg_dump -U postgres postgres | gzip > backups/manua
 |---|---|
 | Сборка фронтенда падает с `Killed` или `SIGKILL` | не хватило памяти (обычно Pi с 4 GB). Добавить swap: `sudo dphys-swapfile swapoff && sudo sed -i 's/^CONF_SWAPSIZE=.*/CONF_SWAPSIZE=2048/' /etc/dphys-swapfile && sudo dphys-swapfile setup && sudo dphys-swapfile swapon` |
 | Контейнеры падают с `exec format error` | 32-битная ОС на Pi — нужна 64-битная (`uname -m` → `aarch64`) |
-| Caddy в логах не может получить сертификат | DNS не указывает на машину или снаружи закрыт порт 80. Перейти на `CADDY_TLS=internal` + Cloudflare Tunnel |
-| Камера не открывается на телефоне | сертификат браузеру не доверяется. Нужен валидный сертификат (домен/туннель) либо установленный корневой сертификат Caddy |
+| `docker compose up` падает: `network dokploy-network declared as external, but could not be found` | стек поднимают вне Dokploy. Либо деплоить через Dokploy, либо создать заглушку: `docker network create dokploy-network` |
+| Домен отдаёт 404 от Traefik, хотя контейнеры healthy | в Dokploy домен привязан не к сервису `caddy` или указан не порт 80; либо `caddy` не в сети `dokploy-network` |
+| В логах Traefik не выпускается сертификат | DNS не указывает на машину или снаружи закрыт порт 80. Вариант для дома — Cloudflare Tunnel до Traefik или DNS-challenge |
+| Камера не открывается на телефоне | страница открыта не по HTTPS или сертификату не доверяют. Камера работает только в secure context |
 | Старые фото отдают 404 после смены адреса | в БД лежат абсолютные URL с прежним origin. Зайти в `docker compose exec postgres psql -U postgres` и выполнить `UPDATE eaten_products SET "imageUrl" = replace("imageUrl", 'https://старый', 'https://новый');` |
 | `docker compose up` жалуется на required variable | в `.env` не заполнены `POSTGRES_PASSWORD` / `AUTH_JWT_SECRET` |
 | Все `/api/*` → 401 | access-токен истёк; либо сменился `AUTH_JWT_SECRET` — войдите заново |

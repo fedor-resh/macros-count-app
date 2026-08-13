@@ -1,0 +1,10 @@
+# Оверрайд для запуска всего стека на своей машине, без Dokploy.
+# Публикует Caddy на 80/443 (в базовом файле порты не публикуются: на сервере
+# наружу смотрит Traefik). TLS здесь нет — открывайте http://localhost.
+#
+#   docker network create dokploy-network        # один раз, заглушка
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+services:
+  caddy:
+    ports:
+      - "127.0.0.1:80:80"

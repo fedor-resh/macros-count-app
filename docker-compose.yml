@@ -1,6 +1,10 @@
-# Весь стек одной командой: Caddy (TLS + единый origin), Go API, Postgres,
+# Весь стек одной командой: Caddy (единый origin), Go API, Postgres,
 # статика фронтенда, ежесуточный бэкап. Авторизация — своя (email/пароль и
 # опционально Google OAuth).
+#
+# TLS и домен — на Traefik из Dokploy: наружу смотрит только caddy, и то через
+# сеть dokploy-network. Без Dokploy (обычный VPS) верните caddy публикацию
+# портов 80/443 и директиву tls в Caddyfile.
 #
 # Один и тот же файл работает на VPS (amd64) и на Raspberry Pi 5 (arm64):
 # образы собираются на месте, готовых бинарников не требуется. Нужна
@@ -18,24 +22,21 @@ x-logging: &logging
       max-file: "3"
 
 services:
+  # Единственный сервис, который видит внешний мир — и то через Traefik из
+  # Dokploy: домен и сертификат заводятся в UI Dokploy (Domains -> сервис
+  # caddy, порт 80), поэтому порты здесь не публикуются.
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
     <<: *logging
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp" # HTTP/3
+    expose:
+      - "80"
+    networks:
+      - default
+      - dokploy-network
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      # Здесь живут выданные сертификаты — терять volume нельзя,
-      # иначе на каждый пересоздание контейнера уходит новый запрос в ACME.
-      - caddy_data:/data
-      - caddy_config:/config
     environment:
-      DOMAIN: ${DOMAIN:-localhost}
-      # internal = self-signed от локального CA Caddy; email = Let's Encrypt.
-      CADDY_TLS: ${CADDY_TLS:-internal}
       TZ: ${TZ:-Etc/UTC}
     depends_on:
       api:
@@ -198,7 +199,11 @@ services:
         condition: service_healthy
 
 volumes:
-  caddy_data:
-  caddy_config:
   pg_data:
   images_data:
+
+networks:
+  # Сеть Traefik'а из Dokploy — создаётся при установке Dokploy, не нами.
+  dokploy-network:
+    external: true
+  default:
