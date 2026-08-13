@@ -34,6 +34,10 @@ services:
     networks:
       - default
       - dokploy-network
+    labels:
+      # У контейнера две сети, и Traefik иначе может взять IP внутренней,
+      # до которой ему не дотянуться — это оборачивается 502 Bad Gateway.
+      - traefik.docker.network=dokploy-network
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     environment:
