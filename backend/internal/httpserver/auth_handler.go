@@ -30,8 +30,8 @@ type AccountsRepo interface {
 	FindByEmail(ctx context.Context, email string) (*repo.Account, error)
 	FindByGoogleSub(ctx context.Context, sub string) (*repo.Account, error)
 	CreateWithPassword(ctx context.Context, email, passwordHash string) (repo.Account, error)
-	CreateWithGoogle(ctx context.Context, email, googleSub string) (repo.Account, error)
-	AttachGoogleSub(ctx context.Context, userID, googleSub string) error
+	CreateWithGoogle(ctx context.Context, email, googleSub, name, avatarURL string) (repo.Account, error)
+	LinkGoogle(ctx context.Context, userID, googleSub, name, avatarURL string) (repo.Account, error)
 	SetPasswordHash(ctx context.Context, userID, passwordHash string) error
 	InsertRefresh(ctx context.Context, userID string, hash []byte) (time.Time, error)
 	GetRefresh(ctx context.Context, hash []byte) (*repo.RefreshRecord, error)
@@ -76,13 +76,22 @@ type credentialsBody struct {
 }
 
 type sessionUser struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
+	ID        string `json:"id"`
+	Email     string `json:"email"`
+	Name      string `json:"name,omitempty"`
+	AvatarURL string `json:"avatarUrl,omitempty"`
 }
 
 type sessionResponse struct {
 	AccessToken string      `json:"accessToken"`
 	User        sessionUser `json:"user"`
+}
+
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -184,13 +193,14 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		writeInternalError(w, err)
 		return
 	}
-	email := ""
-	if rec.Email != nil {
-		email = *rec.Email
-	}
 	writeJSON(w, http.StatusOK, sessionResponse{
 		AccessToken: token,
-		User:        sessionUser{ID: rec.UserID, Email: email},
+		User: sessionUser{
+			ID:        rec.UserID,
+			Email:     deref(rec.Email),
+			Name:      deref(rec.Name),
+			AvatarURL: deref(rec.AvatarURL),
+		},
 	})
 }
 
@@ -266,21 +276,19 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) lookupOrCreateGoogle(ctx context.Context, profile auth.GoogleUser) (repo.Account, error) {
+	// Свой аккаунт по sub, чужой (заведённый паролем) — по email: во втором
+	// случае Google просто привязывается к уже существующему пользователю.
 	if existing, err := h.accounts.FindByGoogleSub(ctx, profile.Sub); err != nil {
 		return repo.Account{}, err
 	} else if existing != nil {
-		return *existing, nil
+		return h.accounts.LinkGoogle(ctx, existing.ID, profile.Sub, profile.Name, profile.Picture)
 	}
 	if byEmail, err := h.accounts.FindByEmail(ctx, profile.Email); err != nil {
 		return repo.Account{}, err
 	} else if byEmail != nil {
-		if err := h.accounts.AttachGoogleSub(ctx, byEmail.ID, profile.Sub); err != nil {
-			return repo.Account{}, err
-		}
-		byEmail.GoogleSub = &profile.Sub
-		return *byEmail, nil
+		return h.accounts.LinkGoogle(ctx, byEmail.ID, profile.Sub, profile.Name, profile.Picture)
 	}
-	return h.accounts.CreateWithGoogle(ctx, profile.Email, profile.Sub)
+	return h.accounts.CreateWithGoogle(ctx, profile.Email, profile.Sub, profile.Name, profile.Picture)
 }
 
 func (h *AuthHandler) issueSession(w http.ResponseWriter, r *http.Request, account repo.Account) {
@@ -293,13 +301,14 @@ func (h *AuthHandler) issueSession(w http.ResponseWriter, r *http.Request, accou
 		writeInternalError(w, err)
 		return
 	}
-	email := ""
-	if account.Email != nil {
-		email = *account.Email
-	}
 	writeJSON(w, http.StatusOK, sessionResponse{
 		AccessToken: token,
-		User:        sessionUser{ID: account.ID, Email: email},
+		User: sessionUser{
+			ID:        account.ID,
+			Email:     deref(account.Email),
+			Name:      deref(account.Name),
+			AvatarURL: deref(account.AvatarURL),
+		},
 	})
 }
 

@@ -19,12 +19,16 @@ type Account struct {
 	Email        *string
 	PasswordHash *string
 	GoogleSub    *string
+	Name         *string
+	AvatarURL    *string
 }
 
 type RefreshRecord struct {
 	ID        int64
 	UserID    string
 	Email     *string
+	Name      *string
+	AvatarURL *string
 	ExpiresAt time.Time
 	Revoked   bool
 }
@@ -39,11 +43,11 @@ func NewAccounts(db *pgxpool.Pool) *Accounts {
 
 func scanAccount(row pgx.Row) (Account, error) {
 	var a Account
-	err := row.Scan(&a.ID, &a.Email, &a.PasswordHash, &a.GoogleSub)
+	err := row.Scan(&a.ID, &a.Email, &a.PasswordHash, &a.GoogleSub, &a.Name, &a.AvatarURL)
 	return a, err
 }
 
-const accountColumns = `id::text, email, password_hash, google_sub`
+const accountColumns = `id::text, email, password_hash, google_sub, name, avatar_url`
 
 func (r *Accounts) FindByEmail(ctx context.Context, email string) (*Account, error) {
 	a, err := scanAccount(r.db.QueryRow(ctx,
@@ -75,15 +79,24 @@ func (r *Accounts) CreateWithPassword(ctx context.Context, email, passwordHash s
 		 RETURNING `+accountColumns, email, passwordHash))
 }
 
-func (r *Accounts) CreateWithGoogle(ctx context.Context, email, googleSub string) (Account, error) {
+func (r *Accounts) CreateWithGoogle(ctx context.Context, email, googleSub, name, avatarURL string) (Account, error) {
 	return scanAccount(r.db.QueryRow(ctx,
-		`INSERT INTO users (id, email, google_sub) VALUES (gen_random_uuid(), $1, $2)
-		 RETURNING `+accountColumns, email, googleSub))
+		`INSERT INTO users (id, email, google_sub, name, avatar_url)
+		 VALUES (gen_random_uuid(), $1, $2, NULLIF($3, ''), NULLIF($4, ''))
+		 RETURNING `+accountColumns, email, googleSub, name, avatarURL))
 }
 
-func (r *Accounts) AttachGoogleSub(ctx context.Context, userID, googleSub string) error {
-	_, err := r.db.Exec(ctx, `UPDATE users SET google_sub = $2 WHERE id = $1`, userID, googleSub)
-	return err
+// LinkGoogle привязывает google_sub к существующему аккаунту и подтягивает имя
+// с аватаром. Вызывается и при каждом повторном входе: ссылка на картинку у
+// Google со временем меняется. Пустые значения не затирают то, что уже есть.
+func (r *Accounts) LinkGoogle(ctx context.Context, userID, googleSub, name, avatarURL string) (Account, error) {
+	return scanAccount(r.db.QueryRow(ctx,
+		`UPDATE users SET
+		   google_sub = $2,
+		   name = COALESCE(NULLIF($3, ''), name),
+		   avatar_url = COALESCE(NULLIF($4, ''), avatar_url)
+		 WHERE id = $1
+		 RETURNING `+accountColumns, userID, googleSub, name, avatarURL))
 }
 
 func (r *Accounts) SetPasswordHash(ctx context.Context, userID, passwordHash string) error {
@@ -122,11 +135,11 @@ func (r *Accounts) GetRefresh(ctx context.Context, hash []byte) (*RefreshRecord,
 	var rec RefreshRecord
 	var revokedAt *time.Time
 	err := r.db.QueryRow(ctx,
-		`SELECT rt.id, rt.user_id::text, u.email, rt.expires_at, rt.revoked_at
+		`SELECT rt.id, rt.user_id::text, u.email, u.name, u.avatar_url, rt.expires_at, rt.revoked_at
 		 FROM refresh_tokens rt
 		 JOIN users u ON u.id = rt.user_id
 		 WHERE rt.token_hash = $1`, hash).Scan(
-		&rec.ID, &rec.UserID, &rec.Email, &rec.ExpiresAt, &revokedAt)
+		&rec.ID, &rec.UserID, &rec.Email, &rec.Name, &rec.AvatarURL, &rec.ExpiresAt, &revokedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}

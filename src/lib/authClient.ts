@@ -14,6 +14,9 @@ export class ApiError extends Error {
 export interface AuthUser {
 	id: string;
 	email: string;
+	/** Из Google-профиля; у аккаунтов с паролем отсутствуют. */
+	name?: string;
+	avatarUrl?: string;
 }
 
 export interface AuthSession {

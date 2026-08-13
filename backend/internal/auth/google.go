@@ -18,8 +18,10 @@ const (
 )
 
 type GoogleUser struct {
-	Sub   string
-	Email string
+	Sub     string
+	Email   string
+	Name    string
+	Picture string
 }
 
 // GoogleExchanger is the OAuth2 code-for-profile step. Tests swap it for a stub.
@@ -112,9 +114,13 @@ func (g *Google) Exchange(ctx context.Context, code string) (GoogleUser, error) 
 		return GoogleUser{}, fmt.Errorf("google userinfo: status %s", infoResp.Status)
 	}
 
+	// name и picture приходят по скоупу profile; оба необязательные — аккаунт
+	// без них должен логиниться так же.
 	var info struct {
-		Sub   string `json:"sub"`
-		Email string `json:"email"`
+		Sub     string `json:"sub"`
+		Email   string `json:"email"`
+		Name    string `json:"name"`
+		Picture string `json:"picture"`
 	}
 	if err := json.Unmarshal(infoBody, &info); err != nil {
 		return GoogleUser{}, fmt.Errorf("google userinfo: %w", err)
@@ -122,5 +128,10 @@ func (g *Google) Exchange(ctx context.Context, code string) (GoogleUser, error) 
 	if info.Sub == "" || info.Email == "" {
 		return GoogleUser{}, fmt.Errorf("google oauth: userinfo missing sub or email")
 	}
-	return GoogleUser{Sub: info.Sub, Email: strings.ToLower(strings.TrimSpace(info.Email))}, nil
+	return GoogleUser{
+		Sub:     info.Sub,
+		Email:   strings.ToLower(strings.TrimSpace(info.Email)),
+		Name:    strings.TrimSpace(info.Name),
+		Picture: strings.TrimSpace(info.Picture),
+	}, nil
 }

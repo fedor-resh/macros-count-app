@@ -42,9 +42,9 @@ export function ProfilePage() {
 	const { data: userGoals, isLoading: isLoadingGoals } = useGetUserGoalsQuery();
 	const { mutate: updateGoals, isPending } = useUpdateUserGoalsMutation();
 
-	const displayName = user?.email || "User";
+	const displayName = user?.name || user?.email || "User";
 	const email = user?.email || "";
-	const avatarUrl: string | undefined = undefined;
+	const avatarUrl = user?.avatarUrl;
 
 	const handleLogout = async () => {
 		await signOut();

@@ -68,29 +68,45 @@ func (f *fakeAccounts) CreateWithPassword(_ context.Context, email, passwordHash
 	return a, nil
 }
 
-func (f *fakeAccounts) CreateWithGoogle(_ context.Context, email, googleSub string) (repo.Account, error) {
+func (f *fakeAccounts) CreateWithGoogle(_ context.Context, email, googleSub, name, avatarURL string) (repo.Account, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	emailCopy := email
 	subCopy := googleSub
 	a := repo.Account{ID: "user-" + email, Email: &emailCopy, GoogleSub: &subCopy}
+	a.Name, a.AvatarURL = optional(name), optional(avatarURL)
 	f.byEmail[email] = a
 	f.byGoogle[googleSub] = a
 	return a, nil
 }
 
-func (f *fakeAccounts) AttachGoogleSub(_ context.Context, userID, googleSub string) error {
+func (f *fakeAccounts) LinkGoogle(_ context.Context, userID, googleSub, name, avatarURL string) (repo.Account, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for email, a := range f.byEmail {
-		if a.ID == userID {
-			sub := googleSub
-			a.GoogleSub = &sub
-			f.byEmail[email] = a
-			f.byGoogle[googleSub] = a
+		if a.ID != userID {
+			continue
 		}
+		sub := googleSub
+		a.GoogleSub = &sub
+		if n := optional(name); n != nil {
+			a.Name = n
+		}
+		if u := optional(avatarURL); u != nil {
+			a.AvatarURL = u
+		}
+		f.byEmail[email] = a
+		f.byGoogle[googleSub] = a
+		return a, nil
 	}
-	return nil
+	return repo.Account{}, nil
+}
+
+func optional(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
 
 func (f *fakeAccounts) SetPasswordHash(_ context.Context, userID, passwordHash string) error {
@@ -112,8 +128,11 @@ func (f *fakeAccounts) InsertRefresh(_ context.Context, userID string, hash []by
 	id := f.nextID
 	f.nextID++
 	expires := time.Now().Add(time.Hour)
-	email := f.emailOf(userID)
-	f.refresh[string(hash)] = repo.RefreshRecord{ID: id, UserID: userID, Email: email, ExpiresAt: expires}
+	rec := repo.RefreshRecord{ID: id, UserID: userID, ExpiresAt: expires}
+	if a := f.accountOf(userID); a != nil {
+		rec.Email, rec.Name, rec.AvatarURL = a.Email, a.Name, a.AvatarURL
+	}
+	f.refresh[string(hash)] = rec
 	return expires, nil
 }
 
@@ -147,10 +166,11 @@ func (f *fakeAccounts) RotateRefresh(ctx context.Context, oldID int64, userID st
 	return f.InsertRefresh(ctx, userID, newHash)
 }
 
-func (f *fakeAccounts) emailOf(userID string) *string {
+func (f *fakeAccounts) accountOf(userID string) *repo.Account {
 	for _, a := range f.byEmail {
 		if a.ID == userID {
-			return a.Email
+			cp := a
+			return &cp
 		}
 	}
 	return nil
@@ -376,5 +396,53 @@ func TestAuth_GoogleCallbackSuccess(t *testing.T) {
 	}
 	if !found {
 		t.Fatal("expected refresh cookie after google login")
+	}
+}
+
+func TestAuth_GoogleProfileReachesSession(t *testing.T) {
+	g := &fakeGoogle{user: auth.GoogleUser{
+		Sub:     "g1",
+		Email:   "a@example.com",
+		Name:    "Фёдор",
+		Picture: "https://lh3.googleusercontent.com/a/pic",
+	}}
+	_, _, router := newAuthTestEnv(g)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/google/start", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	stateCookie := rec.Result().Cookies()[0]
+
+	req = httptest.NewRequest(http.MethodGet, "/api/v1/auth/google/callback?code=abc&state="+g.states[0], nil)
+	req.AddCookie(stateCookie)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	var refreshCookie *http.Cookie
+	for _, c := range rec.Result().Cookies() {
+		if c.Name == refreshCookieName {
+			refreshCookie = c
+		}
+	}
+	if refreshCookie == nil {
+		t.Fatal("expected refresh cookie after google login")
+	}
+
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", nil)
+	req.AddCookie(refreshCookie)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("refresh: expected 200, got %d: %s", rec.Code, rec.Body)
+	}
+	var session sessionResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &session); err != nil {
+		t.Fatal(err)
+	}
+	if session.User.Name != "Фёдор" {
+		t.Fatalf("name lost: %q", session.User.Name)
+	}
+	if session.User.AvatarURL != "https://lh3.googleusercontent.com/a/pic" {
+		t.Fatalf("avatar lost: %q", session.User.AvatarURL)
 	}
 }

@@ -26,6 +26,7 @@ export function AppLayout() {
 
 	const dateValue: DateValue | null = selectedDate ? new Date(selectedDate) : null;
 	const isSearchPage = location.pathname === "/add-product/search";
+	const displayName = user?.name || user?.email || "User";
 
 	return (
 		<AppShell header={isSearchPage ? undefined : { height: 60 }} padding="sm">
@@ -64,8 +65,9 @@ export function AppLayout() {
 							/>
 							<UnstyledButton onClick={() => navigate("/profile")}>
 								<Avatar
-									alt={user?.email || "User"}
-									name={user?.email || "User"}
+									src={user?.avatarUrl}
+									alt={displayName}
+									name={displayName}
 									radius="xl"
 									size="md"
 									style={{ cursor: "pointer" }}
