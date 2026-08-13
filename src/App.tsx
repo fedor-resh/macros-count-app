@@ -6,7 +6,7 @@ import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { useEffect } from "react";
-import { useEatenProductsRealtime } from "./api/foodQueries";
+import { useAnalysisEvents } from "./api/useAnalysisEvents";
 import { DateRangeProvider } from "./contexts/DateRangeContexts";
 import { persister, queryClient } from "./lib/queryClient";
 import { Router } from "./Router";
@@ -15,7 +15,7 @@ import { theme } from "./theme";
 
 export default function App() {
 	const initialize = useAuthStore((state) => state.initialize);
-	useEatenProductsRealtime();
+	useAnalysisEvents();
 
 	useEffect(() => {
 		initialize();

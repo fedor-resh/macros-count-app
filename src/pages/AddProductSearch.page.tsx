@@ -20,10 +20,10 @@ export function AddProductSearchPage() {
 			const compositeKey = keys.map((key) => String(item[key])).join("|");
 			return [compositeKey, item];
 		};
-		
+
 		return [...new Map(array.map(createPair)).values()];
 	}
-	
+
 	const foodsHistoryUnique = getUniqueBy(foodsHistory, "kcalories", "protein");
 
 	const { data: productsData = [], isLoading: isLoadingProducts } = useSearchProductsQuery(
@@ -49,7 +49,9 @@ export function AddProductSearchPage() {
 				</Badge>
 			),
 		}));
-		return [...eatenResults, ...productsData];
+		// Строки products имеют другую форму (snake_case, нет date/status);
+		// раньше сюда попадал нетипизированный ответ supabase — поведение сохранено.
+		return [...eatenResults, ...productsData] as FoodItem[];
 	}, [productsData, foodsHistoryUnique]);
 
 	const handleSelectProduct = (product: FoodItem) => {

@@ -1,0 +1,37 @@
+# Конфиг контейнера frontend — раздача собранной статики.
+# Внешний TLS и маршрутизация /api и /images — в корневом Caddyfile.
+:8081 {
+	root * /srv
+	encode zstd gzip
+
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	# Имена файлов в /assets содержат хэш содержимого, поэтому кэш навсегда.
+	# Промах здесь отдаётся честным 404: если подсунуть index.html, браузер
+	# получит HTML вместо JS и упадёт на MIME-типе.
+	handle /assets/* {
+		@exists file
+		header @exists Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	handle {
+		# route фиксирует порядок директив: сначала SPA-fallback, затем заголовки
+		# по уже подменённому пути, и только потом выдача файла.
+		route {
+			# Любой неизвестный путь — это маршрут react-router, а не 404.
+			try_files {path} /index.html
+
+			# Точки входа перепроверяются всегда, иначе после деплоя клиент
+			# остаётся на старой версии до ручной очистки кэша.
+			header /index.html Cache-Control "no-cache"
+			header /sw.js Cache-Control "no-cache"
+			header /registerSW.js Cache-Control "no-cache"
+			header /manifest.webmanifest Cache-Control "no-cache"
+
+			file_server
+		}
+	}
+}

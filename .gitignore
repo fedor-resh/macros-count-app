@@ -135,3 +135,7 @@ dist
 .DS_Store
 
 dev-dist
+
+# Локальный Postgres-бэкенд (Фазы 2-3)
+backend/.data/
+backups/

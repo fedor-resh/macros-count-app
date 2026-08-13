@@ -1,11 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
+import { api } from "@/lib/apiClient";
 import { queryClient } from "@/lib/queryClient";
 import type { EatenProduct } from "@/types/types";
 import { compressImage } from "../utils/imageCompression";
-import { trackPendingAnalysis } from "./photoAnalysisTracker";
-import { getMondayOfWeek } from "./foodQueries";
 import { foodKeys } from "./foodKey";
-import { fetchWithAuthFormData } from "./queryUtils";
+import { getMondayOfWeek } from "./foodQueries";
+import { trackPendingAnalysis } from "./photoAnalysisTracker";
 
 export type PhotoAnalysisStatus = "pending" | "completed" | "error";
 
@@ -30,7 +30,7 @@ export async function uploadPhoto({
 	formData.append("photo", compressedFile);
 	formData.append("date", date);
 
-	return fetchWithAuthFormData<UploadPhotoResponse>("analyze-food-photo", formData);
+	return api.postFormData<UploadPhotoResponse>("/photos/analyze", formData);
 }
 
 export function useUploadPhotoMutation() {

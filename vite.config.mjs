@@ -62,6 +62,9 @@ export default defineConfig({
 			},
 			workbox: {
 				globPatterns: ["**/*.{js,css,html,ico,png,svg,webp}"],
+				// Запросы к Go API (особенно SSE /api/v1/events) не должны
+				// перехватываться навигационным fallback сервис-воркера.
+				navigateFallbackDenylist: [/^\/api\//],
 				runtimeCaching: [
 					{
 						urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
@@ -71,6 +74,22 @@ export default defineConfig({
 							expiration: {
 								maxEntries: 50,
 								maxAgeSeconds: 60 * 60 * 24, // 24 hours
+							},
+							cacheableResponse: {
+								statuses: [0, 200],
+							},
+						},
+					},
+					{
+						// Картинки еды с собственного бэкенда (Фаза 3): имена файлов
+						// с таймстемпом, никогда не меняются — можно кэшировать надолго.
+						urlPattern: /\/images\/.+\.(png|jpe?g|webp|heic)$/i,
+						handler: "CacheFirst",
+						options: {
+							cacheName: "images-cache",
+							expiration: {
+								maxEntries: 200,
+								maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
 							},
 							cacheableResponse: {
 								statuses: [0, 200],
@@ -88,6 +107,24 @@ export default defineConfig({
 		globals: true,
 		environment: "jsdom",
 		setupFiles: "./vitest.setup.mjs",
+		coverage: {
+			provider: "v8",
+			reporter: ["text", "html", "json-summary"],
+			include: [
+				"src/utils/**/*.ts",
+				"src/api/foodQueries.ts",
+				"supabase/functions/analyze-food-photo/responseAdapter.ts",
+				"supabase/functions/analyze-food-photo/parser.ts",
+				"supabase/functions/analyze-food-photo/llmProvider.ts",
+				"supabase/functions/analyze-food-photo/llm.ts",
+			],
+			exclude: [
+				"src/utils/imageCompression.ts",
+				"src/utils/viewTransition.ts",
+				"**/*.test.ts",
+				"**/*.types.ts",
+			],
+		},
 	},
 	build: {
 		rollupOptions: {
@@ -113,10 +150,22 @@ export default defineConfig({
 	},
 	server: {
 		port: 5173,
-		host: '0.0.0.0', // Allow access from network devices
+		host: "0.0.0.0", // Allow access from network devices
 		strictPort: false, // Try next available port if 5173 is in use
 		hmr: {
 			clientPort: 5173, // HMR client port (for WebSocket)
+		},
+		proxy: {
+			// Go-бэкенд в dev-режиме: тот же origin, без CORS
+			"/api": {
+				target: "http://localhost:8080",
+				changeOrigin: true,
+			},
+			// Картинки с диска (STORAGE_DRIVER=disk) отдаёт тоже Go
+			"/images": {
+				target: "http://localhost:8080",
+				changeOrigin: true,
+			},
 		},
 	},
 });

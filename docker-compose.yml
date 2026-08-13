@@ -1,0 +1,205 @@
+# Весь стек одной командой: Caddy (TLS + единый origin), Go API, Postgres,
+# статика фронтенда, ежесуточный бэкап. В Supabase остаётся только Auth
+# (email/пароль + Google OAuth).
+#
+# Один и тот же файл работает на VPS (amd64) и на Raspberry Pi 5 (arm64):
+# образы собираются на месте, готовых бинарников не требуется. Нужна
+# 64-битная ОС (`uname -m` -> aarch64) — официальных arm/v7-образов Postgres 17 нет.
+#
+# Домен и секреты — в .env рядом с этим файлом (см. .env.example).
+name: bite
+
+# На Pi логи лежат на SD/NVMe и без ротации со временем съедают диск.
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    <<: *logging
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Здесь живут выданные сертификаты — терять volume нельзя,
+      # иначе на каждый пересоздание контейнера уходит новый запрос в ACME.
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      # internal = self-signed от локального CA Caddy; email = Let's Encrypt.
+      CADDY_TLS: ${CADDY_TLS:-internal}
+      TZ: ${TZ:-Etc/UTC}
+    depends_on:
+      api:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:2019/config/ >/dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    <<: *logging
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: postgres
+      # Контрольные суммы страниц: на SD-карте Pi порча сектора — реальность,
+      # лучше узнать о ней от Postgres, чем по кривым данным. Только при initdb.
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      TZ: ${TZ:-Etc/UTC}
+    # Профиль под 4-8 GB RAM и медленный диск Raspberry Pi 5.
+    command:
+      - postgres
+      - -c
+      - max_connections=50
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=1GB
+      - -c
+      - work_mem=8MB
+      - -c
+      - maintenance_work_mem=128MB
+      # Меньше записи в WAL — дольше живёт флеш-память.
+      - -c
+      - wal_compression=on
+      - -c
+      - max_wal_size=1GB
+      # Диск не вращается: случайное чтение почти так же дешево, как последовательное.
+      - -c
+      - random_page_cost=1.1
+    shm_size: 128mb
+    # Postgres должен успеть сделать checkpoint, иначе следующий старт — recovery.
+    stop_grace_period: 1m
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      # Только loopback: для отладки/dump и для локального backend:dev вне Docker.
+      # Порт настраиваемый — 5432 часто занят другим локальным Postgres.
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-55432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    <<: *logging
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres?sslmode=disable
+      AUTO_MIGRATE: "true"
+      STORAGE_DRIVER: disk
+      DATA_DIR: /data
+      # Абсолютный URL картинки сохраняется в БД, поэтому это должен быть тот
+      # адрес, по которому приложение открывают: смена origin позже оставит
+      # старые строки указывающими в никуда. APP_ORIGIN нужен только когда
+      # адрес не https://DOMAIN (например LAN по http://IP).
+      PUBLIC_BASE_URL: ${APP_ORIGIN:-https://${DOMAIN:-localhost}}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      SITE_URL: ${SITE_URL:-https://macros-count-app.com}
+      SITE_NAME: ${SITE_NAME:-Bite}
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+      - images_data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  frontend:
+    build:
+      context: .
+      args:
+        # Vite вшивает эти значения в бандл на этапе сборки, не в рантайме:
+        # после их изменения фронтенд нужно пересобрать (--build).
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:?set VITE_SUPABASE_URL in .env}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:?set VITE_SUPABASE_ANON_KEY in .env}
+        VITE_API_URL: /api/v1
+    restart: unless-stopped
+    <<: *logging
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Периодический pg_dump в ./backups с ретенцией BACKUP_KEEP файлов.
+  # Копирование бэкапов ВНЕ машины — отдельная задача (rclone/scp по крону хоста):
+  # бэкап на том же диске не спасает от смерти диска.
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    <<: *logging
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      BACKUP_INTERVAL: ${BACKUP_INTERVAL:-86400}
+      BACKUP_KEEP: ${BACKUP_KEEP:-14}
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint:
+      - sh
+      - -c
+      - |
+        while true; do
+          pg_dump -h postgres -U postgres postgres | gzip > "/backups/backup-$$(date +%F-%H%M).sql.gz" \
+            && echo "backup done: $$(date)"
+          ls -1t /backups/backup-*.sql.gz 2>/dev/null | tail -n +$$((BACKUP_KEEP + 1)) | xargs -r rm
+          sleep "$$BACKUP_INTERVAL"
+        done
+
+  # Разовый перенос картинок из бакета Supabase на диск (Фаза 3).
+  # Не поднимается вместе со стеком: docker compose run --rm migrate-images
+  migrate-images:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+    entrypoint: ["migrate-images"]
+    restart: "no"
+    <<: *logging
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres?sslmode=disable
+      PUBLIC_BASE_URL: ${APP_ORIGIN:-https://${DOMAIN:-localhost}}
+      DATA_DIR: /data
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+      - images_data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  caddy_config:
+  pg_data:
+  images_data:

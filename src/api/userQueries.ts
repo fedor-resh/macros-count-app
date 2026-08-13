@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@/types/types";
+import { api } from "../lib/apiClient";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../stores/authStore";
-import type { Database } from "../types/database.types";
 
 // Query Keys
 export const userKeys = {
@@ -73,12 +73,7 @@ export function useGetUserGoalsQuery() {
 			if (!userId) {
 				throw new Error("User is not authenticated");
 			}
-			const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
-
-			if (error) {
-				throw error;
-			}
-			return data as Database["public"]["Tables"]["users"]["Row"];
+			return await api.get<User>("/me");
 		},
 		enabled: !!userId,
 	});
@@ -89,7 +84,6 @@ export function useUpdateUserGoalsMutation() {
 
 	return useMutation({
 		mutationFn: async ({
-			userId,
 			caloriesGoal,
 			proteinGoal,
 		}: {
@@ -97,20 +91,7 @@ export function useUpdateUserGoalsMutation() {
 			caloriesGoal: number;
 			proteinGoal: number;
 		}) => {
-			const { data, error } = await supabase
-				.from("users")
-				.upsert({
-					id: userId,
-					caloriesGoal,
-					proteinGoal,
-				})
-				.select()
-				.single();
-
-			if (error) {
-				throw error;
-			}
-			return data;
+			return await api.put<User>("/me/goals", { caloriesGoal, proteinGoal });
 		},
 		onSuccess: (_, variables) => {
 			// Invalidate user queries
@@ -130,17 +111,7 @@ export function useUpdateUserParamsMutation() {
 			if (!userId) {
 				throw new Error("User is not authenticated");
 			}
-			const { data, error } = await supabase
-				.from("users")
-				.update(userParams)
-				.eq("id", userId)
-				.select()
-				.single();
-
-			if (error) {
-				throw error;
-			}
-			return data;
+			return await api.patch<User>("/me", userParams);
 		},
 		onSuccess: () => {
 			if (!userId) {

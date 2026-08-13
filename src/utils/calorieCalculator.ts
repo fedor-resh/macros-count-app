@@ -1,4 +1,5 @@
-import { CalculatorParams } from "@/components/Profile/CalorieCalculator.types";
+import type { CalculatorParams } from "@/components/Profile/CalorieCalculator.types";
+import { type BmrStrategy, defaultBmrStrategy } from "./bmrStrategy";
 
 export type Gender = "male" | "female";
 export type ActivityLevel = "sedentary" | "light" | "moderate" | "high" | "veryHigh";
@@ -30,24 +31,22 @@ const PROTEIN_MULTIPLIERS: Record<ActivityLevel, number> = {
 };
 
 /**
- * Рассчитывает базовый метаболизм (BMR) по формуле Mifflin-St Jeor
- * @param weight - вес в кг
- * @param height - рост в см
- * @param age - возраст в годах
- * @param gender - пол
- * @returns BMR в ккал
+ * Рассчитывает базовый метаболизм (BMR) через выбранную стратегию.
+ * По умолчанию — Mifflin–St Jeor (1990). Поведенческий паттерн Strategy
+ * позволяет подменить формулу без изменения вызывающего кода (см. bmrStrategy.ts).
  */
-export function calculateBMR(weight: number, height: number, age: number, gender: Gender): number {
-	const baseBMR = 10 * weight + 6.25 * height - 5 * age;
-	const genderAdjustment = gender === "male" ? 5 : -161;
-	return baseBMR + genderAdjustment;
+export function calculateBMR(
+	weight: number,
+	height: number,
+	age: number,
+	gender: Gender,
+	strategy: BmrStrategy = defaultBmrStrategy,
+): number {
+	return strategy.compute({ weight, height, age, gender });
 }
 
 /**
  * Рассчитывает общий расход энергии (TDEE)
- * @param bmr - базовый метаболизм
- * @param activityLevel - уровень активности
- * @returns TDEE в ккал
  */
 export function calculateTDEE(bmr: number, activityLevel: ActivityLevel): number {
 	return Math.round(bmr * ACTIVITY_MULTIPLIERS[activityLevel]);
@@ -55,9 +54,6 @@ export function calculateTDEE(bmr: number, activityLevel: ActivityLevel): number
 
 /**
  * Рассчитывает цель по калориям на основе TDEE и цели пользователя
- * @param tdee - общий расход энергии
- * @param goal - цель (похудение/поддержание/набор)
- * @returns Цель по калориям в ккал
  */
 export function calculateCaloriesGoal(tdee: number, goal: Goal): number {
 	return Math.round(tdee + CALORIE_ADJUSTMENTS[goal]);
@@ -65,9 +61,6 @@ export function calculateCaloriesGoal(tdee: number, goal: Goal): number {
 
 /**
  * Рассчитывает цель по белку на основе веса и уровня активности
- * @param weight - вес в кг
- * @param activityLevel - уровень активности
- * @returns Цель по белку в граммах
  */
 export function calculateProteinGoal(weight: number, activityLevel: ActivityLevel): number {
 	const multiplier = PROTEIN_MULTIPLIERS[activityLevel];
@@ -75,16 +68,20 @@ export function calculateProteinGoal(weight: number, activityLevel: ActivityLeve
 }
 
 /**
- * Рассчитывает все цели на основе параметров пользователя
+ * Рассчитывает все цели на основе параметров пользователя.
  * @param params - параметры пользователя
- * @returns Рассчитанные цели
+ * @param strategy - стратегия расчёта BMR (по умолчанию Mifflin–St Jeor)
  */
-export function calculateGoals(params: CalculatorParams) {
+export function calculateGoals(
+	params: CalculatorParams,
+	strategy: BmrStrategy = defaultBmrStrategy,
+) {
 	const bmr = calculateBMR(
 		params.weight ?? 0,
 		params.height ?? 0,
 		params.age ?? 0,
 		params.gender as Gender,
+		strategy,
 	);
 	const tdee = calculateTDEE(bmr, params.activityLevel as ActivityLevel);
 	const caloriesGoal = calculateCaloriesGoal(tdee, params.goal as Goal);

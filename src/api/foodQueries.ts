@@ -1,13 +1,9 @@
-import { notifications } from "@mantine/notifications";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { queryClient as appQueryClient } from "../lib/queryClient";
-import { supabase } from "../lib/supabase";
+import { api } from "../lib/apiClient";
 import { useAuthStore } from "../stores/authStore";
-import type { EatenProduct, InsertEatenProduct } from "../types/types";
+import type { EatenProduct, InsertEatenProduct, Product } from "../types/types";
 import { getFormattedDate } from "../utils/dateUtils";
 import { foodKeys } from "./foodKey";
-import { isPendingAnalysis, untrackPendingAnalysis } from "./photoAnalysisTracker";
 import { foodService } from "./services/foodService";
 
 export function useGetFoodsInRangeQuery(from: Date | null, to: Date | null) {
@@ -26,7 +22,7 @@ export function useGetFoodsInRangeQuery(from: Date | null, to: Date | null) {
 				return [];
 			}
 
-			return await foodService.getFoodInRange(userId, fromStr, toStr);
+			return await foodService.getFoodInRange(fromStr, toStr);
 		},
 		enabled: !!userId && hasRange,
 	});
@@ -54,18 +50,8 @@ export function useGetWeeklyFoodsQuery(date: string | null) {
 			// Calculate date range for last 7 days
 			const endDate = new Date(monday);
 			endDate.setDate(endDate.getDate() + 6);
-			const { data, error } = await supabase
-				.from("eaten_products")
-				.select("*")
-				.eq("userId", userId)
-				.gte("date", monday)
-				.lte("date", getFormattedDate(endDate))
-				.order("createdAt", { ascending: false });
-
-			if (error) {
-				throw error;
-			}
-			return data as EatenProduct[];
+			const params = new URLSearchParams({ from: monday, to: getFormattedDate(endDate) });
+			return await api.get<EatenProduct[]>(`/eaten-products?${params}`);
 		},
 		enabled: !!userId,
 	});
@@ -76,26 +62,11 @@ export function useGetFoodsHistoryQuery(query = "", limit = 50) {
 	return useQuery({
 		queryKey: ["foods-history", query, limit],
 		queryFn: async () => {
-			let queryBuilder = supabase
-				.from("eaten_products")
-				.select("*")
-				.eq("userId", userId)
-				.order("createdAt", { ascending: false });
-
-			// Add search filter if query is provided
+			const params = new URLSearchParams({ limit: String(limit) });
 			if (query.trim()) {
-				queryBuilder = queryBuilder.ilike("name", `%${query.trim()}%`);
+				params.set("search", query.trim());
 			}
-
-			queryBuilder = queryBuilder.limit(limit);
-
-			const { data, error } = await queryBuilder;
-
-			if (error) {
-				throw error;
-			}
-
-			return data as EatenProduct[];
+			return await api.get<EatenProduct[]>(`/eaten-products?${params}`);
 		},
 		enabled: !!userId,
 		staleTime: 1000 * 60 * 5,
@@ -111,81 +82,12 @@ export function useSearchProductsQuery(query: string, limit = 20) {
 				return [];
 			}
 
-			const { data, error } = await supabase
-				.from("products")
-				.select("*")
-				.ilike("name", `%${query.trim()}%`)
-				.limit(limit);
-
-			if (error) {
-				throw error;
-			}
-
-			return data;
+			const params = new URLSearchParams({ search: query.trim(), limit: String(limit) });
+			return await api.get<Product[]>(`/products?${params}`);
 		},
 		enabled: query.trim().length > 0,
 		staleTime: 1000 * 60 * 10, // 10 minutes
 	});
-}
-
-export function useEatenProductsRealtime() {
-	const userId = useAuthStore((state) => state.user?.id);
-
-	useEffect(() => {
-		if (!userId) {
-			return;
-		}
-
-		const channel = supabase
-			.channel(`eaten-products-${userId}`)
-			.on(
-				"postgres_changes",
-				{
-					event: "UPDATE",
-					schema: "public",
-					table: "eaten_products",
-					filter: `userId=eq.${userId}`,
-				},
-				(payload) => {
-					const current = payload.new as EatenProduct;
-					if (current.status !== "completed" && current.status !== "error") {
-						return;
-					}
-
-					void appQueryClient.invalidateQueries({ queryKey: foodKeys.all });
-
-					if (current.status === "completed") {
-						if (!isPendingAnalysis(current.id)) {
-							return;
-						}
-						untrackPendingAnalysis(current.id);
-						notifications.show({
-							title: "Фото проанализировано",
-							message: `Добавлен продукт: ${current.name}`,
-							color: "green",
-						});
-						return;
-					}
-
-					if (current.status === "error") {
-						if (!isPendingAnalysis(current.id)) {
-							return;
-						}
-						untrackPendingAnalysis(current.id);
-						notifications.show({
-							title: "Ошибка анализа",
-							message: "Не удалось распознать фото. Попробуйте еще раз.",
-							color: "red",
-						});
-					}
-				},
-			)
-			.subscribe();
-
-		return () => {
-			void supabase.removeChannel(channel);
-		};
-	}, [userId]);
 }
 
 // Mutations
@@ -194,12 +96,7 @@ export function useAddFoodMutation() {
 
 	return useMutation({
 		mutationFn: async (foodData: InsertEatenProduct) => {
-			const { data, error } = await supabase.from("eaten_products").insert(foodData).select();
-
-			if (error) {
-				throw error;
-			}
-			return data;
+			return await api.post<EatenProduct[]>("/eaten-products", foodData);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
@@ -219,16 +116,7 @@ export function useUpdateFoodMutation() {
 			},
 		) => {
 			const { id, ...foodData } = params;
-			const { data, error } = await supabase
-				.from("eaten_products")
-				.update(foodData)
-				.eq("id", id)
-				.select();
-
-			if (error) {
-				throw error;
-			}
-			return data;
+			return await api.patch<EatenProduct[]>(`/eaten-products/${id}`, foodData);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
@@ -243,12 +131,7 @@ export function useDeleteFoodMutation() {
 
 	return useMutation({
 		mutationFn: async (id: number) => {
-			const { data, error } = await supabase.from("eaten_products").delete().eq("id", id).select();
-
-			if (error) {
-				throw error;
-			}
-			return data;
+			return await api.del<EatenProduct[]>(`/eaten-products/${id}`);
 		},
 		onMutate: async (id) => {
 			// Cancel outgoing refetches
