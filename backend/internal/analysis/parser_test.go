@@ -145,3 +145,26 @@ func TestExtractAnalysisFromResponse_EmptyChoices(t *testing.T) {
 		t.Fatalf("expected fallback analysis, got %+v", result)
 	}
 }
+
+func TestExtractAnalysisFromResponse_ContentArray(t *testing.T) {
+	body := `{"choices":[{"message":{"content":[{"type":"text","text":"{\"food_name\":\"Омлет\",\"calories\":220,\"confidence\":\"high\"}"}]}}]}`
+	result, err := ExtractAnalysisFromResponse([]byte(body))
+	if err != nil {
+		t.Fatalf("array content must parse, got %v", err)
+	}
+	if result.FoodName != "Омлет" {
+		t.Fatalf("food_name: expected Омлет, got %q", result.FoodName)
+	}
+	floatPtrEq(t, "calories", result.Calories, 220)
+}
+
+func TestExtractAnalysisFromResponse_ReasoningFallback(t *testing.T) {
+	body := `{"choices":[{"message":{"content":"","reasoning":"{\"food_name\":\"Каша\",\"confidence\":\"medium\"}"}}]}`
+	result, err := ExtractAnalysisFromResponse([]byte(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.FoodName != "Каша" {
+		t.Fatalf("food_name: expected Каша, got %q", result.FoodName)
+	}
+}

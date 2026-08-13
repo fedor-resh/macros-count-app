@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 // Prompt is the LLM_PROMPT from the edge function, unchanged.
@@ -37,13 +38,22 @@ func NewOpenRouterClient(apiKey, siteURL, siteName string) *OpenRouterClient {
 		siteURL:  siteURL,
 		siteName: siteName,
 		model:    defaultModel,
-		client:   &http.Client{},
+		client:   &http.Client{Timeout: 90 * time.Second},
 	}
 }
 
 func (c *OpenRouterClient) Analyze(ctx context.Context, imageURL string) (FoodAnalysis, error) {
 	payload := map[string]any{
-		"model": c.model,
+		"model":      c.model,
+		"max_tokens": 2048,
+		// Gemini 3 по умолчанию думает: thinking съедает лимит токенов,
+		// content остаётся пустым. low хватает для JSON по фото еды.
+		"reasoning": map[string]any{"effort": "low"},
+		"response_format": map[string]any{
+			"type": "json_object",
+		},
+		// Если preview недоступен у провайдера — тот же запрос уйдёт в 2.5 Flash.
+		"models": []string{"google/gemini-2.5-flash"},
 		"messages": []map[string]any{
 			{
 				"role": "user",
@@ -80,7 +90,11 @@ func (c *OpenRouterClient) Analyze(ctx context.Context, imageURL string) (FoodAn
 		return FoodAnalysis{}, fmt.Errorf("read LLM response: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return FoodAnalysis{}, fmt.Errorf("LLM API error: %d: %s", resp.StatusCode, respBody)
+		msg := string(respBody)
+		if len(msg) > 500 {
+			msg = msg[:500]
+		}
+		return FoodAnalysis{}, fmt.Errorf("LLM API error: %d: %s", resp.StatusCode, msg)
 	}
 
 	return ExtractAnalysisFromResponse(respBody)

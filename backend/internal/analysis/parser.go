@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 // FoodAnalysis mirrors the FoodAnalysis type of the edge function: optional
@@ -84,9 +85,38 @@ func AdaptGeminiResponse(rawText string) FoodAnalysis {
 type chatCompletionResponse struct {
 	Choices []struct {
 		Message struct {
-			Content string `json:"content"`
+			// Gemini 3 / новые провайдеры отдают либо строку, либо массив
+			// частей [{"type":"text","text":"..."}]. json.RawMessage, чтобы
+			// не падать на unmarshal array → string (это помечало каждый
+			// успешный ответ как ошибку анализа).
+			Content   json.RawMessage `json:"content"`
+			Reasoning string          `json:"reasoning"`
 		} `json:"message"`
 	} `json:"choices"`
+}
+
+func messageText(raw json.RawMessage) string {
+	if len(raw) == 0 || string(raw) == "null" {
+		return ""
+	}
+	var s string
+	if err := json.Unmarshal(raw, &s); err == nil {
+		return s
+	}
+	var parts []struct {
+		Type string `json:"type"`
+		Text string `json:"text"`
+	}
+	if err := json.Unmarshal(raw, &parts); err == nil {
+		var b strings.Builder
+		for _, p := range parts {
+			if p.Type == "text" || p.Type == "" {
+				b.WriteString(p.Text)
+			}
+		}
+		return b.String()
+	}
+	return ""
 }
 
 // ExtractAnalysisFromResponse ports extractAnalysisFromResponse: pulls
@@ -99,7 +129,10 @@ func ExtractAnalysisFromResponse(body []byte) (FoodAnalysis, error) {
 	}
 	content := ""
 	if len(data.Choices) > 0 {
-		content = data.Choices[0].Message.Content
+		content = messageText(data.Choices[0].Message.Content)
+		if content == "" {
+			content = data.Choices[0].Message.Reasoning
+		}
 	}
 	return AdaptGeminiResponse(content), nil
 }
